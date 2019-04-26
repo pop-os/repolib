@@ -34,5 +34,7 @@ setup(
     description = 'Easily manage software sources',
     url = 'https://github.com/isantop/repolib',
     license = 'BSD-2',
-    packages=['repolib']
+    packages=['repolib'],
+    scripts=['bin/apt-manage']
+
 )

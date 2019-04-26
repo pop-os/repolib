@@ -26,10 +26,26 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from .source import Source
-from .source import SystemSource
-from .util import AptSourceEnabled
-from .util import AptSourceType
-from . import ppa
+from enum import Enum
 
-version = '0.0.0'
+sources_dir = '/etc/apt/sources.list.d'
+
+class AptSourceType(Enum):
+    BINARY = "deb"
+    SOURCE = "deb-src"
+
+    def get_string(self):
+        return self.value
+
+class AptSourceEnabled(Enum):
+    TRUE = 'yes'
+    FALSE = 'no'
+
+    def get_bool(self):
+        if self.value is "yes":
+            return True
+        else:
+            return False
+    
+    def get_string(self):
+        return self.value
