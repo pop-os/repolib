@@ -1,0 +1,312 @@
+#!/usr/bin/python3
+
+"""
+Copyright (c) 2019, Ian Santopietro
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+import argparse
+import glob
+import logging
+import os
+
+import repolib
+
+SOURCES_DIR = '/etc/apt/sources.list.d'
+
+def get_repository(name):
+    filename = '{}.sources'.format(name)
+    source = repolib.Source(filename=filename)
+    source.load_from_file()
+    return source
+
+def source(log, args):
+    """ source command. """
+    source_enable = False
+    if args.source_enable:
+        source_enable = True
+    log.info(
+        'Setting source code for repository %s to %s' % (args.repository, source_enable)
+    )
+    
+    try:
+        source = get_repository(args.repository)
+    except FileNotFoundError:
+        log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+        exit(1)
+
+    source.set_source_enabled(source_enable)
+    log.debug(source.make_source_string())
+    
+    try:
+        source.save_to_disk()
+    except PermissionError:
+        log.error('Unable to save changes, are you root?')
+        exit(1)
+    
+    exit(0)
+
+def add(log, args):
+    """ add Subcommand. """
+    log.debug('Adding line: %s' % args.deb_line)
+    if args.deb_line.startswith('ppa:'):
+        source = repolib.Source()
+        source.load_from_ppa(args.deb_line)
+        source.save_to_disk()
+        source.get_ppa_key()
+
+def list(log, args):
+    """ list Subcommand."""
+    log.debug('Doing list')
+    print('Current repositories:\n')
+    sources = glob.glob('{}/*.sources'.format(SOURCES_DIR))
+    for source in sources:
+        print(
+            os.path.basename(source).replace('.sources', '')
+        )
+
+def repo(log, args):
+    """ Repo Subcommand."""
+    try:
+        source = get_repository(args.repository)
+    except FileNotFoundError:
+        log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+        exit(1)
+
+    if args.repo_details:
+        log.info('Getting info for repo: %s' % args.repository)
+        print(source.make_source_string())
+        exit(0)
+
+    if args.repo_disable:
+        log.info('Disabling repo: %s' % args.repository)
+        source.set_enabled(False)
+        try:
+            source.save_to_disk()
+        except PermissionError:
+            log.error('Unable to save changes, are you root?')
+            exit(1)
+    
+    if args.repo_enable:
+        log.info('Enabling repo: %s' % args.repository)
+        source.set_enabled(True)
+        try:
+            source.save_to_disk()
+        except PermissionError:
+            log.error('Unable to save changes, are you root?')
+            exit(1)
+    
+    if args.repo_remove:
+        log.info('Removing repo: %s' % args.repository)
+        filename = '{}.sources'.format(args.repository)
+        try:
+            os.remove(os.path.join('/etc/apt/sources.list.d', filename))
+        except PermissionError:
+            log.error('Unable to save changes, are you root?')
+            exit(1)
+        except FileNotFoundError:
+            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+            exit(1)
+
+def convert(log, args):
+    pass
+
+def main(options=None):
+    # Set up Argument Parsing.
+    parser = argparse.ArgumentParser(
+        prog='apt-manage',
+        description='Manage software sources',
+        epilog='apt-manage version: {}'.format(repolib.version)
+    )
+
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        dest='verbosity',
+        help='Make output more verbose'
+    )
+
+    subparsers = parser.add_subparsers(
+        help='...',
+        dest='action',
+        metavar='COMMAND'
+    )
+
+    # source subcommand
+    parser_source = subparsers.add_parser(
+        'source',
+        help='Manage source-code'
+    )
+    parser_source.add_argument(
+        'repository',
+        help='The name of the repository. See LIST. Default: system'
+    )
+    
+    source_enable = parser_source.add_mutually_exclusive_group(
+        required=True
+    )
+    source_enable.add_argument(
+        '-e',
+        '--enable',
+        action='store_true',
+        dest='source_enable',
+        help='Enable source code for this repository'
+    )
+    source_enable.add_argument(
+        '-d',
+        '--disable',
+        action='store_true',
+        dest='source_disable',
+        help='Disable source code for this repository'
+    )
+
+    # add subcommand
+    parser_add = subparsers.add_parser(
+        'add',
+        help='Add a new repository'
+    )
+
+    parser_add.add_argument(
+        'deb_line',
+        # dest='debline',
+        help='The deb line of the repository you want to add'
+    )
+
+    parser_add.add_argument(
+        '-s',
+        '--enable-source',
+        action='store_true',
+        dest='add_source',
+        help='Enable source code for the new repository'
+    )
+
+    # list subcommand
+    parser_list = subparsers.add_parser(
+        'list',
+        help='List available repositories.'
+    )
+
+    # repo subcommand
+    parser_repo = subparsers.add_parser(
+        'repo',
+        help='Manage a configured repository'
+    )
+
+    parser_repo.add_argument(
+        'repository',
+        help='The name of the repository to manage. See LIST'
+    )
+
+    parser_repo_group = parser_repo.add_mutually_exclusive_group(
+        required=True
+    )
+
+    parser_repo_group.add_argument(
+        '-i',
+        '--info',
+        action='store_true',
+        dest='repo_details',
+        help='Print details about the repository.'
+    )
+
+    parser_repo_group.add_argument(
+        '-e',
+        '--enable',
+        action='store_true',
+        dest='repo_enable',
+        help='Enable the repository, if it\'s disabled.'
+    )
+
+    parser_repo_group.add_argument(
+        '-d',
+        '--disable',
+        action='store_true',
+        dest='repo_disable',
+        help='Disable the repository, if it\'s enabled.'
+    )
+
+    parser_repo_group.add_argument(
+        '-r',
+        '--remove',
+        action='store_true',
+        dest='repo_remove',
+        help='Remove this repository from the system.'
+    )
+
+    # convert subcommand
+    parser_convert = subparsers.add_parser(
+        'convert',
+        help=argparse.SUPPRESS
+    )
+
+    args = parser.parse_args()
+    if options:
+        args = parser.parse_args(options)
+    
+    if not args.verbosity:
+        args.verbosity = 0
+
+    if args.verbosity > 2:
+        args.verbosity = 2
+    
+    verbosity = {
+        0 : logging.WARN,
+        1 : logging.INFO,
+        2 : logging.DEBUG
+    }
+    
+    log = logging.getLogger('apt-manage')
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    log.setLevel(verbosity[args.verbosity])
+    log.debug('Logging set up!')
+
+    log.debug('Arguments passed: %s' %str(args))
+    
+    if not args.action:
+        args.action = 'list'
+    
+    
+    
+    log.debug('Got command: %s', args.action)
+
+    # if os.geteuid() != 0:
+    #     parser.print_help()
+    #     log.error('You need to root, or use sudo.')
+    #     exit(176)
+    
+    action = {
+        'source': source,
+        'add': add,
+        'list': list,
+        'repo': repo,
+        'convert': convert
+    }
+    action[args.action](log, args)
+
+if __name__ == '__main__':
+    main()
