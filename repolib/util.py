@@ -52,3 +52,35 @@ class AptSourceEnabled(Enum):
     
     def get_string(self):
         return self.value
+
+CLEAN_CHARS = {
+    33: None,
+    64: 45,
+    35: 45,
+    36: 45,
+    37: 45,
+    94: 45,
+    38: 45,
+    42: 45,
+    41: None,
+    40: None,
+    43: 45,
+    61: 45,
+    91: None,
+    92: None,
+    93: None,
+    123: None,
+    125: None,
+    124: 95,
+    63: None,
+    47: 95,
+    46: 45,
+    60: 95,
+    62: 95,
+    44: 95,
+    96: None,
+    126: None,
+    32: 95,
+    58: None,
+    59: None,
+}

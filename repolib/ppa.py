@@ -59,7 +59,7 @@ LAUNCHPAD_PPA_CERT = "/etc/ssl/certs/ca-certificates.crt"
 class PPALine(source.Source):
     
     def __init__(self, line):
-        super().__init__(self)
+        super().__init__()
         self.ppa_line = line
         self.load_from_ppa(self.ppa_line)
         self.get_ppa_key(self.ppa_line)

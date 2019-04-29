@@ -75,7 +75,39 @@ def add(log, args):
     
     elif args.deb_line.startswith('deb'):
         source = repolib.DebLine(args.deb_line)
+        source_str = source.make_source_string()
+        log.debug('Adding source:\n%s' % source_str)
     
+    else:
+        uris = input("Enter the URIs of the repository: ").replace(',', ' ')
+        suites = input(
+            'Enter the suites/distros of the repository (e.g. "disco"): '
+        ).replace(',', ' ')
+        comps = input(
+            'Enter the componenets of the repository (e.g. "main"): '
+        ).replace(',', ' ')
+        sources = input(
+            'Enable source code for this repository? (y/N): '
+        ).lower()
+        name = input("Enter a name for this repository: ").lower()
+        name = name.translate(repolib.util.CLEAN_CHARS)
+        name += '.sources'
+
+        source_code = False
+        if sources == 'y':
+            source_code = True
+
+        uril = uris.split()
+        suitel = suites.split()
+        compl = comps.split()
+        
+        source = repolib.Source(uris=uril, suites=suitel, components=compl)
+        source.filename = name
+        source.set_source_enabled(source_code)
+        source_str = source.make_source_string()
+        log.debug('Adding source: %s\n%s' % (name, source_str))
+
+    log.debug('Saving')    
     source.save_to_disk()
 
 def list(log, args):
@@ -90,19 +122,24 @@ def list(log, args):
 
 def repo(log, args):
     """ Repo Subcommand."""
-    try:
-        source = get_repository(args.repository)
-    except FileNotFoundError:
-        log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-        exit(1)
 
     if args.repo_details:
         log.info('Getting info for repo: %s' % args.repository)
+        try:
+            source = get_repository(args.repository)
+        except FileNotFoundError:
+            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+            exit(1)
         print(source.make_source_string())
         exit(0)
 
     if args.repo_disable:
         log.info('Disabling repo: %s' % args.repository)
+        try:
+            source = get_repository(args.repository)
+        except FileNotFoundError:
+            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+            exit(1)
         source.set_enabled(False)
         try:
             source.save_to_disk()
@@ -112,6 +149,11 @@ def repo(log, args):
     
     if args.repo_enable:
         log.info('Enabling repo: %s' % args.repository)
+        try:
+            source = get_repository(args.repository)
+        except FileNotFoundError:
+            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+            exit(1)
         source.set_enabled(True)
         try:
             source.save_to_disk()
@@ -122,8 +164,9 @@ def repo(log, args):
     if args.repo_remove:
         log.info('Removing repo: %s' % args.repository)
         filename = '{}.sources'.format(args.repository)
+        log.debug('Deleting file %s' % filename)
         try:
-            os.remove(os.path.join('/etc/apt/sources.list.d', filename))
+            os.remove(os.path.join(repolib.util.sources_dir, filename))
         except PermissionError:
             log.error('Unable to save changes, are you root?')
             exit(1)
@@ -192,7 +235,8 @@ def main(options=None):
 
     parser_add.add_argument(
         'deb_line',
-        # dest='debline',
+        nargs='?',
+        default='822styledeb',
         help='The deb line of the repository you want to add'
     )
 
@@ -311,4 +355,8 @@ def main(options=None):
     action[args.action](log, args)
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('')
+        exit(130)
