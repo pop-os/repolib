@@ -116,16 +116,6 @@ def listall(log, args):
 def repo(log, args):
     """ Repo Subcommand."""
 
-    if args.repo_details:
-        log.info('Getting info for repo: %s' % args.repository)
-        try:
-            source = get_repository(args.repository)
-        except FileNotFoundError:
-            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-            exit(1)
-        print(source.make_source_string())
-        exit(0)
-
     if args.repo_disable:
         log.info('Disabling repo: %s' % args.repository)
         try:
@@ -139,6 +129,7 @@ def repo(log, args):
         except PermissionError:
             log.error('Unable to save changes, are you root?')
             exit(1)
+        exit(0)
     
     if args.repo_enable:
         log.info('Enabling repo: %s' % args.repository)
@@ -153,6 +144,7 @@ def repo(log, args):
         except PermissionError:
             log.error('Unable to save changes, are you root?')
             exit(1)
+        exit(0)
     
     if args.repo_remove:
         log.info('Removing repo: %s' % args.repository)
@@ -166,6 +158,16 @@ def repo(log, args):
         except FileNotFoundError:
             log.error('Repository %s not found, try `apt-manage list`' % args.repository)
             exit(1)
+        exit(0)
+
+    log.info('Getting info for repo: %s' % args.repository)
+    try:
+        source = get_repository(args.repository)
+    except FileNotFoundError:
+        log.error('Repository %s not found, try `apt-manage list`' % args.repository)
+        exit(1)
+    print(source.make_source_string())
+    exit(0)
 
 def convert(log, args):
     pass
@@ -259,7 +261,6 @@ def main(options=None):
     )
 
     parser_repo_group = parser_repo.add_mutually_exclusive_group(
-        required=True
     )
 
     parser_repo_group.add_argument(

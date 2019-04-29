@@ -39,5 +39,8 @@ setup(
     url = 'https://github.com/isantop/repolib',
     license = 'BSD-2',
     packages=['repolib'],
-    scripts=['bin/apt-manage']
+    scripts=['bin/apt-manage'],
+    data_files=[
+        ('/etc/bash_completion.d', ['data/apt-manage']),
+    ]
 )
