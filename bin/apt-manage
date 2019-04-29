@@ -69,14 +69,15 @@ def source(log, args):
 
 def add(log, args):
     """ add Subcommand. """
-    log.debug('Adding line: %s' % args.deb_line)
-    if args.deb_line.startswith('ppa:'):
-        source = repolib.PPALine(args.deb_line)
+    deb_line = args.deb_line
+    if isinstance(args.deb_line, (list,)):
+        deb_line = " ".join(args.deb_line)
+    log.debug('Adding line: %s' % deb_line)
+    if deb_line.startswith('ppa:'):
+        source = repolib.PPALine(deb_line)
     
-    elif args.deb_line.startswith('deb'):
-        source = repolib.DebLine(args.deb_line)
-        source_str = source.make_source_string()
-        log.debug('Adding source:\n%s' % source_str)
+    elif deb_line.startswith('deb'):
+        source = repolib.DebLine(deb_line)
     
     else:
         uris = input("Enter the URIs of the repository: ").replace(',', ' ')
@@ -86,16 +87,9 @@ def add(log, args):
         comps = input(
             'Enter the componenets of the repository (e.g. "main"): '
         ).replace(',', ' ')
-        sources = input(
-            'Enable source code for this repository? (y/N): '
-        ).lower()
         name = input("Enter a name for this repository: ").lower()
         name = name.translate(repolib.util.CLEAN_CHARS)
         name += '.sources'
-
-        source_code = False
-        if sources == 'y':
-            source_code = True
 
         uril = uris.split()
         suitel = suites.split()
@@ -103,14 +97,13 @@ def add(log, args):
         
         source = repolib.Source(uris=uril, suites=suitel, components=compl)
         source.filename = name
-        source.set_source_enabled(source_code)
-        source_str = source.make_source_string()
-        log.debug('Adding source: %s\n%s' % (name, source_str))
-
-    log.debug('Saving')    
+    
+    source.set_source_enabled(args.add_source) 
+    source_str = source.make_source_string()
+    log.debug('Adding source: %s\n%s' % (source.filename, source_str))  
     source.save_to_disk()
 
-def list(log, args):
+def listall(log, args):
     """ list Subcommand."""
     log.debug('Doing list')
     print('Current repositories:\n')
@@ -235,7 +228,7 @@ def main(options=None):
 
     parser_add.add_argument(
         'deb_line',
-        nargs='?',
+        nargs='*',
         default='822styledeb',
         help='The deb line of the repository you want to add'
     )
@@ -348,7 +341,7 @@ def main(options=None):
     action = {
         'source': source,
         'add': add,
-        'list': list,
+        'list': listall,
         'repo': repo,
         'convert': convert
     }
