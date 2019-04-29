@@ -42,7 +42,7 @@ class DebLine(source.Source):
     }
     
     def __init__(self, line):
-        super.__init__(self)
+        super().__init__()
         # Clean up deb line by making spaces consistent 
         self.deb_line = self.cleanup_debline(line)
 
@@ -62,13 +62,7 @@ class DebLine(source.Source):
             self.set_comps(deb_list[3:])
             self.options = {}
         
-        self.filename = self.make_name()
-        
-    def make_name(self):
-        uri = self.uris[0].replace('/', ' ')
-        uri_list = uri.split()
-        name = 'deb-{}-{}.sources'.format(uri_list[1].replace('.', '_'), uri_list[-1])
-        return name
+        self.filename = self.make_name(prefix="deb-")
 
     def cleanup_debline(self, line):
         line = line.replace('[ ', '[')
@@ -116,7 +110,7 @@ class DebLine(source.Source):
         through a list of provided comps and add each one.
         """        
         for comp in comp_list:
-            self.suites.append(comp)
+            self.components.append(comp)
 
     def set_options(self, options_str):
         """

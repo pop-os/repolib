@@ -30,5 +30,6 @@ from .source import Source, SystemSource
 from .deb import DebLine
 from .ppa import PPALine
 from .util import AptSourceEnabled, AptSourceType, RepoError
+from . import util
 
 version = '0.0.0'

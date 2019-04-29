@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 
-from . import util, ppa
+from . import util
 
 class PPAError(Exception):
     pass
@@ -60,6 +60,15 @@ class Source():
         self.components = components
         self.options = options
         self.filename = filename
+    
+    def make_name(self, prefix=''):
+        uri = self.uris[0].replace('/', ' ')
+        uri_list = uri.split()
+        name = '{}{}.sources'.format(
+            prefix,
+            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+        )
+        return name
     
     def load_from_file(self, filename=None):
         """

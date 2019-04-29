@@ -30,7 +30,7 @@ from distutils.core import setup
 
 setup(
     name = 'repolib',
-    version = '0.0.0',
+    version = '0.0.1',
     description = 'Easily manage software sources',
     url = 'https://github.com/isantop/repolib',
     license = 'BSD-2',
