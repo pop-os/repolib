@@ -26,10 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from .source import Source
-from .source import SystemSource
-from .util import AptSourceEnabled
-from .util import AptSourceType
-from . import ppa
+from .source import Source, SystemSource
+from .deb import DebLine
+from .ppa import PPALine
+from .util import AptSourceEnabled, AptSourceType, RepoError
 
 version = '0.0.0'

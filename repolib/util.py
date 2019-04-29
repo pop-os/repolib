@@ -30,6 +30,9 @@ from enum import Enum
 
 sources_dir = '/etc/apt/sources.list.d'
 
+class RepoError(Exception):
+    pass
+
 class AptSourceType(Enum):
     BINARY = "deb"
     SOURCE = "deb-src"

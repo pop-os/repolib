@@ -61,32 +61,6 @@ class Source():
         self.options = options
         self.filename = filename
     
-    def load_from_ppa(self, ppa_line):
-        self.enabled = util.AptSourceEnabled.TRUE
-        self.types = []
-        self.uris = []
-        self.suites = []
-        self.components = []
-        self.options = {}
-        self.ppa_line = ppa_line
-
-        try:
-            import lsb_release
-        except ImportError:
-            raise PPAError("The system can't find version information!")
-        if not ppa_line.startswith('ppa:'):
-            raise PPAError("The PPA %s is malformed!" % ppa_line)
-        
-        ppa_info = ppa_line.split(":")
-        ppa_uri = 'http://ppa.launchpad.net/{}/ubuntu'.format(ppa_info[1])
-        self.set_source_enabled(False)
-        self.uris.append(ppa_uri)
-        self.suites.append(lsb_release.get_distro_information()['CODENAME'])
-        self.components.append('main')
-        ppa_name = ppa_info[1].split('/')
-        name = 'ppa-{}'.format('-'.join(ppa_name))
-        self.filename = '{}.sources'.format(name)
-    
     def load_from_file(self, filename=None):
         """
         Loads the source from a file on disk.
@@ -161,10 +135,6 @@ class Source():
 
         with open(full_path, 'w') as source_file:
             source_file.write(string_source)
-        
-    def get_ppa_key(self):
-        if self.ppa_line:
-            ppa.add_key(self.ppa_line)
     
     def make_source_string(self):
         """Makes a string of the source."""

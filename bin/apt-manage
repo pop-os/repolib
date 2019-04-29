@@ -71,10 +71,12 @@ def add(log, args):
     """ add Subcommand. """
     log.debug('Adding line: %s' % args.deb_line)
     if args.deb_line.startswith('ppa:'):
-        source = repolib.Source()
-        source.load_from_ppa(args.deb_line)
-        source.save_to_disk()
-        source.get_ppa_key()
+        source = repolib.PPALine(args.deb_line)
+    
+    elif args.deb_line.startswith('deb'):
+        source = repolib.DebLine(args.deb_line)
+    
+    source.save_to_disk()
 
 def list(log, args):
     """ list Subcommand."""
