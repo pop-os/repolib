@@ -1,3 +1,9 @@
+repolib (0.0.4) disco; urgency=medium
+
+  * Bash Completion
+
+ -- Ian Santopietro <isantop@gmail.com>  Mon, 29 Apr 2019 16:33:19 -0600
+
 repolib (0.0.3) disco; urgency=medium
 
   * Initial release 
