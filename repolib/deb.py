@@ -44,33 +44,34 @@ class DebLine(source.Source):
     def __init__(self, line):
         super().__init__()
         # Clean up deb line by making spaces consistent 
-        self.deb_line = self.cleanup_debline(line)
+        self.deb_line = line
+        deb_list = self.parse_debline(self.deb_line)
 
-        deb_list = self.deb_line.split()
         self.validate(deb_list[0])
-
         self.set_type(deb_list[0])
 
-        if deb_list[1].startswith('['):
-            self.set_options(deb_list[1])
-            self.set_uris(deb_list[2])
-            self.set_suites(deb_list[3])
-            self.set_comps(deb_list[4:])
-        else:
+        if len(deb_list) == 1:
             self.set_uris(deb_list[1])
             self.set_suites(deb_list[2])
             self.set_comps(deb_list[3:])
             self.options = {}
+        else: 
+            self.set_type(deb_list[0])
+            ex_deb_list = deb_list[2].split()
+            self.set_uris(ex_deb_list[0])
+            self.set_suites(ex_deb_list[1])
+            self.set_comps(ex_deb_list[2:])
+            self.set_options(deb_list[1])
         
         self.filename = self.make_name(prefix="deb-")
 
-    def cleanup_debline(self, line):
-        line = line.replace('[ ', '[')
-        line = line.replace('[', ' [')
-        line = line.replace(', ', ',')
-        line = line.replace(' ]', ']')
-        line = line.replace(']', '] ')
-        return line
+    def parse_debline(self, line):
+        line = line.replace(']', '[')
+        line = line.split('[')
+        deb_list = []
+        for i in line:
+            deb_list.append(i.strip())
+        return deb_list
     
     def validate(self, valid):
         """
@@ -118,12 +119,15 @@ class DebLine(source.Source):
         """
         
         for replacement in self.options_d:
-                options_str = options_str.replace(self.options_d[replacement])
-
-        options_str = options_str.strip("[]")
-        options_list = options_str.split(',')
+                options_str = options_str.replace(replacement, self.options_d[replacement])
+        
+        options_str = options_str.replace('=', ',')
+        options_list = options_str.split()
         
         for i in options_list:
-            option = i.split('=')
-            self.options[option[1]] = option[2]
+            option = i.split(',')
+            values_list = []
+            for value in option[1:]:
+                values_list.append(value)
+            self.options[option[0]] = values_list
             

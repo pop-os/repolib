@@ -112,10 +112,9 @@ class Source():
                 elif line == "":
                     continue
                 else:
-                    option = line.strip().split(' ')
-                    if option != "":
-                        option_key = self.translate_options(option[0].strip(': '))
-                        self.options[option_key] = option[1].strip()
+                    option = line.replace(':', '').strip().split(' ')
+                    self.options[option[0]] = option[1:]
+                    
     
     def translate_options(self, option):
         """
@@ -149,11 +148,11 @@ class Source():
         """Makes a string of the source."""
         toprint = (
                 "Enabled: {}\n".format(self.enabled.value) + 
-                "Types: {}\n".format(" ".join(self.cat_types())) +
+                "Types: {}\n".format(" ".join(self.get_types())) +
                 "URIs: {}\n".format(" ".join(self.uris)) +
                 "Suites: {}\n".format(" ".join(self.suites)) +
                 "Components: {}\n".format(" ".join(self.components)) +
-                "{}".format("\n".join(self.cat_options())) + '\n'
+                self.get_options() + '\n'
         )
         return toprint
     
@@ -179,13 +178,13 @@ class Source():
         else:
             self.types = [util.AptSourceType.BINARY]
 
-    def cat_options(self):
-        opts_s = []
+    def get_options(self):
+        opt_str = ''
         for key in self.options:
-            opts_s.append("{}: {}".format(key, self.options[key]))
-        return opts_s
+            opt_str += '{key}: {values}\n'.format(key=key, values=' '.join(self.options[key]))
+        return opt_str
     
-    def cat_types(self):
+    def get_types(self):
         types_s = []
         for i in self.types:
             types_s.append(i.value)
