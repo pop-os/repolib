@@ -12,11 +12,13 @@ Welcome to RepoLib's documentation!
 RepoLib user documentation
 --------------------------
 
+.. _apt_manage_docs:
+
 .. toctree:: 
     :maxdepth 2
-    :caption: Contents
+    :caption: apt-manage Documentation
 
-    apt-manage
+    aptmanage/aptmanage
 
 
 .. include:: ../README.rst
