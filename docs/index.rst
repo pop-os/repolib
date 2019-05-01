@@ -28,4 +28,8 @@ feature parity with software-properties for most commonly used functions.
 
     aptmanage/aptmanage
 
+.. toctree::
+    :maxdepth: 1
+    :caption: Developer Documentation
 
+    library/developer
