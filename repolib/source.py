@@ -36,7 +36,7 @@ class PPAError(Exception):
 class Source():
 
     def __init__(self,
-                 enabled=True, types=[],
+                 name='', enabled=True, types=[],
                  uris=[], suites=[], components=[], options={}, 
                  filename='example.source'):
         """
@@ -51,6 +51,7 @@ class Source():
           options -- Dict of options for the source. 
           filename -- The filename of the source file on disk (default: example.source)
         """
+        self.name = name
         self.set_enabled(enabled)
         self.types = []
         for type in types:
@@ -91,7 +92,9 @@ class Source():
         with open(full_path, 'r') as source_file:
             for line in source_file:
                 line = line.strip()
-                if line.startswith('Enabled:'):
+                if line.startswith('X-Repolib-Name:'):
+                    self.name = " ".join(line.split()[1:])
+                elif line.startswith('Enabled:'):
                     self.enabled=util.AptSourceEnabled(line.split(":")[1].strip().lower())
                 elif line.startswith('Types:'):
                     types = line.split(' ')
@@ -139,6 +142,7 @@ class Source():
     def save_to_disk(self):
         """ Saves the source to disk at self.filename location."""
         string_source = self.make_source_string()
+        string_source = string_source.replace('Name: ', 'X-Repolib-Name: ')
         full_path = os.path.join(util.sources_dir, self.filename)
 
         with open(full_path, 'w') as source_file:
@@ -146,14 +150,16 @@ class Source():
     
     def make_source_string(self):
         """Makes a string of the source."""
-        toprint = (
-                "Enabled: {}\n".format(self.enabled.value) + 
-                "Types: {}\n".format(" ".join(self.get_types())) +
-                "URIs: {}\n".format(" ".join(self.uris)) +
-                "Suites: {}\n".format(" ".join(self.suites)) +
-                "Components: {}\n".format(" ".join(self.components)) +
-                self.get_options() + '\n'
-        )
+        if self.name == '':
+            self.name = self.filename.replace('.sources', '')
+            
+        toprint  = "Name: {}\n".format(self.name)
+        toprint += "Enabled: {}\n".format(self.enabled.value) 
+        toprint += "Types: {}\n".format(" ".join(self.get_types())) 
+        toprint += "URIs: {}\n".format(" ".join(self.uris)) 
+        toprint += "Suites: {}\n".format(" ".join(self.suites)) 
+        toprint += "Components: {}\n".format(" ".join(self.components)) 
+        toprint += "{}".format(self.get_options())
         return toprint
     
     def set_enabled(self, is_enabled):
@@ -195,6 +201,6 @@ class SystemSource(Source):
     def __init__(self,
                  enabled=True, types=[],
                  uris=[''], suites=[''], components=[''], options={}, 
-                 filename='00-system.sources'):
+                 filename='system.sources'):
         super().__init__(filename=filename)
         self.load_from_file()
