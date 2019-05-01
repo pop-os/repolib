@@ -11,7 +11,7 @@ Welcome to RepoLib's documentation!
 
 RepoLib user documentation
 --------------------------
-.. include:: ../README.md
+.. include:: ../README.rst
 
 .. toctree::
    :maxdepth: 2
