@@ -15,7 +15,7 @@ RepoLib user documentation
 .. _apt_manage_docs:
 
 .. toctree:: 
-    :maxdepth 2
+    :maxdepth 1
     :caption: apt-manage Documentation
 
     aptmanage/aptmanage
