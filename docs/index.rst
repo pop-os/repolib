@@ -6,15 +6,13 @@
 Welcome to RepoLib's documentation!
 ===================================
 
+.. contents:: Table of Contents
+   :local:
+
+RepoLib user documentation
+--------------------------
+.. include:: ../README.md
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
