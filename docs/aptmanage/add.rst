@@ -1,5 +1,5 @@
 ==============
-Add Subcommand
+Adding Sources
 ==============
 
 The ``add`` subcommand is used to add new repositories to the software sources.
