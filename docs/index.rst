@@ -6,19 +6,26 @@
 Welcome to RepoLib's documentation!
 ===================================
 
+RepoLib is a Python library and CLI tool-set for managing your software 
+system software repositories. It's currently set up to handle APT repositories
+on Debian-based linux distributions. 
+
+RepoLib is intended to operate on DEB822-format sources. It aims to provide
+feature parity with software-properties for most commonly used functions.
+
 .. contents:: Table of Contents
    :local:
 
-RepoLib user documentation
---------------------------
+.. toctree::
+    :maxdepth: 1
+    :caption: RepoLib Documentation
 
-.. _apt_manage_docs:
+    installation
 
 .. toctree:: 
-    :maxdepth 1
+    :maxdepth: 1
     :caption: apt-manage Documentation
 
     aptmanage/aptmanage
 
 
-.. include:: ../README.rst
