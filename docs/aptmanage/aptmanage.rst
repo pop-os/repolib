@@ -23,4 +23,7 @@ one-line sources into DEB822 sources.
     :maxdepth 2
     :caption: apt-manage Documentation
 
-    am_add
+    add
+    repo
+    source
+    convert
