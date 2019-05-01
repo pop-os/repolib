@@ -49,4 +49,4 @@ Removing Sources
 
 You can remove sources that you want to stop using permanently. ::
 
-    $ sudo apt-manage repo --disable ppa-system76-proposed
+    $ sudo apt-manage repo --remove ppa-system76-proposed
