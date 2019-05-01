@@ -94,6 +94,6 @@ setup(
     cmdclass={'release': DebRelease},
     scripts=['bin/apt-manage'],
     data_files=[
-        ('/etc/bash_completion.d', ['data/apt-manage']),
+        ('/usr/share/bash-completion/completions', ['data/apt-manage']),
     ]
 )
