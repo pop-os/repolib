@@ -16,7 +16,7 @@ From System Package Manager
 
 If your operating system packages repolib, you can install it by running::
     
-    sudo apt install python3-repolibTwine
+    sudo apt install python3-repolib
 
 
 Uninstall
