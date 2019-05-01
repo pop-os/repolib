@@ -42,8 +42,15 @@ from urllib.error import HTTPError, URLError
 import urllib.parse
 from http.client import HTTPException
 
+try:
+    import lsb_release
+except ImportError:
+    raise util.RepoError("The system can't find version information!")
+
 from . import source
 from . import util
+
+DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
 
 SKS_KEYSERVER = 'https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&exact=on&search=0x%s'
 # maintained until 2015
@@ -62,9 +69,14 @@ class PPALine(source.Source):
         super().__init__()
         self.ppa_line = line
         self.load_from_ppa(self.ppa_line)
-        self.get_ppa_key(self.ppa_line)
     
     def load_from_ppa(self, ppa_line):
+        raw_ppa = self.ppa_line.replace('ppa:','').split('/')
+        ppa_owner = raw_ppa[0]
+        ppa_name = raw_ppa[1]
+
+        self.ppa_info = get_info_from_lp(ppa_owner, ppa_name)
+        self.name = self.ppa_info['displayname']
         self.enabled = util.AptSourceEnabled.TRUE
         self.types = []
         self.uris = []
@@ -73,10 +85,7 @@ class PPALine(source.Source):
         self.options = {}
         self.ppa_line = ppa_line
 
-        try:
-            import lsb_release
-        except ImportError:
-            raise util.RepoError("The system can't find version information!")
+        
         if not ppa_line.startswith('ppa:'):
             raise util.RepoError("The PPA %s is malformed!" % ppa_line)
         
@@ -84,15 +93,22 @@ class PPALine(source.Source):
         ppa_uri = 'http://ppa.launchpad.net/{}/ubuntu'.format(ppa_info[1])
         self.set_source_enabled(False)
         self.uris.append(ppa_uri)
-        self.suites.append(lsb_release.get_distro_information()['CODENAME'])
+        self.suites.append(DISTRO_CODENAME)
         self.components.append('main')
         ppa_name = ppa_info[1].split('/')
         name = 'ppa-{}'.format('-'.join(ppa_name))
         self.filename = '{}.sources'.format(name)
     
+    def save_to_disk(self):
+        """
+        Saves the PPA to disk, and fetches the signing key.
+        """
+        self.get_ppa_key(self.ppa_line)
+        super().save_to_disk()
+    
     def get_ppa_key(self, line):
         if self.ppa_line:
-            add_key(line)
+            add_key(self.ppa_info['signing_key_fingerprint'])
 
 def get_info_from_lp(owner_name, ppa):
     if owner_name[0] != '~':
@@ -131,11 +147,8 @@ def _get_https_content_py3(lp_url, accept_json, retry_delays=None):
 
     raise err
 
-def add_key(ppa_line):
-    raw_ppa = ppa_line.replace('ppa:','').split('/')
-    ppa_owner = raw_ppa[0]
-    ppa = raw_ppa[1]
-    ppa_info = get_info_from_lp(ppa_owner, ppa)
+def add_key(fingerprint):
     apt_key_cmd = "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys".split()
-    apt_key_cmd.append(ppa_info['signing_key_fingerprint'])
+    # apt_key_cmd.append(ppa_info['signing_key_fingerprint'])
+    apt_key_cmd.append(fingerprint)
     get_key = subprocess.run(apt_key_cmd)

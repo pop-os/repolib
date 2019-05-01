@@ -44,16 +44,25 @@ class DebLine(source.Source):
     def __init__(self, line):
         super().__init__()
         # Clean up deb line by making spaces consistent 
+        self.name = ''
+        self.enabled = util.AptSourceEnabled.TRUE
+        self.types = []
+        self.uris = []
+        self.suites = []
+        self.components = []
+        self.options = {}
+        
         self.deb_line = line
         deb_list = self.parse_debline(self.deb_line)
 
         self.validate(deb_list[0])
-        self.set_type(deb_list[0])
 
         if len(deb_list) == 1:
-            self.set_uris(deb_list[1])
-            self.set_suites(deb_list[2])
-            self.set_comps(deb_list[3:])
+            ex_deb_list = deb_list[0].split()
+            self.set_type(ex_deb_list[0])
+            self.set_uris(ex_deb_list[1])
+            self.set_suites(ex_deb_list[2])
+            self.set_comps(ex_deb_list[3:])
             self.options = {}
         else: 
             self.set_type(deb_list[0])

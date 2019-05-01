@@ -30,10 +30,160 @@ import argparse
 import glob
 import logging
 import os
+import shutil
 
 import repolib
 
 SOURCES_DIR = '/etc/apt/sources.list.d'
+
+def system_convert(log):
+    print(
+        "This will convert your system software sources from the old one-line "
+        "format to the newer DEB822 format. As a precaution, your old "
+        "sources.list file will be backed up  to /etc/apt/sources.list.save \n\n"
+    )
+    do_conversion = input('Do you want to proceed? (Y/n): ').lower()
+    if do_conversion == '':
+        do_conversion = 'y'
+    log.debug('Got response: %s' % do_conversion)
+    
+    # Exit if the user doesn't say yes
+    if do_conversion[0] != 'y':
+        return
+    
+    system_source = repolib.Source(filename='system.sources')
+    system_source.name="System Sources"
+    log.info(system_source.make_source_string())
+
+    # Back up old sources
+    try:
+        shutil.copyfile('/etc/apt/sources.list', '/etc/apt/sources.list.save')
+    except:
+        log.error('Couldn\'t back up old sources. Are you root?')
+    
+    do_pop = False
+    
+    with open('/etc/apt/sources.list', 'r') as sources_list:
+        for line in sources_list:
+            if line.startswith('deb '):
+                deb_src = repolib.DebLine(line)
+                for uri in deb_src.uris:
+                    if not uri in system_source.uris:
+                        if 'apt.pop-os.org/proprietary' in uri:
+                            uri = ''
+                            do_pop = True
+                        # We don't need to add a separate repo for -security
+                        if 'security.ubuntu.com/ubuntu' in uri:
+                            uri = ''
+                        system_source.uris.append(uri)
+                        log.debug(system_source.uris)
+                for suite in deb_src.suites:
+                    if not suite in system_source.suites:
+                        system_source.suites.append(suite)
+                for comp in deb_src.components:
+                    if not comp in system_source.components:
+                        system_source.components.append(comp)
+            elif line.startswith('deb-src '):
+                system_source.set_source_enabled(True)
+    
+    if do_pop:
+        print('Pop!_OS Apps repository found, adding seperately...')
+        pop_src = repolib.Source(
+            name="Pop!_OS Apps", enabled=True, 
+            types=['deb'], 
+            uris=['http://apt.pop-os.org/proprietary'], 
+            suites=[repolib.ppa.DISTRO_CODENAME], components=['main'],
+            options={}, filename='pop_OS-apps.sources'
+        )
+        pop_src.save_to_disk()
+    
+    print('Converted System sources:\n{}'.format(system_source.make_source_string()))
+    accept_conv = input('Is this okay? (Y/n): ').lower()
+    if accept_conv == '':
+        accept_conv = 'y'
+    
+    if accept_conv == 'y':
+        system_source.save_to_disk()
+
+        new_sources_list = ''
+        with open('/etc/apt/sources.list', 'r') as sources_list:
+            for line in sources_list:
+                line = '# {}'.format(line)
+                new_sources_list += line
+        with open('/etc/apt/sources.list', 'w') as sources_list:
+            sources_list.write(new_sources_list)
+        print('System Conversion Complete!')
+
+def third_party_convert(log):
+    print(
+        'This will convert your software sources from the old one-line format '
+        'to the new DEB822 format. As a precaution, your old sources will be '
+        'backed up as .save files in /etc/apt/sources.list.d\n'
+    )
+    do_conversion = input('Convert third-party sources? (Y/n): ').lower()
+
+    if do_conversion == '':
+        do_conversion = 'y'
+    log.debug('Got response: %s' % do_conversion)
+
+    if do_conversion[0] != 'y':
+        return
+    
+    list_files = glob.glob('/etc/apt/sources.list.d/*.list')
+    # Back up old sources
+    try:
+        for list_file in list_files:
+            shutil.copyfile(
+                list_file, '{}.save'.format(list_file)
+            )
+    except:
+        log.error('Couldn\'t back up old sources. Are you root?')
+    
+    for list_file in list_files:
+        deb_src = repolib.Source()
+        deb_src.uris = []
+        deb_src.suites = []
+        deb_src.components = []
+        deb_src.options = {}
+        source_name = os.path.basename(list_file).split('.')[0]
+        print('Converting {}...'.format(source_name))
+        with open(list_file, 'r') as current_list:
+            for line in current_list:
+                if line.startswith('deb '):
+                    deb_src = repolib.DebLine(line)
+                    deb_src.filename = 'converted-{}.sources'.format(source_name)
+            deb_src = deb_src
+
+        if deb_src.filename != 'example.source':
+            enable_sc = input(
+                'Enable source code for {}? (y/N): '.format(source_name)
+            ).lower()
+            if enable_sc == '':
+                enable_sc = 'n'
+            
+            if enable_sc == 'y':
+                deb_src.set_source_enabled(True)
+            
+            print(
+                'converted source for {}:\n'.format(source_name)
+            )
+            print(deb_src.make_source_string())
+
+            accept_source = input('\nIs this okay? (Y/n): ').lower()
+            
+            if accept_source == '':
+                accept_source = 'y'
+            log.debug('Accepted? %s ' % accept_source)
+
+            if accept_source == 'y':
+                deb_src.save_to_disk()
+                new_file_contents = ''
+                with open(list_file, 'r') as current_list:
+                    for line in current_list:
+                        new_line = '# {}'.format(line)
+                        new_file_contents += new_line
+                with open(list_file, 'w') as current_list:
+                    current_list.write(new_file_contents)
 
 def get_repository(name):
     filename = '{}.sources'.format(name)
@@ -170,7 +320,9 @@ def repo(log, args):
     exit(0)
 
 def convert(log, args):
-    pass
+    third_party_convert(log)
+    system_convert(log)
+    exit(0)
 
 def main(options=None):
     # Set up Argument Parsing.
