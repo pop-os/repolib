@@ -16,3 +16,12 @@ RepoLib user documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+apt-manage documentation
+------------------------
+.. toctree:: 
+    :maxdepth 2
+    :caption: Contents
+
+    apt-manage/add
+    
