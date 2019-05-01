@@ -65,8 +65,8 @@ _apt-manage()
         case $command in 
             repo | source )
                 COMPREPLY=( $( compgen -W '$(find /etc/apt/sources.list.d \
-                    -name '*.sources' \
-                    -exec basename --suffix='.sources' {} \;)' -- "$cur"))
+                    -name "*.sources" \
+                    -exec basename --suffix=".sources" {} \;)' -- "$cur"))
                 return 0
                 ;;
         esac
