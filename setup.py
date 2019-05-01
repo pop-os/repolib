@@ -35,7 +35,7 @@ version = {}
 with open("repolib/__version__.py") as fp:
     exec(fp.read(), version)
 
-with open("README.md", "r") as fh:
+with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 classifiers = [
