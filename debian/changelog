@@ -1,8 +1,9 @@
-repolib (0.0.6) UNRELEASED; urgency=medium
+repolib (0.0.7) disco; urgency=medium
 
   * Support for converting legacy Sources to Deb822 format
+  * Updated Python setup
 
- -- Ian Santopietro <isantop@gmail.com>  Wed, 01 May 2019 10:35:51 -0600
+ -- Ian Santopietro <isantop@gmail.com>  Wed, 01 May 2019 11:07:27 -0600
 
 repolib (0.0.4) disco; urgency=medium
 
