@@ -26,19 +26,72 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import subprocess
+
 from distutils.core import setup
+from distutils.cmd import Command
 
 version = {}
 with open("repolib/__version__.py") as fp:
     exec(fp.read(), version)
 
+long_description = (
+    'RepoLib is a Python library and CLI tool-set for managing your software '
+    'system software repositories. It\'s currently set up to handle APT '
+    'repositories on Debian-based linux distributions.\n\n'
+
+    'RepoLib is intended to operate on DEB822-format sources. It aims to '
+    'provide feature parity with software-properties for most commonly used '
+    'functions.'
+)
+
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Environment :: Console',
+    'Intended Audience :: System Administrators',
+    'Intended Audience :: End Users/Desktop',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: BSD License',
+    'Natural Language :: English',
+    'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python :: 3',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: System'
+]
+
+def do_deb_release(vers):
+    subprocess.run(['dch', '-v', vers])
+    subprocess.run(['dch', '-r','""'])
+
+class DebRelease(Command):
+    """Basic sanity checks on our code."""
+    description = 'Release a version to the debian packaging.'
+
+    user_options = [
+        ('version', None, 'Override the version to use'),
+    ]
+
+    def initialize_options(self):
+        self.version = version['VERSION']
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        do_deb_release(self.version)
+
 setup(
     name = 'repolib',
     version = version['VERSION'],
-    description = 'Easily manage software sources',
+    author = 'Ian Santopietro',
+    author_email = 'isantop@gmail.com',
     url = 'https://github.com/isantop/repolib',
+    description = 'Easily manage software sources',
+    download_url = 'https://github.com/isantop/repolib/releases',
+    long_description = long_description,
     license = 'BSD-2',
     packages=['repolib'],
+    cmdclass={'release': DebRelease},
     scripts=['bin/apt-manage'],
     data_files=[
         ('/etc/bash_completion.d', ['data/apt-manage']),
