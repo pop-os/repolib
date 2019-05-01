@@ -1,6 +1,6 @@
-==============
-= Apt Manage =
-==============
+==========
+Apt Manage
+==========
 
 ``apt-manage`` is a command line tool for managing your local software sources
 using RepoLib. Run ``apt-manage`` standalone to get a listing of all of the 
@@ -18,3 +18,9 @@ software repositories currently configured::
 it can accept traditional "deb lines" and ``ppa:`` shortcuts as input to add a 
 repository to your system. It also has the capability of converting legacy 
 one-line sources into DEB822 sources.
+
+.. toctree:: 
+    :maxdepth 2
+    :caption: apt-manage Documentation
+
+    am_add
