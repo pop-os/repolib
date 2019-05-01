@@ -28,22 +28,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import subprocess
 
-from distutils.core import setup
+from setuptools import setup
 from distutils.cmd import Command
 
 version = {}
 with open("repolib/__version__.py") as fp:
     exec(fp.read(), version)
 
-long_description = (
-    'RepoLib is a Python library and CLI tool-set for managing your software '
-    'system software repositories. It\'s currently set up to handle APT '
-    'repositories on Debian-based linux distributions.\n\n'
-
-    'RepoLib is intended to operate on DEB822-format sources. It aims to '
-    'provide feature parity with software-properties for most commonly used '
-    'functions.'
-)
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 classifiers = [
     'Development Status :: 3 - Alpha',
