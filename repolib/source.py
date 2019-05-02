@@ -35,6 +35,14 @@ class PPAError(Exception):
 
 class Source():
 
+    options_d = {
+        'arch': 'Architectures',
+        'lang': 'Languages',
+        'target': 'Targets',
+        'pdiffs': 'PDiffs',
+        'by-hash': 'By-Hash'
+    }
+
     def __init__(self,
                  name='', enabled=True, types=[],
                  uris=[], suites=[], components=[], options={}, 
@@ -61,15 +69,6 @@ class Source():
         self.components = components
         self.options = options
         self.filename = filename
-    
-    def make_name(self, prefix=''):
-        uri = self.uris[0].replace('/', ' ')
-        uri_list = uri.split()
-        name = '{}{}.sources'.format(
-            prefix,
-            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
-        )
-        return name
     
     def load_from_file(self, filename=None):
         """
@@ -117,27 +116,6 @@ class Source():
                 else:
                     option = line.replace(':', '').strip().split(' ')
                     self.options[option[0]] = option[1:]
-                    
-    
-    def translate_options(self, option):
-        """
-        Translates an old-style option into a DEB822 option
-
-        Arguments:
-          option -- The option to check and translate
-        
-        Returns the translated option
-        """
-        translations = {
-            'arch': 'Architectures',
-            'lang': 'Languages',
-            'target': 'Targets',
-            'pdiffs': 'PDiffs',
-            'by-hash': 'By-Hash'
-        }
-        if option in translations:
-            option = translations[option]
-        return option
     
     def save_to_disk(self):
         """ Saves the source to disk at self.filename location."""
@@ -155,11 +133,11 @@ class Source():
             
         toprint  = "Name: {}\n".format(self.name)
         toprint += "Enabled: {}\n".format(self.enabled.value) 
-        toprint += "Types: {}\n".format(" ".join(self.get_types())) 
+        toprint += "Types: {}\n".format(" ".join(self._get_types())) 
         toprint += "URIs: {}\n".format(" ".join(self.uris)) 
         toprint += "Suites: {}\n".format(" ".join(self.suites)) 
         toprint += "Components: {}\n".format(" ".join(self.components)) 
-        toprint += "{}".format(self.get_options())
+        toprint += "{}".format(self._get_options())
         return toprint
     
     def set_enabled(self, is_enabled):
@@ -184,13 +162,13 @@ class Source():
         else:
             self.types = [util.AptSourceType.BINARY]
 
-    def get_options(self):
+    def _get_options(self):
         opt_str = ''
         for key in self.options:
             opt_str += '{key}: {values}\n'.format(key=key, values=' '.join(self.options[key]))
         return opt_str
     
-    def get_types(self):
+    def _get_types(self):
         types_s = []
         for i in self.types:
             types_s.append(i.value)

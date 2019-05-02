@@ -42,13 +42,13 @@ from urllib.error import HTTPError, URLError
 import urllib.parse
 from http.client import HTTPException
 
+from . import source
+from . import util
+
 try:
     import lsb_release
 except ImportError:
     raise util.RepoError("The system can't find version information!")
-
-from . import source
-from . import util
 
 DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
 
@@ -68,9 +68,11 @@ class PPALine(source.Source):
     def __init__(self, line):
         super().__init__()
         self.ppa_line = line
-        self.load_from_ppa(self.ppa_line)
+        self.load_from_ppa(ppa_line=self.ppa_line)
     
-    def load_from_ppa(self, ppa_line):
+    def load_from_ppa(self, ppa_line=None):
+        if ppa_line:
+            self.ppa_line = ppa_line
         raw_ppa = self.ppa_line.replace('ppa:','').split('/')
         ppa_owner = raw_ppa[0]
         ppa_name = raw_ppa[1]
@@ -103,10 +105,10 @@ class PPALine(source.Source):
         """
         Saves the PPA to disk, and fetches the signing key.
         """
-        self.get_ppa_key(self.ppa_line)
+        self._get_ppa_key(self.ppa_line)
         super().save_to_disk()
     
-    def get_ppa_key(self, line):
+    def _get_ppa_key(self, line):
         if self.ppa_line:
             add_key(self.ppa_info['signing_key_fingerprint'])
 
