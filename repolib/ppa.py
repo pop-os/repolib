@@ -42,13 +42,13 @@ from urllib.error import HTTPError, URLError
 import urllib.parse
 from http.client import HTTPException
 
+from . import source
+from . import util
+
 try:
     import lsb_release
 except ImportError:
     raise util.RepoError("The system can't find version information!")
-
-from . import source
-from . import util
 
 DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
 

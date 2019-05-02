@@ -32,14 +32,6 @@ from . import source
 from . import util
 
 class DebLine(source.Source):
-
-    options_d = {
-        'arch': 'Architectures',
-        'lang': 'Languages',
-        'target': 'Targets',
-        'pdiffs': 'PDiffs',
-        'by-hash': 'By-Hash'
-    }
     
     def __init__(self, line):
         super().__init__()

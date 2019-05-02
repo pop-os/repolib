@@ -35,6 +35,14 @@ class PPAError(Exception):
 
 class Source():
 
+    options_d = {
+        'arch': 'Architectures',
+        'lang': 'Languages',
+        'target': 'Targets',
+        'pdiffs': 'PDiffs',
+        'by-hash': 'By-Hash'
+    }
+
     def __init__(self,
                  name='', enabled=True, types=[],
                  uris=[], suites=[], components=[], options={}, 
@@ -117,27 +125,6 @@ class Source():
                 else:
                     option = line.replace(':', '').strip().split(' ')
                     self.options[option[0]] = option[1:]
-                    
-    
-    def translate_options(self, option):
-        """
-        Translates an old-style option into a DEB822 option
-
-        Arguments:
-          option -- The option to check and translate
-        
-        Returns the translated option
-        """
-        translations = {
-            'arch': 'Architectures',
-            'lang': 'Languages',
-            'target': 'Targets',
-            'pdiffs': 'PDiffs',
-            'by-hash': 'By-Hash'
-        }
-        if option in translations:
-            option = translations[option]
-        return option
     
     def save_to_disk(self):
         """ Saves the source to disk at self.filename location."""
