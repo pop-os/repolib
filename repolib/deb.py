@@ -45,24 +45,24 @@ class DebLine(source.Source):
         self.options = {}
         
         self.deb_line = line
-        deb_list = self.parse_debline(self.deb_line)
+        deb_list = self._parse_debline(self.deb_line)
 
-        self.validate(deb_list[0])
+        self._validate(deb_list[0])
 
         if len(deb_list) == 1:
             ex_deb_list = deb_list[0].split()
-            self.set_type(ex_deb_list[0])
-            self.set_uris(ex_deb_list[1])
-            self.set_suites(ex_deb_list[2])
-            self.set_comps(ex_deb_list[3:])
+            self._set_type(ex_deb_list[0])
+            self._set_uris(ex_deb_list[1])
+            self._set_suites(ex_deb_list[2])
+            self._set_comps(ex_deb_list[3:])
             self.options = {}
         else: 
-            self.set_type(deb_list[0])
+            self._set_type(deb_list[0])
             ex_deb_list = deb_list[2].split()
-            self.set_uris(ex_deb_list[0])
-            self.set_suites(ex_deb_list[1])
-            self.set_comps(ex_deb_list[2:])
-            self.set_options(deb_list[1])
+            self._set_uris(ex_deb_list[0])
+            self._set_suites(ex_deb_list[1])
+            self._set_comps(ex_deb_list[2:])
+            self._set_options(deb_list[1])
         
         self.filename = self._make_name(prefix="deb-")
     
@@ -75,7 +75,7 @@ class DebLine(source.Source):
         )
         return name
 
-    def parse_debline(self, line):
+    def _parse_debline(self, line):
         line = line.replace(']', '[')
         line = line.split('[')
         deb_list = []
@@ -83,7 +83,7 @@ class DebLine(source.Source):
             deb_list.append(i.strip())
         return deb_list
     
-    def validate(self, valid):
+    def _validate(self, valid):
         """
         Ensure we have a valid debian repositor line.
         """
@@ -92,19 +92,19 @@ class DebLine(source.Source):
                 'The line %s does not appear to be a valid repo' % self.deb_line
             )
 
-    def set_type(self, deb_type):
+    def _set_type(self, deb_type):
         """
         Set the type of repository (deb or deb-src)
         """
         self.types = [util.AptSourceType(deb_type)]
     
-    def set_uris(self, uri):
+    def _set_uris(self, uri):
         """ 
         Set the URIs of the repository.
         """
         self.uris.append(uri)
     
-    def set_suites(self, suite):
+    def _set_suites(self, suite):
         """
         Sets the suite of the repository.
 
@@ -113,7 +113,7 @@ class DebLine(source.Source):
         """
         self.suites.append(suite)
     
-    def set_comps(self, comp_list):
+    def _set_comps(self, comp_list):
         """
         Sets the components of the repository.
 
@@ -123,7 +123,7 @@ class DebLine(source.Source):
         for comp in comp_list:
             self.components.append(comp)
 
-    def set_options(self, options_str):
+    def _set_options(self, options_str):
         """
         Set the options.
         """
