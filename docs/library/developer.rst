@@ -104,8 +104,7 @@ the program.
 Source object
 =============
 
-*class repolib.**Source** (name='',enabled=True,types=[],uris=[],suites=[],components=[],options={},filename='example.source')*
-
+class repolib.**Source** (name='',enabled=True,types=[],uris=[],suites=[],components=[],options={},filename='example.source')
     Create a new :ref:`source-object`. All parameters should be passed as 
     keyword arguments. Each parameter has its own more detailed description 
     below, but in short they are:
