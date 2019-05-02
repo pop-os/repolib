@@ -101,11 +101,10 @@ the program.
 
 .. _source-object:
 
-Source objects
-==============
+Source object
+=============
 
-*class repolib.**Source** (name='', enabled=True, types=[], uris=[], suites=[],
-components=[], options={}, filename='example.source')*
+*class repolib.**Source** (name='',enabled=True,types=[],uris=[],suites=[],components=[],options={},filename='example.source')*
 
     Create a new :ref:`source-object`. All parameters should be passed as 
     keyword arguments. Each parameter has its own more detailed description 
@@ -133,10 +132,9 @@ The following decribe how each of these are used.
 name
 ----
 
-name (The name of the source. type: str, default='')
-    This is a human-readable and nicely-formatted name to help a user recognize
-    what this source is. Any unicode character is allowed in this field. If a 
-    source is opened which doesn't have a name field, the filename will be used.
+This is a human-readable and nicely-formatted name to help a user recognize
+what this source is. Any unicode character is allowed in this field. If a 
+source is opened which doesn't have a name field, the filename will be used.
 
-    This field maps to the ``X-Repolib-Name:`` field in the .sources file, which 
-    is ignored by Apt and other standards-compliant sources parsers.
+This field maps to the ``X-Repolib-Name:`` field in the .sources file, which 
+is ignored by Apt and other standards-compliant sources parsers.
