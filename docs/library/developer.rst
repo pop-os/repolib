@@ -95,8 +95,8 @@ the program.
 
 .. note::
     While :ref:`source-object`s can be manipulated after using the 
-    :ref:`save-to-disk-method`, any subsequent changes will not be automatically 
-    written to the disk as well. You need to call the :ref:`save-to-disk-method` 
+    :ref:`save-to-disk` method, any subsequent changes will not be automatically 
+    written to the disk as well. You need to call the :ref:`save-to-disk` 
     again in order to save further changes.
 
 .. _source-object:
@@ -233,3 +233,15 @@ filename
 
 This is a string value describing the filename to save the source to when using 
 the :ref:`save-to-disk-method`. It defaults to ``example.sources``
+
+Methods
+=======
+
+.. -save-to-disk-method:
+
+save_to_disk() 
+--------------
+
+Source.save_to_disk()
+    Takes all of the current data saved in the :ref:`source-object` and writes 
+    it to the disk. It uses the 
