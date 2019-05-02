@@ -64,7 +64,16 @@ class DebLine(source.Source):
             self.set_comps(ex_deb_list[2:])
             self.set_options(deb_list[1])
         
-        self.filename = self.make_name(prefix="deb-")
+        self.filename = self._make_name(prefix="deb-")
+    
+    def _make_name(self, prefix=''):
+        uri = self.uris[0].replace('/', ' ')
+        uri_list = uri.split()
+        name = '{}{}.sources'.format(
+            prefix,
+            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+        )
+        return name
 
     def parse_debline(self, line):
         line = line.replace(']', '[')
