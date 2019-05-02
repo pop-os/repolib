@@ -17,6 +17,7 @@ also allows easy creation of new DEB822-style sources from user-supplied data.
     :caption: RepoLib
 
     source
+    subclasses
     enums
 
 Example
