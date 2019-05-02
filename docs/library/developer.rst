@@ -104,7 +104,7 @@ the program.
 Source object
 =============
 
-class repolib.**Source** (name='',enabled=True,types=[],uris=[],suites=[],components=[],options={},filename='example.source')
+class repolib.Source (name='',enabled=True,types=[],uris=[],suites=[],components=[],options={},filename='example.source')
     Create a new :ref:`source-object`. All parameters should be passed as 
     keyword arguments. Each parameter has its own more detailed description 
     below, but in short they are:
@@ -114,7 +114,7 @@ class repolib.**Source** (name='',enabled=True,types=[],uris=[],suites=[],compon
           (default: True)
         * :ref:`types` - A list of the types that the source should use.
           (default: [])
-        * :ref:'uris' - A list of URIs from which to fetch software or check for 
+        * :ref:`uris` - A list of URIs from which to fetch software or check for 
           updates. (default: [])
         * :ref:`suites` - Suites in which to narrow available software. (default: 
           [])
@@ -135,5 +135,84 @@ This is a human-readable and nicely-formatted name to help a user recognize
 what this source is. Any unicode character is allowed in this field. If a 
 source is opened which doesn't have a name field, the filename will be used.
 
+:ref:`name` is a string value, set to ``''`` by default. If there is no name in 
+a loaded source, it will be set to the same as the filename (minus the 
+extension).
+
 This field maps to the ``X-Repolib-Name:`` field in the .sources file, which 
 is ignored by Apt and other standards-compliant sources parsers.
+
+.. _enabled:
+
+enabled
+-------
+
+This a boolean value representing whether the source is enabled or not. A 
+disabled source is excluded from updates and new software installs, but it can 
+be easily re-enabled at any time. It defaults to ``True``.
+
+This field maps to the ``Enabled:`` field in the .sources file. This is optional 
+per the DEB822 standard, however if set to anything other than ``no``, the 
+source is considered enabled.
+
+.. _types:
+
+types
+-----
+
+A list of string values describing the type of the repository. Valid values are
+either ``deb`` for binary software or ``deb-src`` for source code. The default 
+value for this argument is ``[]``.
+
+This field maps to the ``Types:`` field in the sources file. 
+
+.. _uris:
+
+uris
+----
+
+A list of string values describing the URIs from which to fetch package lists 
+and software for updates and installs. The currently recognized URI types are:
+
+file
+    The file scheme allows an arbitrary directory in the file system to be 
+    considered an archive. This is useful for NFS mounts and local mirrors or 
+    archives.
+
+cdrom
+    The cdrom scheme allows APT to use a local CD-ROM drive with media swapping. 
+    Use the apt-cdrom(8) program to create cdrom entries in the source list.
+
+http
+    The http scheme specifies an HTTP server for the archive. If an environment 
+    variable http_proxy is set with the format http://server:port/, the proxy 
+    server specified in http_proxy will be used. Users of authenticated HTTP/1.1 
+    proxies may use a string of the format http://user:pass@server:port/. Note 
+    that this is an insecure method of authentication.
+
+ftp
+    The ftp scheme specifies an FTP server for the archive. APT's FTP behavior 
+    is highly configurable; for more information see the apt.conf(5) manual 
+    page. Please note that an FTP proxy can be specified by using the ftp_proxy 
+    environment variable. It is possible to specify an HTTP proxy (HTTP proxy 
+    servers often understand FTP URLs) using this environment variable and only 
+    this environment variable. Proxies using HTTP specified in the configuration 
+    file will be ignored.
+
+copy
+    The copy scheme is identical to the file scheme except that packages are 
+    copied into the cache directory instead of used directly at their location. 
+    This is useful for people using removable media to copy files around with APT.
+
+rsh, ssh
+    The rsh/ssh method invokes RSH/SSH to connect to a remote host and access 
+    the files as a given user. Prior configuration of rhosts or RSA keys is 
+    recommended. The standard find and dd commands are used to perform the file 
+    transfers from the remote host.
+  
+.. note::
+    Although these are the currently-recognized official URI types, Apt can be 
+    extended with additional URI schemes through extension packages. Thus it is 
+    **not** recommended to parse URIs by type and instead rely on user input 
+    being correct and to throw exceptions when that isn't the case.
+
