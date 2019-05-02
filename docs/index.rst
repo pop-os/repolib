@@ -26,6 +26,12 @@ format sources, and instead only manages one-line sources.
 
 RepoLib is available under a BSD 2-Clause License. Full License below:
 
+|
+|
+|
+|
+|
+
 Copyright © 2019, Ian Santopietro
 All rights reserved.
 
