@@ -121,7 +121,7 @@ PPALine.save_to_disk()
 _ppa-module-functions:
 
 repolib.ppa Module functions
-----------------------------
+============================
 
 The module containing the :ref:`ppa-source-object` class also contains two 
 public helper functions that can be helpful in manual processing of the data for 
