@@ -145,7 +145,7 @@ repolib.ppa.get_info_from_lp(owner_name, ppa)
 add_key()
 ^^^^^^^^^
 
-repolib.ppa.get_info_from_lp(fingerprint)
+repolib.ppa.add_key(fingerprint)
     Downloads the key with ``fingerprint`` from keyserver.ubuntu.com and adds it 
     to the system configuration. 
 
