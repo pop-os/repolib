@@ -313,6 +313,6 @@ is_enabled
 ^^^^^^^^^^
 
 If ``True``, the :ref:`source-object`.``types`` attribute is set to 
-``[:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]``. 
-Otherwise, it's set to ``[:ref:`aptsourcetype-enum`.BINARY]`` only.
+'[:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]'. 
+Otherwise, it's set to '[:ref:`aptsourcetype-enum`.BINARY]' only.
 
