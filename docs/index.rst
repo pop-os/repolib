@@ -17,7 +17,7 @@ feature parity with software-properties for most commonly used functions.
    :local:
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
     :caption: Developer Documentation
 
     library/developer
