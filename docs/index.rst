@@ -18,6 +18,12 @@ feature parity with software-properties for most commonly used functions.
 
 .. toctree::
     :maxdepth: 1
+    :caption: Developer Documentation
+
+    library/developer
+
+.. toctree::
+    :maxdepth: 1
     :caption: RepoLib Documentation
 
     installation
@@ -27,9 +33,3 @@ feature parity with software-properties for most commonly used functions.
     :caption: apt-manage Documentation
 
     aptmanage/aptmanage
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Developer Documentation
-
-    library/developer
