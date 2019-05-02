@@ -216,3 +216,78 @@ rsh, ssh
     **not** recommended to parse URIs by type and instead rely on user input 
     being correct and to throw exceptions when that isn't the case.
 
+.. _suites:
+
+suites
+------
+
+This value is a list of strings describing the suites against which to check for 
+software. This is typically used to differentiate versions for the same OS, e.g. 
+``disco`` or ``cosmic`` for Ubuntu. 
+
+This value maps to the ``Suites:`` field in the sources file. 
+
+.. _components:
+
+components
+----------
+
+This value is a list of strings describing the enabled distro components to 
+download software from. Common values include ``main``, ``restricted``, 
+``nonfree``, etc.
+
+.. _options:
+
+options
+-------
+
+This is a dictionary containing key value pairs of options to add to the source. 
+Options often are used to restrict a source to certain CPU architectures or 
+languages. Valid options include:
+
+Architectures
+    Multivalue option defining for which architectures information should be 
+    downloaded. If this option isn't set the default is all architectures as 
+    defined by the APT::Architectures config option.
+
+Languages 
+    Multivalue option defining for which languages information such as 
+    translated package descriptions should be downloaded. If this option isn't 
+    set the default is all languages as defined by the Acquire::Languages config 
+    option.
+
+Targets
+    Multivalue option defining which download targets apt will try to acquire 
+    from this source. If not specified, the default set is defined by the 
+    Acquire::IndexTargets configuration scope (targets are specified by their 
+    name in the Created-By field). Additionally, targets can be enabled or 
+    disabled by using the Identifier field as an option with a boolean value 
+    instead of using this multivalue option.
+
+PDiffs
+    A yes/no value which controls if APT should try to use PDiffs to update old 
+    indexes instead of downloading the new indexes entirely. The value of this 
+    option is ignored if the repository doesn't announce the availability of 
+    PDiffs. Defaults to the value of the option with the same name for a 
+    specific index file defined in the Acquire::IndexTargets scope, which itself 
+    defaults to the value of configuration option Acquire::PDiffs which defaults 
+    to yes.
+
+By-Hash
+    Can have the value yes, no or force and controls if APT should try to acquire 
+    indexes via a URI constructed from a hashsum of the expected file instead of 
+    using the well-known stable filename of the index. Using this can avoid 
+    hashsum mismatches, but requires a supporting mirror. A yes or no value 
+    activates/disables the use of this feature if this source indicates support 
+    for it, while force will enable the feature regardless of what the source 
+    indicates. Defaults to the value of the option of the same name for a specific 
+    index file defined in the Acquire::IndexTargets scope, which itself defaults 
+    to the value of configuration option Acquire::By-Hash which defaults to yes.
+
+.. _filename:
+
+filename
+--------
+
+This is a string value describing the filename to save the source to when using 
+the :ref:`save-to-disk-method`. 
