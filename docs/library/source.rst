@@ -204,16 +204,16 @@ set_source_enabled()
 Source.set_source_enabled(is_enabled)
     This method can be used to quickly set the :ref:`source-object`.``types``
     attribute. Since the ``types`` attribute is a list of 
-    :ref:`aptsourcetype-enum`s, this method can quickly set the type to either 
-    of these values without needing to use the Enum directly. The argument
-    :ref:`sse-is-enabled` is a boolean value.
+    :ref:`aptsourcetype-enum` values, this method can quickly set the type to 
+    either of these values without needing to use the Enum directly. The 
+    argument :ref:`sse-is-enabled` is a boolean value.
 
 .. _sse-is-enabled:
 
 is_enabled
 ^^^^^^^^^^
 
-If ``True``, the :ref:`source-object`.``types`` attribute is set to 
-'[:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]'. 
-Otherwise, it's set to '[:ref:`aptsourcetype-enum`.BINARY]' only.
+If ``True``, the :ref:`source-object` ``types`` attribute is set to 
+[:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]. 
+Otherwise, it's set to [:ref:`aptsourcetype-enum`.BINARY] only.
 
