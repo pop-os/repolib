@@ -94,7 +94,7 @@ PPALine.load_from_ppa(ppa_line=None)
     :ref:`ppa-ppa-line` argument, or from the PPALine.ppa_line attribute if 
     blank. 
 
-    * :ref:`ppa-ppa-line - The PPA to load from Launchpad.
+    * :ref:`ppa-ppa-line` - The PPA to load from Launchpad.
 
 
 .. _ppa-ppa-line:

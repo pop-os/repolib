@@ -44,7 +44,8 @@ the new, modified source to disk::
     source.save_to_disk()
 
 When run with the appropriate arguments, it prints the contents of the source 
-to disk and then saves a new ``example.sources`` file in ``/etc/apt/sources.list.d``::
+to console and then saves a new ``example.sources`` file in 
+``/etc/apt/sources.list.d``::
 
     $ 
     Name: Example Source
