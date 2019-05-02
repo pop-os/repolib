@@ -134,6 +134,7 @@ filename
 This is a string value describing the filename to save the source to when using 
 the :ref:`save-to-disk-method`. It defaults to ``example.sources``
 
+=======
 Methods
 =======
 
