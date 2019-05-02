@@ -137,7 +137,7 @@ DEB822 Source Format Specifications
 Following is a description of each field in the deb822 source format.
 
 
-.._deb822-field-enabled:
+.. _deb822-field-enabled:
 
 Enabled:
 ========
@@ -161,7 +161,7 @@ Types: (value: "deb" or "deb-src", required: Yes)
     type. A ``deb-src`` line is required to fetch source pacakge indices. 
 
 
-.. -deb822-field-uris:
+.. _deb822-field-uris:
 
 URIs:
 =====

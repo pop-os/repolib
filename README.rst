@@ -1,3 +1,4 @@
+=======
 RepoLib
 =======
 
@@ -8,11 +9,16 @@ on Debian-based linux distributions.
 RepoLib is intended to operate on DEB822-format sources. It aims to provide
 feature parity with software-properties for most commonly used functions.
 
+Documentation
+=============
+
+Documentation is available online at `Read The Docs <https://repolib.rtfd.io/>`_.
+
 Installation
-------------
+============
 
 From System Package Manager
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 If your operating system packages repolib, you can install it by running::
     
@@ -20,7 +26,7 @@ If your operating system packages repolib, you can install it by running::
 
 
 Uninstall
-"""""""""
+^^^^^^^^^
 
 To uninstall, simply do::
     
@@ -28,7 +34,7 @@ To uninstall, simply do::
 
 
 From PyPI
-^^^^^^^^^
+---------
 
 Repolib is available on PyPI. You can install it for your current user with::
 
@@ -39,14 +45,14 @@ Alternatively, you can install it system-wide using::
     sudo pip3 install repolib
 
 Uninstall
-"""""""""
+^^^^^^^^^
 
 To uninstall, simply do::
 
     sudo pip3 uninstall repolib
 
 From Git
-^^^^^^^^
+--------
 
 First, clone the git repository onto your local system::
 
@@ -54,7 +60,7 @@ First, clone the git repository onto your local system::
     cd repolib
 
 Debian
-^^^^^^
+------
 
 On debian based distributions, you can build a .deb package locally and install 
 it onto your system. You will need the following build-dependencies:
@@ -75,14 +81,14 @@ Then build and install the package::
     sudo dpkg -i python3-repolib_*.deb
 
 Uninstall
-"""""""""
+^^^^^^^^^
 
 To uninstall, simply do::
 
     sudo apt remove python3-repolib
 
 setuptools setup.py 
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 You can build and install the package using python3-setuptools. First, install 
 the dependencies::
@@ -94,7 +100,7 @@ Then build and install the package::
     sudo python3 ./setup.py install
 
 Uninstall
-"""""""""
+^^^^^^^^^
 
 You can uninstall RepoLib by removing the following files/directories:
 
