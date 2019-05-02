@@ -12,14 +12,12 @@ contents, parsing it into a Python object which can then be iterated upon and
 which uses native data types where practicable. The :ref:`repolib-module` module 
 also allows easy creation of new DEB822-style sources from user-supplied data.
 
-Contents
-========
-
 .. toctree::
     :maxdepth: 2
     :caption: RepoLib
 
     source
+    enums
 
 Example
 =======
