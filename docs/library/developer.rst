@@ -163,7 +163,7 @@ types
 Debian archives may contain either binary packages or source code packages, and 
 this value specifies which of those Apt should look for in the source. ``deb`` 
 is used to look for binary packages, while ``deb-src`` looks for source code 
-packages. RepoLib stores this value as a list of :ref:`AptSourceType-Enum`s, and 
+packages. RepoLib stores this value as a list of :ref:`aptsourcetype-enum`s, and 
 defaults to ``[AptSourceType.BINARY]``.
 
 This field maps to the ``Types:`` field in the sources file. 
@@ -237,11 +237,82 @@ the :ref:`save-to-disk-method`. It defaults to ``example.sources``
 Methods
 =======
 
-.. -save-to-disk-method:
+.. _make-source-string:
+
+make_source_string()
+--------------------
+
+Source.make_source_string()
+    Takes the data from the :ref:`source-object` and makes it a printable string 
+    for output to console or for saving to a file. The :ref:`save-to-disk` 
+    method uses this method as a basis for its file output.
+
+.. note::
+    The ``Name:`` field output by this method is not suitable for directly 
+    saving to a file without additional processing. When using this method to 
+    generate data for manually saving to disk, be sure to replace ``Name:`` with 
+    ``X-Repolib-Name:`` first.
+
+.. _save-to-disk:
 
 save_to_disk() 
 --------------
 
 Source.save_to_disk()
     Takes all of the current data saved in the :ref:`source-object` and writes 
-    it to the disk. It uses the 
+    it to the disk. It uses the current :ref:`filename` attribute as the storage 
+    location within ``/etc/apt/sources.list.d``. 
+
+
+.. _load-from-file:
+
+load_from_file()
+----------------
+
+Source.load_from_file(filename=None)
+    Loads the source from a file on disk. The location loaded depends on the 
+    :ref:`lff-filename` parameter's value, as described below:
+
+
+.. _lff-filename:
+
+filename
+^^^^^^^^
+
+The filename of the sources file to load from the disk. If ommitted, the method
+instead loads from the current :ref:`filename` attribute, otherwise the method 
+sets the :ref:`filename` attribute to the value of this argument. For example::
+
+    >>> source = Source()
+    >>> source.filename 
+    'example.sources'
+    >>> source.load_from_file(filename='google-chrome.sources')
+    >>> source.filename 
+    'google-chrome.sources'
+    >>> source_with_name = Source()
+    >>> source_with_name.filename = 'ppa-system76-pop.sources'
+    >>> source_with_name.load_from_file()
+    >>> source_with_name.filename
+    'ppa-system76-pop.sources'
+
+.. _set-source-enabled:
+
+set_source_enabled()
+--------------------
+
+Source.set_source_enabled(is_enabled)
+    This method can be used to quickly set the :ref:`source-object`.``types``
+    attribute. Since the ``types`` attribute is a list of 
+    :ref:`aptsourcetype-enum`s, this method can quickly set the type to either 
+    of these values without needing to use the Enum directly. The argument
+    :ref:`sse-is-enabled` is a boolean value.
+
+.. _sse-is-enabled:
+
+is_enabled
+^^^^^^^^^^
+
+If ``True``, the :ref:`source-object`.``types`` attribute is set to 
+``[:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]``. 
+Otherwise, it's set to ``[:ref:`aptsourcetype-enum`.BINARY]`` only.
+
