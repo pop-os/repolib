@@ -133,11 +133,11 @@ class Source():
             
         toprint  = "Name: {}\n".format(self.name)
         toprint += "Enabled: {}\n".format(self.enabled.value) 
-        toprint += "Types: {}\n".format(" ".join(self.get_types())) 
+        toprint += "Types: {}\n".format(" ".join(self._get_types())) 
         toprint += "URIs: {}\n".format(" ".join(self.uris)) 
         toprint += "Suites: {}\n".format(" ".join(self.suites)) 
         toprint += "Components: {}\n".format(" ".join(self.components)) 
-        toprint += "{}".format(self.get_options())
+        toprint += "{}".format(self._get_options())
         return toprint
     
     def set_enabled(self, is_enabled):
@@ -162,13 +162,13 @@ class Source():
         else:
             self.types = [util.AptSourceType.BINARY]
 
-    def get_options(self):
+    def _get_options(self):
         opt_str = ''
         for key in self.options:
             opt_str += '{key}: {values}\n'.format(key=key, values=' '.join(self.options[key]))
         return opt_str
     
-    def get_types(self):
+    def _get_types(self):
         types_s = []
         for i in self.types:
             types_s.append(i.value)
