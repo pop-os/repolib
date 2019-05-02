@@ -103,9 +103,9 @@ disk. This does not destroy the object, so that it may be further manipulated by
 the program.
 
 .. note::
-    While :ref:`source-object`s can be manipulated after using the 
+    While :ref:`source-object` data can be manipulated after using the 
     :ref:`save-to-disk` method, any subsequent changes will not be automatically 
-    written to the disk as well. You need to call the :ref:`save-to-disk` 
-    again in order to save further changes.
+    written to the disk as well. You need to call :ref:`save-to-disk` again in
+    order to save further changes.
 
 .. _source-object:

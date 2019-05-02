@@ -26,6 +26,27 @@ format sources, and instead only manages one-line sources.
 
 RepoLib is available under a BSD 2-Clause License. Full License below:
 
+.. contents:: Table of Contents
+   :local:
+
+.. toctree::
+    :maxdepth: 4
+    :caption: Developer Documentation
+
+    library/developer
+
+.. toctree::
+    :maxdepth: 1
+    :caption: RepoLib Documentation
+
+    installation
+
+.. toctree:: 
+    :maxdepth: 1
+    :caption: apt-manage Documentation
+
+    aptmanage/aptmanage
+
 |
 |
 |
@@ -56,23 +77,3 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.. contents:: Table of Contents
-   :local:
-
-.. toctree::
-    :maxdepth: 4
-    :caption: Developer Documentation
-
-    library/developer
-
-.. toctree::
-    :maxdepth: 1
-    :caption: RepoLib Documentation
-
-    installation
-
-.. toctree:: 
-    :maxdepth: 1
-    :caption: apt-manage Documentation
-
-    aptmanage/aptmanage
