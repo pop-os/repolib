@@ -33,6 +33,12 @@ sources_dir = '/etc/apt/sources.list.d'
 class RepoError(Exception):
     pass
 
+try:
+    import lsb_release
+    DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
+except ImportError:
+    raise RepoError("The system can't find version information!")
+
 class AptSourceType(Enum):
     BINARY = "deb"
     SOURCE = "deb-src"
