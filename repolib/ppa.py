@@ -45,12 +45,7 @@ from http.client import HTTPException
 from . import source
 from . import util
 
-try:
-    import lsb_release
-except ImportError:
-    raise util.RepoError("The system can't find version information!")
-
-DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
+DISTRO_CODENAME = util.DISTRO_CODENAME
 
 SKS_KEYSERVER = 'https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&exact=on&search=0x%s'
 # maintained until 2015
