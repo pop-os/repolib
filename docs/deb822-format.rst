@@ -68,7 +68,7 @@ for extensions to add additional schemas on certain configurations. Thus,
 supporting modern, optioned :ref:`one-line-format` source entries requires use 
 of either regular expressions or multi-level parsing in order to adequately 
 parse the entry. Further compounding this support is the fact that 
-:dir:`one-line-format` entries can have one or more components, preventing 
+:ref:`one-line-format` entries can have one or more components, preventing 
 parsing of sources backwards from the end towards the front. 
 
 Consider the following examples::
