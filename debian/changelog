@@ -1,3 +1,10 @@
+repolib (1.1.0) disco; urgency=medium
+
+  * Improved deb-line parser to get better reliability
+  * Throws an exception when given an unsupported URI via DebLine()
+
+ -- Ian Santopietro <isantop@gmail.com>  Mon, 06 May 2019 19:04:21 -0600
+
 repolib (1.0.0) disco; urgency=medium
 
   * Minor modifications to API for Repoman
