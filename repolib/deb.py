@@ -28,8 +28,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 This is a library for parsing deb lines into deb822-format data.
 """
 
+import re
+
 from . import source
 from . import util
+
+options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
+uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
 class DebLine(source.Source):
     
@@ -43,26 +48,35 @@ class DebLine(source.Source):
         self.suites = []
         self.components = []
         self.options = {}
+        self.has_options = False
         
         self.deb_line = line
+        if 'cdrom:' in self.deb_line:
+            raise util.RepoError('RepoLib does not support \'cdrom:\' URIs')
         deb_list = self._parse_debline(self.deb_line)
 
         self._validate(deb_list[0])
+        # if len(deb_list) == 1:
+        #     ex_deb_list = deb_list[0].split()
+        #     self._set_type(ex_deb_list[0])
+        #     self._set_uris(ex_deb_list[1])
+        #     self._set_suites(ex_deb_list[2])
+        #     self._set_comps(ex_deb_list[3:])
+        #     self.options = {}
+        # else: 
+        #     self._set_type(deb_list[0])
+        #     ex_deb_list = deb_list[2].split()
+        #     self._set_uris(ex_deb_list[0])
+        #     self._set_suites(ex_deb_list[1])
+        #     self._set_comps(ex_deb_list[2:])
+        #     self._set_options(deb_list[1])
 
-        if len(deb_list) == 1:
-            ex_deb_list = deb_list[0].split()
-            self._set_type(ex_deb_list[0])
-            self._set_uris(ex_deb_list[1])
-            self._set_suites(ex_deb_list[2])
-            self._set_comps(ex_deb_list[3:])
-            self.options = {}
-        else: 
-            self._set_type(deb_list[0])
-            ex_deb_list = deb_list[2].split()
-            self._set_uris(ex_deb_list[0])
-            self._set_suites(ex_deb_list[1])
-            self._set_comps(ex_deb_list[2:])
-            self._set_options(deb_list[1])
+        self._set_type(deb_list[0])
+        self._set_uris(deb_list[1])
+        self._set_suites(deb_list[2])
+        self._set_comps(deb_list[3:-1])
+        if self.has_options:
+            self._set_options(deb_list[-1].strip().strip('[]'))
         
         self.filename = self._make_name(prefix="deb-")
     
@@ -76,17 +90,27 @@ class DebLine(source.Source):
         return name
 
     def _parse_debline(self, line):
-        line = line.replace(']', '[')
-        line = line.split('[')
-        deb_list = []
-        for i in line:
-            deb_list.append(i.strip())
+        for uri in uri_re.findall(line):
+            line_nouri = line.replace(uri, '')
+        try:
+            options = options_re.search(line_nouri).group()
+            line = line.replace(options, ' ')
+            deb_list = line.split()
+            deb_list += [options]
+            self.has_options = True
+        except AttributeError:
+            deb_list = line.split()
+        
         return deb_list
     
     def _validate(self, valid):
         """
         Ensure we have a valid debian repositor line.
         """
+        if valid.startswith('#'):
+            self.set_enabled(False)
+            valid = valid.replace('#', '')
+        valid = valid.strip()
         if not valid.startswith('deb'):
             raise util.RepoError(
                 'The line %s does not appear to be a valid repo' % self.deb_line
