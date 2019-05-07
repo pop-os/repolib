@@ -52,25 +52,13 @@ class DebLine(source.Source):
         
         self.deb_line = line
         if 'cdrom:' in self.deb_line:
-            raise util.RepoError('RepoLib does not support \'cdrom:\' URIs')
+            raise util.RepoError(
+                'RepoLib does not support \'cdrom:\' URIs via this DebLine Class. '
+                'Please use a Source() class to add these sources'
+            )
         deb_list = self._parse_debline(self.deb_line)
 
         self._validate(deb_list[0])
-        # if len(deb_list) == 1:
-        #     ex_deb_list = deb_list[0].split()
-        #     self._set_type(ex_deb_list[0])
-        #     self._set_uris(ex_deb_list[1])
-        #     self._set_suites(ex_deb_list[2])
-        #     self._set_comps(ex_deb_list[3:])
-        #     self.options = {}
-        # else: 
-        #     self._set_type(deb_list[0])
-        #     ex_deb_list = deb_list[2].split()
-        #     self._set_uris(ex_deb_list[0])
-        #     self._set_suites(ex_deb_list[1])
-        #     self._set_comps(ex_deb_list[2:])
-        #     self._set_options(deb_list[1])
-
         self._set_type(deb_list[0])
         self._set_uris(deb_list[1])
         self._set_suites(deb_list[2])
