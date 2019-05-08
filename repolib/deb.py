@@ -48,7 +48,6 @@ class DebLine(source.Source):
         self.suites = []
         self.components = []
         self.options = {}
-        self.has_options = False
         
         self.deb_line = line
         if 'cdrom:' in self.deb_line:
@@ -56,17 +55,10 @@ class DebLine(source.Source):
                 'RepoLib does not support \'cdrom:\' URIs via this DebLine Class. '
                 'Please use a Source() class to add these sources'
             )
-        deb_list = self._parse_debline(self.deb_line)
-
-        self._validate(deb_list[0])
-        self._set_type(deb_list[0])
-        self._set_uris(deb_list[1])
-        self._set_suites(deb_list[2])
-        self._set_comps(deb_list[3:-1])
-        if self.has_options:
-            self._set_options(deb_list[-1].strip().strip('[]'))
-        
+        self._parse_debline(self.deb_line)
         self.filename = self._make_name(prefix="deb-")
+        self.name = self.name.replace('.sources', '')
+        
     
     def _make_name(self, prefix=''):
         uri = self.uris[0].replace('/', ' ')
@@ -78,22 +70,46 @@ class DebLine(source.Source):
         return name
 
     def _parse_debline(self, line):
-        for uri in uri_re.findall(line):
-            line_nouri = line.replace(uri, '')
-        try:
-            options = options_re.search(line_nouri).group()
-            line = line.replace(options, ' ')
-            deb_list = line.split()
-            deb_list += [options]
-            self.has_options = True
-        except AttributeError:
-            deb_list = line.split()
+        # Enabled vs. Disabled
+        if line.startswith('#'):
+            self.set_enabled(False)
+            line = line.replace('#', '')
+            line = line.strip()
         
-        return deb_list
+        # URI parsing
+        for uri in uri_re.finditer(line):
+            self.uris = [uri[0]]
+            line_uri = line.replace(uri[0], '')
+        
+        # Options parsing
+        try:
+            options = options_re.search(line_uri).group()
+            self._set_options(options.strip())
+            line_uri = line_uri.replace(options, '')
+            print(line_uri)
+        except AttributeError:
+            pass
+        
+        deb_list = line_uri.split()
+        
+        # Type Parsing
+        self.types = [util.AptSourceType.BINARY]
+        if deb_list[0] == 'deb-src':
+            self.types = [util.AptSourceType.SOURCE]
+
+        # Suite Parsing
+        self.suites = [deb_list[1]]
+
+        # Components parsing
+        for item in deb_list[2:]:
+            if not item.startswith('#'):
+                self.components.append(item)
+            else:
+                break
     
     def _validate(self, valid):
         """
-        Ensure we have a valid debian repositor line.
+        Ensure we have a valid debian repository line.
         """
         if valid.startswith('#'):
             self.set_enabled(False)
@@ -110,41 +126,22 @@ class DebLine(source.Source):
         """
         self.types = [util.AptSourceType(deb_type)]
     
-    def _set_uris(self, uri):
-        """ 
-        Set the URIs of the repository.
-        """
-        self.uris.append(uri)
-    
-    def _set_suites(self, suite):
-        """
-        Sets the suite of the repository.
-
-        Since single-line repos can only define a single suite, we're only going
-        to apply our single one. Additional suites can be defined afterward.
-        """
-        self.suites.append(suite)
-    
-    def _set_comps(self, comp_list):
-        """
-        Sets the components of the repository.
-
-        Since single-line repos may specify multiple componentss, we need to iterate 
-        through a list of provided comps and add each one.
-        """        
-        for comp in comp_list:
-            self.components.append(comp)
-
-    def _set_options(self, options_str):
+    def _set_options(self, options):
         """
         Set the options.
         """
+        # Split the option string into a list of chars, so that we can replace
+        # the first and last characters ([ and ]) with spaces.
+        op = list(options)
+        op[0] = " "
+        op[-1] = " "
+        options = "".join(op).strip()
         
         for replacement in self.options_d:
-                options_str = options_str.replace(replacement, self.options_d[replacement])
+                options = options.replace(replacement, self.options_d[replacement])
         
-        options_str = options_str.replace('=', ',')
-        options_list = options_str.split()
+        options = options.replace('=', ',')
+        options_list = options.split()
         
         for i in options_list:
             option = i.split(',')
