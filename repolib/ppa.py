@@ -148,4 +148,4 @@ def add_key(fingerprint):
     apt_key_cmd = "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys".split()
     # apt_key_cmd.append(ppa_info['signing_key_fingerprint'])
     apt_key_cmd.append(fingerprint)
-    get_key = subprocess.run(apt_key_cmd)
+    subprocess.run(apt_key_cmd)
