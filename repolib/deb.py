@@ -57,7 +57,7 @@ class DebLine(source.Source):
             )
         self._parse_debline(self.deb_line)
         self.filename = self._make_name(prefix="deb-")
-        self.name = self.name.replace('.sources', '')
+        self.name = self.filename.replace('.sources', '')
         
     
     def _make_name(self, prefix=''):
@@ -73,7 +73,7 @@ class DebLine(source.Source):
         # Enabled vs. Disabled
         if line.startswith('#'):
             self.set_enabled(False)
-            line = line.replace('#', '')
+            line = line.replace('#', '', 1)
             line = line.strip()
         
         # URI parsing
@@ -86,7 +86,6 @@ class DebLine(source.Source):
             options = options_re.search(line_uri).group()
             self._set_options(options.strip())
             line_uri = line_uri.replace(options, '')
-            print(line_uri)
         except AttributeError:
             pass
         

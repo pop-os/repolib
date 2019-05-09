@@ -76,20 +76,6 @@ class DebRelease(Command):
     def run(self):
         do_deb_release(self.version)
 
-class Test(Command):
-    """Basic sanity checks on our code."""
-    description = 'Run unit tests.'
-    user_options = [('none', None, 'No Options')]
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        run_pytest()
-
 setup(
     name = 'repolib',
     version = version['VERSION'],
@@ -102,7 +88,7 @@ setup(
     tests_require = ['pytest'],
     license = 'BSD-2',
     packages=['repolib'],
-    cmdclass={'release': DebRelease, 'test': Test},
+    cmdclass={'release': DebRelease},
     scripts=['bin/apt-manage'],
     data_files=[
         ('share/bash-completion/completions', ['data/apt-manage']),
