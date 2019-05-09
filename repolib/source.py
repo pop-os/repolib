@@ -125,7 +125,7 @@ class Source():
 
         with open(full_path, 'w') as source_file:
             source_file.write(string_source)
-    
+            
     def make_source_string(self):
         """Makes a string of the source."""
         if self.name == '':
