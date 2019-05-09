@@ -56,8 +56,11 @@ def do_deb_release(vers):
     subprocess.run(['dch', '-v', vers])
     subprocess.run(['dch', '-r','""'])
 
+def run_pytest():
+    subprocess.run(['pytest-3'])
+
 class DebRelease(Command):
-    """Basic sanity checks on our code."""
+    """Update Debian Changelog with latest version in code."""
     description = 'Release a version to the debian packaging.'
 
     user_options = [
@@ -73,6 +76,20 @@ class DebRelease(Command):
     def run(self):
         do_deb_release(self.version)
 
+class Test(Command):
+    """Basic sanity checks on our code."""
+    description = 'Run unit tests.'
+    user_options = [('none', None, 'No Options')]
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        run_pytest()
+
 setup(
     name = 'repolib',
     version = version['VERSION'],
@@ -82,9 +99,10 @@ setup(
     description = 'Easily manage software sources',
     download_url = 'https://github.com/isantop/repolib/releases',
     long_description = long_description,
+    tests_require = ['pytest'],
     license = 'BSD-2',
     packages=['repolib'],
-    cmdclass={'release': DebRelease},
+    cmdclass={'release': DebRelease, 'test': Test},
     scripts=['bin/apt-manage'],
     data_files=[
         ('share/bash-completion/completions', ['data/apt-manage']),
