@@ -176,9 +176,6 @@ class Source():
 
 class SystemSource(Source):
 
-    def __init__(self,
-                 enabled=True, types=[],
-                 uris=[''], suites=[''], components=[''], options={}, 
-                 filename='system.sources'):
+    def __init__(self, filename='system.sources'):
         super().__init__(filename=filename)
         self.load_from_file()
