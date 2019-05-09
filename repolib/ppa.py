@@ -62,40 +62,36 @@ class PPALine(source.Source):
     
     def __init__(self, line, fetch_data=True):
         super().__init__()
-        self.ppa_line = line
-        if fetch_data:
-            self.load_from_ppa(ppa_line=self.ppa_line)
+        self.ppa_line = line    
+        if not self.ppa_line.startswith('ppa:'):
+            raise util.RepoError("The PPA %s is malformed!" % self.ppa_line)
+
+        self.load_from_ppa(fetch_data=fetch_data)
     
-    def load_from_ppa(self, ppa_line=None):
-        if ppa_line:
-            self.ppa_line = ppa_line
+    def load_from_ppa(self, fetch_data=True):
         raw_ppa = self.ppa_line.replace('ppa:','').split('/')
         ppa_owner = raw_ppa[0]
         ppa_name = raw_ppa[1]
 
-        self.ppa_info = get_info_from_lp(ppa_owner, ppa_name)
-        self.name = self.ppa_info['displayname']
         self.enabled = util.AptSourceEnabled.TRUE
         self.types = []
         self.uris = []
         self.suites = []
         self.components = []
         self.options = {}
-        self.ppa_line = ppa_line
-
         
-        if not ppa_line.startswith('ppa:'):
-            raise util.RepoError("The PPA %s is malformed!" % ppa_line)
-        
-        ppa_info = ppa_line.split(":")
+        ppa_info = self.ppa_line.split(":")
         ppa_uri = 'http://ppa.launchpad.net/{}/ubuntu'.format(ppa_info[1])
         self.set_source_enabled(False)
-        self.uris.append(ppa_uri)
-        self.suites.append(DISTRO_CODENAME)
-        self.components.append('main')
+        self.uris = [ppa_uri]
+        self.suites = [DISTRO_CODENAME]
+        self.components = ['main']
         ppa_name = ppa_info[1].split('/')
-        name = 'ppa-{}'.format('-'.join(ppa_name))
-        self.filename = '{}.sources'.format(name)
+        self.name = 'ppa-{}'.format('-'.join(ppa_name))
+        self.filename = '{}.sources'.format(self.name)
+        if fetch_data:
+            self.ppa_info = get_info_from_lp(ppa_owner, ppa_name[1])
+            self.name = self.ppa_info['displayname']
     
     def save_to_disk(self):
         """
@@ -128,8 +124,7 @@ def _get_https_content_py3(lp_url, accept_json, retry_delays=None):
         trynum += 1
         try:
             request = urllib.request.Request(str(lp_url), headers=headers)
-            lp_page = urllib.request.urlopen(request,
-                                             cafile=LAUNCHPAD_PPA_CERT)
+            lp_page = urllib.request.urlopen(request)
             return lp_page.read().decode("utf-8", "strict")
         except (HTTPException, URLError) as e:
             err = util.RepoError(
