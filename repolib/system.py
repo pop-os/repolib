@@ -27,7 +27,56 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 from . import source
 
+class SystemSourceException(Exception):
+    
+    def __init__(self, msg=None, code=1):
+        """Exception with the system sources
+
+        Arguments: 
+            msg (str): Human-readable message describing the error that threw the 
+                exception.
+            code (:obj:`int`, optional, default=1): Exception error code.
+    """
+        self.msg = msg
+        self.code = code
+
 class SystemSource(source.Source):
 
-    def __init__(self):
-        pass
+    def __init__(self,
+                 name='System Sources', enabled=True, types=[],
+                 uris=[], suites=[], components=[], options={},
+                 filename='system.sources'):
+        """ Constructor for System Sources
+
+        Loads a source object for the System Sources. These are located (by 
+        default) in /etc/apt/sources.list.d/system.sources. If your distro uses
+        a different location, please patch this in your packaging.
+        """
+        super().__init__()
+        self.load_from_file(filename=filename)
+    
+    def set_component_enabled(self, component='main', enabled=True):
+        """ Enables or disabled a repo component (e.g. 'ubuntu')
+
+        Keyword Arguments:
+            component -- The component to (en|dis)able (default: main)
+            ennabled -- Whether COMPONENT is enabled (default: True)
+        """
+        if not enabled:
+            if component not in self.components:
+                self.components.remove(component)
+                if len(self.components > 0):
+                    self.save_to_disk()
+                else:
+                    self.set_enabled(False)
+                    self.save_to_disk()
+                return component
+        
+        else:
+            self.set_enabled(True)
+            if component not in self.components:
+                self.components.append(component)
+
+        raise SystemSourceException(msg=f"Couldn't toggle component {component}")
+
+    def enable_suite(self, suite):
