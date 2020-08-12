@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019, Ian Santopietro
+Copyright (c) 2019-2020, Ian Santopietro
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,14 @@ options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
 class DebLine(source.Source):
+
+    outoptions_d = {
+        'Architectures': 'arch',
+        'Languages': 'lang',
+        'Targets': 'target',
+        'PDiffs': 'pdiffs',
+        'By-Hash': 'by-hash'
+    }
     
     def __init__(self, line):
         super().__init__()
@@ -68,6 +76,31 @@ class DebLine(source.Source):
             '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
         )
         return name
+    
+    def _make_debline(self):
+        line = ''
+
+        if len(self.uris) > 1 or len(self.suites) > 1:
+            return False
+        
+        if self.enabled == util.AptSourceEnabled.FALSE:
+            line += '# '
+        
+        line += f'{self.types[0].get_string()} '
+        
+        if self.options:
+            line += '['
+            line += self._get_options()
+            line = line.strip()
+            line += '] '
+
+        line += f'{self.uris[0]} '
+        line += f'{self.suites[0]} '
+        
+        for component in self.components:
+            line += f'{component} '
+        
+        return line.strip()
 
     def _parse_debline(self, line):
         # Enabled vs. Disabled
@@ -118,6 +151,12 @@ class DebLine(source.Source):
             raise util.RepoError(
                 'The line %s does not appear to be a valid repo' % self.deb_line
             )
+    
+    def _get_options(self):
+        opt_str = ''
+        for key in self.options:
+            opt_str += '{key}={values} '.format(key=self.outoptions_d[key], values=','.join(self.options[key]))
+        return opt_str
 
     def _set_type(self, deb_type):
         """
