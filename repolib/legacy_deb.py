@@ -37,22 +37,27 @@ options_re = compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = compile(r'\w+:(\/?\/?)[^\s]+')
 
 class LegacyDebSource():
+    """Legacy deb sources
+
+    Because Legacy Deb format entries have limitations on how many URIs or 
+    suites they can contain, many legacy entry files use multiple sources to 
+    configure multiple URIs, suites, or types. A common example is to have a 
+    `deb` entry and an otherwise identical `deb-src` entry. To make this 
+    simpler, we treat legacy sources as a "meta source" and store the individual
+    lines in a list. 
+
+    Keyword Arguments:
+        name (str): The name of this source
+        filename (str): The name of the source file on disk
+    """
 
     def __init__(self, name='', filename='example.list'):
-        """
-        Constructor for legacy deb sources.
-
-        Keyword Arguments:
-            name (str): The name of this source
-            filename (str): The name of the source file on disk
-        """
         self.name = name
         self.filename = filename
         self.sources = []
 
     def load_from_file(self, filename=None):
-        """
-        Loads the source from a file on disk.
+        """ Loads the source from a file on disk.
 
         Keyword arguments:
           filename -- STR, Containing the path to the file. (default: self.filename)
@@ -71,6 +76,7 @@ class LegacyDebSource():
                     self.sources.append(deb_src)
     
     def save_to_disk(self):
+        """ Save the source to the disk. """
         full_path = util.sources_dir / self.filename
 
         source_output = self.make_deblines()
@@ -79,6 +85,13 @@ class LegacyDebSource():
             source_file.write(source_output)
     
     def make_deblines(self):
+        """ Create a string representation of the enties as they would be saved.
+
+        This is useful for testing, and is used by the save_to_disk() method.
+
+        Returns:
+            A str with the output entries.
+        """
         toprint = '## Added/managed by repolib ##\n'
         for source in self.sources:
             toprint += f'{source._make_debline()}\n'
@@ -86,9 +99,7 @@ class LegacyDebSource():
         return toprint
 
     def _validate(self, valid):
-        """
-        Ensure we have a valid debian repository line.
-        """
+        """ Ensure we have a valid debian repository line. """
         valid = valid.strip()
         if valid.startswith('#'):
             valid = valid.replace('#', '')
