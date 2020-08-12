@@ -94,7 +94,7 @@ class LegacyDebSource():
         """
         toprint = '## Added/managed by repolib ##\n'
         for source in self.sources:
-            toprint += f'{source._make_debline()}\n'
+            toprint += f'{source.make_debline()}\n'
         
         return toprint
 
