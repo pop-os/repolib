@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019, Ian Santopietro
+Copyright (c) 2019-2020, Ian Santopietro
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
