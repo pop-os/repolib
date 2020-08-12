@@ -22,7 +22,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'RepoLib'
-copyright = '2019, Ian Santopietro'
+copyright = '2019-2020, Ian Santopietro'
 author = 'Ian Santopietro'
 
 # The short X.Y version

@@ -6,7 +6,7 @@ repolib PPA Signing Key Support
 From software-properties
 
 Copyright (c) 2004-2009 Canonical Ltd.
-          (c) 2019 Ian Santopietro <isantop@gmail.com>
+          (c) 2019-2020 Ian Santopietro <isantop@gmail.com>
 
 Author: Michael Vogt <mvo@debian.org>
         Ian Santopietro <isantop@gmail.com>
