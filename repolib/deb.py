@@ -36,6 +36,16 @@ from . import util
 options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
+class DebLineSourceException(Exception):
+    
+    def __init__(self, code=1):
+        """Exception with a debline-format source
+
+        Arguments: 
+            code (:obj:`int`, optional, default=1): Exception error code.
+    """
+        self.code = code
+
 class DebLine(source.Source):
 
     outoptions_d = {
@@ -76,8 +86,21 @@ class DebLine(source.Source):
         """
         line = ''
 
-        if len(self.uris) > 1 or len(self.suites) > 1:
-            return False
+        if len(self.uris) > 1:
+            raise DebLineSourceException(
+                'The source has too many URIs. One-line format sources support '
+                'one URI only.'
+            )
+        if len(self.suites) > 1:
+            raise DebLineSourceException(
+                'The source has too many suites. One-line format sources support '
+                'one suite only.'
+            )
+        if len(self.uris) > 1:
+            raise DebLineSourceException(
+                'The source has too many types. One-line format sources support '
+                'one type only.'
+            )
         
         if self.enabled == util.AptSourceEnabled.FALSE:
             line += '# '
