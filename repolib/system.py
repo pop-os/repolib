@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019, Ian Santopietro
+Copyright (c) 2019-2020, Ian Santopietro
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 from . import source
+from . import util 
 
 class SystemSourceException(Exception):
     
@@ -56,10 +57,10 @@ class SystemSource(source.Source):
         self.load_from_file(filename=filename)
     
     def set_component_enabled(self, component='main', enabled=True):
-        """ Enables or disabled a repo component (e.g. 'ubuntu')
+        """ Enables or disabled a repo component (e.g. 'main')
 
         Keyword Arguments:
-            component -- The component to (en|dis)able (default: main)
+            component -- The component to (en|dis)able (default: "main")
             ennabled -- Whether COMPONENT is enabled (default: True)
         """
         if not enabled:
@@ -77,6 +78,34 @@ class SystemSource(source.Source):
             if component not in self.components:
                 self.components.append(component)
 
-        raise SystemSourceException(msg=f"Couldn't toggle component {component}")
+        raise SystemSourceException(
+            msg=f"Couldn't toggle component: {component} to {enabled}"
+        )
 
-    def enable_suite(self, suite):
+    def set_suite_enabled(self, suite=util.DISTRO_CODENAME, enabled=True):
+
+        """ Enables or disabled a repo suite (e.g. 'main')
+
+        Keyword Arguments:
+            suite -- The suite to (en|dis)able (default: main)
+            ennabled -- Whether COMPONENT is enabled (default: True)
+        """
+        if not enabled:
+            if suite not in self.suites:
+                self.suites.remove(suite)
+                if len(self.suites > 0):
+                    self.save_to_disk()
+                else:
+                    self.set_enabled(False)
+                    self.save_to_disk()
+                return suite
+        
+        else:
+            self.set_enabled(True)
+            if suite not in self.suites:
+                self.suites.append(suite)
+
+        raise SystemSourceException(
+            msg=f"Couldn't toggle suite: {suite} to {enabled}"
+        )
+    
