@@ -67,17 +67,13 @@ class DebLine(source.Source):
         self.filename = self._make_name(prefix="deb-")
         self.name = self.filename.replace('.sources', '')
         
-    
-    def _make_name(self, prefix=''):
-        uri = self.uris[0].replace('/', ' ')
-        uri_list = uri.split()
-        name = '{}{}.sources'.format(
-            prefix,
-            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
-        )
-        return name
-    
-    def _make_debline(self):
+    def make_debline(self):
+        """ Output a one-line entry for this source.
+
+        Note that this is expected to fail if somehow there is more than one 
+        type, URI, or suite, because this format does not support multiples of 
+        these items.
+        """
         line = ''
 
         if len(self.uris) > 1 or len(self.suites) > 1:
@@ -101,6 +97,15 @@ class DebLine(source.Source):
             line += f'{component} '
         
         return line.strip()
+
+    def _make_name(self, prefix=''):
+        uri = self.uris[0].replace('/', ' ')
+        uri_list = uri.split()
+        name = '{}{}.sources'.format(
+            prefix,
+            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+        )
+        return name
 
     def _parse_debline(self, line):
         # Enabled vs. Disabled
