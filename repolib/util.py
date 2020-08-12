@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019, Ian Santopietro
+Copyright (c) 2019-2020, Ian Santopietro
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from enum import Enum
+from pathlib import Path
 
-sources_dir = '/etc/apt/sources.list.d'
+sources_dir = Path('/etc/apt/sources.list.d')
 
 class RepoError(Exception):
     pass
@@ -51,7 +52,7 @@ class AptSourceEnabled(Enum):
     FALSE = 'no'
 
     def get_bool(self):
-        if self.value is "yes":
+        if self.value == "yes":
             return True
         else:
             return False
