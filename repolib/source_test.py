@@ -99,18 +99,3 @@ class SourceTestCase(unittest.TestCase):
     
     def test_get_types(self):
         self.assertEqual(self.source._get_types(), ['deb', 'deb-src'])
-    
-    def test_system_source(self):
-        try:
-            system_source = source.SystemSource()
-        except FileNotFoundError:
-            raise unittest.SkipTest(
-                'System doesn\'t have testable system sources.'
-            )
-
-        self.assertEqual(system_source.filename, 'system.sources')
-        self.assertNotEqual(system_source.uris, [])
-        self.assertNotEqual(system_source.suites, [])
-        self.assertNotEqual(system_source.components, [])
-        self.assertNotEqual(system_source.types, [])
-
