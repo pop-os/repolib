@@ -1,3 +1,9 @@
+repolib (1.1.0) eoan; urgency=medium
+
+  * Repolib now supports operating on traditional .list files
+
+ -- Ian Santopietro <ian@system76.com>  Thu, 20 Aug 2020 17:13:05 -0600
+
 repolib (1.0.2) disco; urgency=medium
 
   * Reworked some minor class features for better reliability
