@@ -35,4 +35,4 @@ from .util import AptSourceEnabled, AptSourceType, RepoError
 from . import util
 from . import __version__
 
-version = __version__.VERSION
+version = __version__.__version__
