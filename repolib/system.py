@@ -64,9 +64,9 @@ class SystemSource(source.Source):
             ennabled -- Whether COMPONENT is enabled (default: True)
         """
         if not enabled:
-            if component not in self.components:
+            if component in self.components:
                 self.components.remove(component)
-                if len(self.components > 0):
+                if len(self.components) > 0:
                     self.save_to_disk()
                 else:
                     self.set_enabled(False)
@@ -77,6 +77,7 @@ class SystemSource(source.Source):
             self.set_enabled(True)
             if component not in self.components:
                 self.components.append(component)
+                return component
 
         raise SystemSourceException(
             msg=f"Couldn't toggle component: {component} to {enabled}"
@@ -91,9 +92,9 @@ class SystemSource(source.Source):
             ennabled -- Whether COMPONENT is enabled (default: True)
         """
         if not enabled:
-            if suite not in self.suites:
+            if suite in self.suites:
                 self.suites.remove(suite)
-                if len(self.suites > 0):
+                if len(self.suites) > 0:
                     self.save_to_disk()
                 else:
                     self.set_enabled(False)
@@ -104,6 +105,7 @@ class SystemSource(source.Source):
             self.set_enabled(True)
             if suite not in self.suites:
                 self.suites.append(suite)
+                return suite
 
         raise SystemSourceException(
             msg=f"Couldn't toggle suite: {suite} to {enabled}"
