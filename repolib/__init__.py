@@ -26,7 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from .source import Source, SystemSource
+from .source import Source
+from .system import SystemSource
+from .legacy_deb import LegacyDebSource
 from .deb import DebLine
 from .ppa import PPALine
 from .util import AptSourceEnabled, AptSourceType, RepoError
