@@ -88,14 +88,3 @@ class SystemTestCase(unittest.TestCase):
         self.source.set_source_enabled(False)
 
         self.assertEqual(self.source.types, expected)
-    
-    def test_make_source_string(self):
-
-        expected = (
-            'Name: Pop!_OS Sources\n'
-            'Enabled: no\n'
-            'Types: deb\n'
-            'URIs: http://apt.pop-os.org/ubuntu http://archive.ubuntu.com/ubuntu\n'
-            'Suites: focal focal-updates focal-test\n'
-            'Components: main universe multiverse test\n'
-        )

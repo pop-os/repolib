@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import unittest
 from pathlib import Path
 
-from . import deb
 from . import legacy_deb
 from . import util
 
