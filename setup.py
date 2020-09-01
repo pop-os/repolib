@@ -43,7 +43,7 @@ classifiers = [
     'Intended Audience :: System Administrators',
     'Intended Audience :: End Users/Desktop',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: BSD License',
+    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Natural Language :: English',
     'Operating System :: POSIX :: Linux',
     'Programming Language :: Python :: 3',
