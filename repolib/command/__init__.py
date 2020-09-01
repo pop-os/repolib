@@ -19,9 +19,10 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
-This subpackage contains tools for use in developing CLI applications using 
+This subpackage contains tools for use in developing CLI applications using
 repolib. apt-manage uses this library.
 """
+#pylint: disable=invalid-name
 
 from . import add
 from . import argparser

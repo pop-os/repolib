@@ -87,14 +87,15 @@ class Source(deb822.Deb822):
         with open(full_path, mode='r') as source_file:
             super().__init__(source_file)
 
-    def save_to_disk(self):
+    def save_to_disk(self, save=True):
         """ Saves the source to disk."""
         if not self.filename:
             raise SourceError('No filename to save to specified')
         full_path = util.get_sources_dir() / self.filename
 
-        with open(full_path, mode='w') as sources_file:
-            sources_file.write(self.dump())
+        if save:
+            with open(full_path, mode='w') as sources_file:
+                sources_file.write(self.dump())
 
     def make_source_string(self):
         """ Makes a printable string of the source.
