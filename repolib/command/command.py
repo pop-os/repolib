@@ -1,7 +1,6 @@
-#!/usr/bin/python3
 
 """
-Copyright (c) 2019-2020, Ian Santopietro
+Copyright (c) 2020, Ian Santopietro
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -24,15 +23,29 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Command line application helper class.
 """
 
-from .source import Source
-from .system import SystemSource
-from .legacy_deb import LegacyDebSource
-from .deb import DebLine
-from .ppa import PPALine
-from .util import AptSourceEnabled, AptSourceType, RepoError
-from . import util
-from . import __version__
+class Command:
+    """ CLI helper class for developing command line applications."""
 
-VERSION = __version__.__version__
+    def __init__(self, log, args, parser):
+        self.log = log
+        self.args = args
+        self.parser = parser
+    
+    def run(self):
+        """ The initial base for running the command. 
+        
+        This needs to have a standardized format, argument list, and return 
+        either True or False depending on whether the command was successful or
+        not. 
+
+        Returns:
+            True if the command succeeded, otherwise False.
+        """
+
+        # Since this is just the base, it should always return True (because
+        # you shouldn't fail at doing nothing).
+        return True

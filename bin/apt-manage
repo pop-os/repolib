@@ -25,484 +25,69 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+#pylint: disable=invalid-name
+# Pylint will complain about our module name not being snake_case, however this
+# is a command rather than a python module, and thus this is correct anyway.
 
 import argparse
-import glob
 import logging
 import os
-import shutil
+import sys
 
 import repolib
+from repolib import command
 
 SOURCES_DIR = '/etc/apt/sources.list.d'
 
-def system_convert(log):
-    print(
-        "This will convert your system software sources from the old one-line "
-        "format to the newer DEB822 format. As a precaution, your old "
-        "sources.list file will be backed up  to /etc/apt/sources.list.save \n\n"
-    )
-    do_conversion = input('Do you want to proceed? (Y/n): ').lower()
-    if do_conversion == '':
-        do_conversion = 'y'
-    log.debug('Got response: %s' % do_conversion)
-    
-    # Exit if the user doesn't say yes
-    if do_conversion[0] != 'y':
-        return
-    
-    system_source = repolib.Source(filename='system.sources')
-    system_source.name="System Sources"
-    log.info(system_source.make_source_string())
-
-    # Back up old sources
-    try:
-        shutil.copyfile('/etc/apt/sources.list', '/etc/apt/sources.list.save')
-    except:
-        log.error('Couldn\'t back up old sources. Are you root?')
-    
-    do_pop = False
-    
-    with open('/etc/apt/sources.list', 'r') as sources_list:
-        for line in sources_list:
-            if line.startswith('deb '):
-                deb_src = repolib.DebLine(line)
-                for uri in deb_src.uris:
-                    if not uri in system_source.uris:
-                        if 'apt.pop-os.org/proprietary' in uri:
-                            uri = ''
-                            do_pop = True
-                        # We don't need to add a separate repo for -security
-                        if 'security.ubuntu.com/ubuntu' in uri:
-                            uri = ''
-                        system_source.uris.append(uri)
-                        log.debug(system_source.uris)
-                for suite in deb_src.suites:
-                    if not suite in system_source.suites:
-                        system_source.suites.append(suite)
-                for comp in deb_src.components:
-                    if not comp in system_source.components:
-                        system_source.components.append(comp)
-            elif line.startswith('deb-src '):
-                system_source.set_source_enabled(True)
-    
-    if do_pop:
-        print('Pop!_OS Apps repository found, adding seperately...')
-        pop_src = repolib.Source(
-            name="Pop!_OS Apps", enabled=True, 
-            types=['deb'], 
-            uris=['http://apt.pop-os.org/proprietary'], 
-            suites=[repolib.ppa.DISTRO_CODENAME], components=['main'],
-            options={}, filename='pop_OS-apps.sources'
-        )
-        pop_src.save_to_disk()
-    
-    print('Converted System sources:\n{}'.format(system_source.make_source_string()))
-    accept_conv = input('Is this okay? (Y/n): ').lower()
-    if accept_conv == '':
-        accept_conv = 'y'
-    
-    if accept_conv == 'y':
-        system_source.save_to_disk()
-
-        new_sources_list = ''
-        with open('/etc/apt/sources.list', 'r') as sources_list:
-            for line in sources_list:
-                line = '# {}'.format(line)
-                new_sources_list += line
-        with open('/etc/apt/sources.list', 'w') as sources_list:
-            sources_list.write(new_sources_list)
-        print('System Conversion Complete!')
-
-def third_party_convert(log):
-    print(
-        'This will convert your software sources from the old one-line format '
-        'to the new DEB822 format. As a precaution, your old sources will be '
-        'backed up as .save files in /etc/apt/sources.list.d\n'
-    )
-    do_conversion = input('Convert third-party sources? (Y/n): ').lower()
-
-    if do_conversion == '':
-        do_conversion = 'y'
-    log.debug('Got response: %s' % do_conversion)
-
-    if do_conversion[0] != 'y':
-        return
-    
-    list_files = glob.glob('/etc/apt/sources.list.d/*.list')
-    # Back up old sources
-    try:
-        for list_file in list_files:
-            shutil.copyfile(
-                list_file, '{}.save'.format(list_file)
-            )
-    except:
-        log.error('Couldn\'t back up old sources. Are you root?')
-    
-    for list_file in list_files:
-        deb_src = repolib.Source()
-        deb_src.uris = []
-        deb_src.suites = []
-        deb_src.components = []
-        deb_src.options = {}
-        source_name = os.path.basename(list_file).split('.')[0]
-        print('Converting {}...'.format(source_name))
-        with open(list_file, 'r') as current_list:
-            for line in current_list:
-                if line.startswith('deb '):
-                    deb_src = repolib.DebLine(line)
-                    deb_src.filename = 'converted-{}.sources'.format(source_name)
-            deb_src = deb_src
-
-        if deb_src.filename != 'example.source':
-            enable_sc = input(
-                'Enable source code for {}? (y/N): '.format(source_name)
-            ).lower()
-            if enable_sc == '':
-                enable_sc = 'n'
-            
-            if enable_sc == 'y':
-                deb_src.set_source_enabled(True)
-            
-            print(
-                'converted source for {}:\n'.format(source_name)
-            )
-            print(deb_src.make_source_string())
-
-            accept_source = input('\nIs this okay? (Y/n): ').lower()
-            
-            if accept_source == '':
-                accept_source = 'y'
-            log.debug('Accepted? %s ' % accept_source)
-
-            if accept_source == 'y':
-                deb_src.save_to_disk()
-                new_file_contents = ''
-                with open(list_file, 'r') as current_list:
-                    for line in current_list:
-                        new_line = '# {}'.format(line)
-                        new_file_contents += new_line
-                with open(list_file, 'w') as current_list:
-                    current_list.write(new_file_contents)
-
-def get_repository(name):
-    filename = '{}.sources'.format(name)
-    source = repolib.Source(filename=filename)
-    source.load_from_file()
-    return source
-
-def source(log, args):
-    """ source command. """
-    source_enable = False
-    if args.source_enable:
-        source_enable = True
-    log.info(
-        'Setting source code for repository %s to %s' % (args.repository, source_enable)
-    )
-    
-    try:
-        source = get_repository(args.repository)
-    except FileNotFoundError:
-        log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-        exit(1)
-
-    source.set_source_enabled(source_enable)
-    log.debug(source.make_source_string())
-    
-    try:
-        source.save_to_disk()
-    except PermissionError:
-        log.error('Unable to save changes, are you root?')
-        exit(1)
-    
-    exit(0)
-
-def add(log, args):
-    """ add Subcommand. """
-    deb_line = args.deb_line
-    if isinstance(args.deb_line, (list,)):
-        deb_line = " ".join(args.deb_line)
-    log.debug('Adding line: %s' % deb_line)
-    if deb_line.startswith('ppa:'):
-        source = repolib.PPALine(deb_line)
-    
-    elif deb_line.startswith('deb'):
-        source = repolib.DebLine(deb_line)
-    
-    else:
-        uris = input("Enter the URIs of the repository: ").replace(',', ' ')
-        suites = input(
-            'Enter the suites/distros of the repository (e.g. "disco"): '
-        ).replace(',', ' ')
-        comps = input(
-            'Enter the componenets of the repository (e.g. "main"): '
-        ).replace(',', ' ')
-        name = input("Enter a name for this repository: ").lower()
-        name = name.translate(repolib.util.CLEAN_CHARS)
-        name += '.sources'
-
-        uril = uris.split()
-        suitel = suites.split()
-        compl = comps.split()
-        
-        source = repolib.Source(uris=uril, suites=suitel, components=compl)
-        source.filename = name
-    
-    source.set_source_enabled(args.add_source) 
-    source_str = source.make_source_string()
-    log.debug('Adding source: %s\n%s' % (source.filename, source_str))  
-    source.save_to_disk()
-
-def listall(log, args):
-    """ list Subcommand."""
-    log.debug('Doing list')
-    print('Current repositories:\n')
-    sources = glob.glob('{}/*.sources'.format(SOURCES_DIR))
-    for source in sources:
-        print(
-            os.path.basename(source).replace('.sources', '')
-        )
-
-def repo(log, args):
-    """ Repo Subcommand."""
-
-    if args.repo_disable:
-        log.info('Disabling repo: %s' % args.repository)
-        try:
-            source = get_repository(args.repository)
-        except FileNotFoundError:
-            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-            exit(1)
-        source.set_enabled(False)
-        try:
-            source.save_to_disk()
-        except PermissionError:
-            log.error('Unable to save changes, are you root?')
-            exit(1)
-        exit(0)
-    
-    if args.repo_enable:
-        log.info('Enabling repo: %s' % args.repository)
-        try:
-            source = get_repository(args.repository)
-        except FileNotFoundError:
-            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-            exit(1)
-        source.set_enabled(True)
-        try:
-            source.save_to_disk()
-        except PermissionError:
-            log.error('Unable to save changes, are you root?')
-            exit(1)
-        exit(0)
-    
-    if args.repo_remove:
-        log.info('Removing repo: %s' % args.repository)
-        filename = '{}.sources'.format(args.repository)
-        log.debug('Deleting file %s' % filename)
-        try:
-            os.remove(os.path.join(repolib.util.sources_dir, filename))
-        except PermissionError:
-            log.error('Unable to save changes, are you root?')
-            exit(1)
-        except FileNotFoundError:
-            log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-            exit(1)
-        exit(0)
-
-    log.info('Getting info for repo: %s' % args.repository)
-    try:
-        source = get_repository(args.repository)
-    except FileNotFoundError:
-        log.error('Repository %s not found, try `apt-manage list`' % args.repository)
-        exit(1)
-    print(source.make_source_string())
-    exit(0)
-
-def convert(log, args):
-    third_party_convert(log)
-    system_convert(log)
-    exit(0)
-
 def main(options=None):
+    """ Main function for apt-manage."""
     # Set up Argument Parsing.
-    parser = argparse.ArgumentParser(
-        prog='apt-manage',
-        description='Manage software sources',
-        epilog='apt-manage version: {}'.format(repolib.version)
-    )
+    parser = repolib.command.parser
 
-    parser.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
-        dest='verbosity',
-        help='Make output more verbose'
-    )
-
-    subparsers = parser.add_subparsers(
-        help='...',
-        dest='action',
-        metavar='COMMAND'
-    )
-
-    # source subcommand
-    parser_source = subparsers.add_parser(
-        'source',
-        help='Manage source-code'
-    )
-    parser_source.add_argument(
-        'repository',
-        help='The name of the repository. See LIST. Default: system'
-    )
-    
-    source_enable = parser_source.add_mutually_exclusive_group(
-        required=True
-    )
-    source_enable.add_argument(
-        '-e',
-        '--enable',
-        action='store_true',
-        dest='source_enable',
-        help='Enable source code for this repository'
-    )
-    source_enable.add_argument(
-        '-d',
-        '--disable',
-        action='store_true',
-        dest='source_disable',
-        help='Disable source code for this repository'
-    )
-
-    # add subcommand
-    parser_add = subparsers.add_parser(
-        'add',
-        help='Add a new repository'
-    )
-
-    parser_add.add_argument(
-        'deb_line',
-        nargs='*',
-        default='822styledeb',
-        help='The deb line of the repository you want to add'
-    )
-
-    parser_add.add_argument(
-        '-s',
-        '--enable-source',
-        action='store_true',
-        dest='add_source',
-        help='Enable source code for the new repository'
-    )
-
-    # list subcommand
-    parser_list = subparsers.add_parser(
-        'list',
-        help='List available repositories.'
-    )
-
-    # repo subcommand
-    parser_repo = subparsers.add_parser(
-        'repo',
-        help='Manage a configured repository'
-    )
-
-    parser_repo.add_argument(
-        'repository',
-        help='The name of the repository to manage. See LIST'
-    )
-
-    parser_repo_group = parser_repo.add_mutually_exclusive_group(
-    )
-
-    parser_repo_group.add_argument(
-        '-i',
-        '--info',
-        action='store_true',
-        dest='repo_details',
-        help='Print details about the repository.'
-    )
-
-    parser_repo_group.add_argument(
-        '-e',
-        '--enable',
-        action='store_true',
-        dest='repo_enable',
-        help='Enable the repository, if it\'s disabled.'
-    )
-
-    parser_repo_group.add_argument(
-        '-d',
-        '--disable',
-        action='store_true',
-        dest='repo_disable',
-        help='Disable the repository, if it\'s enabled.'
-    )
-
-    parser_repo_group.add_argument(
-        '-r',
-        '--remove',
-        action='store_true',
-        dest='repo_remove',
-        help='Remove this repository from the system.'
-    )
-
-    # convert subcommand
-    parser_convert = subparsers.add_parser(
-        'convert',
-        help=argparse.SUPPRESS
-    )
-
+    # Parse options
     args = parser.parse_args()
     if options:
         args = parser.parse_args(options)
-    
-    if not args.verbosity:
-        args.verbosity = 0
 
-    if args.verbosity > 2:
-        args.verbosity = 2
-    
+    if not args.debug:
+        args.debug = 0
+
+    if args.debug > 2:
+        args.debug = 2
+
     verbosity = {
         0 : logging.WARN,
         1 : logging.INFO,
         2 : logging.DEBUG
     }
-    
+
     log = logging.getLogger('apt-manage')
     handler = logging.StreamHandler()
     formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
     handler.setFormatter(formatter)
     log.addHandler(handler)
-    log.setLevel(verbosity[args.verbosity])
+    log.setLevel(verbosity[args.debug])
     log.debug('Logging set up!')
 
-    log.debug('Arguments passed: %s' %str(args))
-    
+    log.debug('Arguments passed: %s', str(args))
+
     if not args.action:
         args.action = 'list'
-    
-    
-    
+
     log.debug('Got command: %s', args.action)
 
-    # if os.geteuid() != 0:
-    #     parser.print_help()
-    #     log.error('You need to root, or use sudo.')
-    #     exit(176)
-    
     action = {
-        'source': source,
-        'add': add,
-        'list': listall,
-        'repo': repo,
-        'convert': convert
+    #     'source': source,
+        'add': repolib.command.add,
+    #     'list': listall,
+    #     'repo': repo,
+    #     'convert': convert
     }
-    action[args.action](log, args)
+    action[args.action](log, args, parser)
 
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
         print('')
-        exit(130)
+        sys.exit(130)

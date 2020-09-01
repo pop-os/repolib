@@ -1,4 +1,4 @@
-#! /usr/bin/python3 
+#! /usr/bin/python3
 
 """
 repolib PPA Signing Key Support
@@ -26,24 +26,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 USA
 """
+#pylint: disable=too-many-ancestors
+# If we want to use the subclass, we don't have a lot of options.
 
 from __future__ import print_function
 
-import apt_pkg
 import json
-import os
 import subprocess
 import time
-
-from threading import Thread
-
-import urllib.request
-from urllib.error import HTTPError, URLError
 import urllib.parse
+import urllib.request
 from http.client import HTTPException
+from urllib.error import HTTPError, URLError
 
-from . import source
-from . import util
+from . import source, util
 
 DISTRO_CODENAME = util.DISTRO_CODENAME
 
@@ -59,27 +55,42 @@ LAUNCHPAD_DISTRIBUTION_SERIES_API = 'https://launchpad.net/api/1.0/%s/%s'
 LAUNCHPAD_PPA_CERT = "/etc/ssl/certs/ca-certificates.crt"
 
 class PPALine(source.Source):
-    
-    def __init__(self, line, fetch_data=True):
+    """ A source specifically for Launchpad PPAs
+
+    These are typically given in the format ppa:owner/name. This is a
+    convenience function which makes adding these sources easier. Most of this
+    code was adopted from SoftwareProperties.
+
+    Arguments:
+        line (str): The ppa: format line.
+        fetch_data (bool): Whether to try and fetch metadata from LP.
+    """
+    # pylint: disable=too-many-instance-attributes
+    # These just have more data than a normal source, and most of these are
+    # @properties anyway (due to the inheritance from source.Source).
+
+    def __init__(self, line, fetch_data=True, verbose=False):
         super().__init__()
-        self.ppa_line = line    
+        self.ppa_line = line
+        self.verbose = verbose
         if not self.ppa_line.startswith('ppa:'):
             raise util.RepoError("The PPA %s is malformed!" % self.ppa_line)
 
         self.load_from_ppa(fetch_data=fetch_data)
-    
+
     def load_from_ppa(self, fetch_data=True):
-        raw_ppa = self.ppa_line.replace('ppa:','').split('/')
+        """ Load PPA information from the PPA.
+
+        Arguments:
+            fetch_data (bool): Whether to fetch metadata from Launchpad.
+        """
+        self.init_values()
+        self.enabled = 'yes'
+
+        raw_ppa = self.ppa_line.replace('ppa:', '').split('/')
         ppa_owner = raw_ppa[0]
         ppa_name = raw_ppa[1]
 
-        self.enabled = util.AptSourceEnabled.TRUE
-        self.types = []
-        self.uris = []
-        self.suites = []
-        self.components = []
-        self.options = {}
-        
         ppa_info = self.ppa_line.split(":")
         ppa_uri = 'http://ppa.launchpad.net/{}/ubuntu'.format(ppa_info[1])
         self.set_source_enabled(False)
@@ -91,20 +102,61 @@ class PPALine(source.Source):
         self.filename = '{}.sources'.format(self.name)
         if fetch_data:
             self.ppa_info = get_info_from_lp(ppa_owner, ppa_name[1])
+            if self.verbose:
+                print(self.ppa_info)
             self.name = self.ppa_info['displayname']
-    
-    def save_to_disk(self):
+        self.enabled = util.AptSourceEnabled.TRUE
+
+    def make_name(self):
+        """ Make a name suitable for a PPA.
+
+        Returns:
+            str: The name generated.
+        """
+        try:
+            ref = self.ppa_info['reference'].replace('/', '-')
+            name = f'{ref}-{self.suites[0]}.sources'
+        except (TypeError, AttributeError):
+            name = f'{self.ppa_line.split(":")[1]}'
+
+        return name.replace("~", "")
+
+    def save_to_disk(self, save=True):
         """
         Saves the PPA to disk, and fetches the signing key.
         """
-        self._get_ppa_key(self.ppa_line)
-        super().save_to_disk()
-    
-    def _get_ppa_key(self, line):
+        self._get_ppa_key()
+        if save:
+            super().save_to_disk()
+
+    def copy(self, source_code=True):
+        """ Copies the source and returns an identical source object.
+
+        Arguments:
+            source_code (bool): if True, output an identical source, except with
+                source code enabled.
+
+        Returns:
+            A Source() object identical to self.
+        """
+        new_source = PPALine(self.ppa_line)
+        new_source = self._copy(new_source, source_code=source_code)
+        return new_source
+
+    def _get_ppa_key(self):
         if self.ppa_line:
             add_key(self.ppa_info['signing_key_fingerprint'])
 
 def get_info_from_lp(owner_name, ppa):
+    """ Attempt to get information on a PPA from launchpad over the internet.
+
+    Arguments:
+        owner_name (str): The Launchpad user owning the PPA.
+        ppa (str): The name of the PPA
+
+    Returns:
+        json: The PPA information as a JSON object.
+    """
     if owner_name[0] != '~':
         owner_name = '~' + owner_name
     lp_url = LAUNCHPAD_PPA_API % (owner_name, ppa)
@@ -126,12 +178,15 @@ def _get_https_content_py3(lp_url, accept_json, retry_delays=None):
             request = urllib.request.Request(str(lp_url), headers=headers)
             lp_page = urllib.request.urlopen(request)
             return lp_page.read().decode("utf-8", "strict")
-        except (HTTPException, URLError) as e:
+        except (HTTPException, URLError) as errr:
             err = util.RepoError(
-                "Error reading %s (%d tries): %s" % (lp_url, trynum, e.reason),
-                e)
-            # do not retry on 404. HTTPError is a subclass of URLError.
-            if isinstance(e, HTTPError) and e.code == 404:
+                "Error reading %s (%d tries): %s" % (lp_url, trynum, errr.reason),
+                errr)
+            # do not retry on 404. HTTPError is a subclass of URLError
+
+            # pylint: disable=no-member
+            # Yes it does, and this works fine. Not sure why things complain.
+            if isinstance(errr, HTTPError) and errr.code == 404:
                 break
         try:
             time.sleep(next(sleep_waits))
@@ -141,7 +196,15 @@ def _get_https_content_py3(lp_url, accept_json, retry_delays=None):
     raise err
 
 def add_key(fingerprint):
+    """ Add a key for a PPA into the system configuration.
+
+    Arguments:
+        fingerprint (str): The fingerprint of the key to add.
+    """
     apt_key_cmd = "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys".split()
     # apt_key_cmd.append(ppa_info['signing_key_fingerprint'])
     apt_key_cmd.append(fingerprint)
-    subprocess.run(apt_key_cmd)
+    subprocess.run(
+        apt_key_cmd,
+        check=False
+    )

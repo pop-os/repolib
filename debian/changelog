@@ -1,3 +1,9 @@
+repolib (1.2.0) focal; urgency=medium
+
+  * Improvements to code quality
+
+ -- Ian Santopietro <ian@system76.com>  Thu, 27 Aug 2020 14:57:43 -0600
+
 repolib (1.1.0) eoan; urgency=medium
 
   * Repolib now supports operating on traditional .list files

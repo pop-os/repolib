@@ -25,9 +25,10 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+# pylint: disable=missing-function-docstring, missing-class-docstring
+# These aren't really relevant for unit testing (which is mostly automatic.)
 
 import unittest
-from pathlib import Path
 
 from . import legacy_deb
 from . import util
@@ -36,16 +37,16 @@ from . import util
 class LegacyTestCase(unittest.TestCase):
 
     def setUp(self):
-        util.sources_dir = Path('/tmp/repolib_tests')
-        util.sources_dir.mkdir(parents=True, exist_ok=True)
-        with open(util.sources_dir / 'test.list', mode='w') as test_file:
+        with open(util.get_sources_dir(testing=True) / 'test.list', mode='w') as test_file:
             test_file.write(
                 'deb [arch=amd64] https://example.com ubuntu main universe\n'
                 'deb-src [arch=amd64] https://example.com ubuntu main universe\n'
             )
-        with open(util.sources_dir / 'test2.list', mode='w') as test_file:
+        with open(util.get_sources_dir(testing=True) / 'test2.list', mode='w') as test_file:
             test_file.write(
                 '## Added/managed by repolib ##\n'
+                '#\n'
+                '## X-Repolib-Name: deb-example-com\n'
                 'deb [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
                 'deb-src [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
             )
@@ -53,7 +54,7 @@ class LegacyTestCase(unittest.TestCase):
         self.source.load_from_file()
 
     def test_load_from_file(self):
-        opts = {'Architectures': ['amd64']}
+        opts = {'Architectures': 'amd64'}
         self.assertEqual(self.source.filename, 'test.list')
         self.assertEqual(len(self.source.sources), 2)
         for debsource in self.source.sources:
@@ -62,12 +63,15 @@ class LegacyTestCase(unittest.TestCase):
             self.assertDictEqual(debsource.options, opts)
             self.assertEqual(debsource.suites, ['ubuntu'])
             self.assertEqual(debsource.components, ['main', 'universe'])
-    
+
     def test_make_deblines(self):
-        expected = '## Added/managed by repolib ##\ndeb [arch=amd64] https://example.com ubuntu main universe\ndeb-src [arch=amd64] https://example.com ubuntu main universe\n'
+        # pylint: disable=line-too-long
+        # unittest doesn't like when this is split to a sane length. We need to
+        # have it on one ugly line so that the assertion is Equal.
+        expected = '## Added/managed by repolib ##\n#\n## X-Repolib-Name: deb-example-com\ndeb [arch=amd64] https://example.com ubuntu main universe\ndeb-src [arch=amd64] https://example.com ubuntu main universe\n'
         actual = self.source.make_deblines()
         self.assertEqual(actual, expected)
-        
+
     def test_validate(self):
         testline1 = '# deb http://example.com ubuntu main'
         testline2 = 'deb http://example.com ubuntu main'
@@ -77,30 +81,30 @@ class LegacyTestCase(unittest.TestCase):
         testline6 = 'dba http://example.com ubuntu main'
 
         for line in [testline1, testline2, testline3, testline4]:
-            self.assertTrue(self.source._validate(line))
-        
+            self.assertTrue(util.validate_debline(line))
+
         for line in [testline5, testline6]:
-            self.assertFalse(self.source._validate(line))
+            self.assertFalse(util.validate_debline(line))
 
     def test_save_to_disk(self):
-        with open(util.sources_dir / 'test2.list', mode='r') as expected_file:
+        with open(util.get_sources_dir(testing=True) / 'test2.list', mode='r') as expected_file:
             expected_data = expected_file.readlines()
-        
-        with open(util.sources_dir / 'test.list', mode='r') as source_file:
+
+        with open(util.get_sources_dir(testing=True) / 'test.list', mode='r') as source_file:
             source_data = source_file.readlines()
         self.assertNotEqual(source_data, expected_data)
-        
+
         for source in self.source.sources:
             source.uris = ['http://example.com']
             source.options = {
-                'Architectures': ['armel', 'amd64'],
-                'Languages': ['en_US']
+                'Architectures': 'armel amd64',
+                'Languages': 'en_US'
             }
             source.components = ['main']
         self.source.filename = 'test3.list'
         self.source.save_to_disk()
 
-        with open(util.sources_dir / 'test3.list', mode='r') as source_file:
+        with open(util.get_sources_dir(testing=True) / 'test3.list', mode='r') as source_file:
             source_file.seek(0)
             source_data = source_file.readlines()
         self.assertEqual(source_data, expected_data)

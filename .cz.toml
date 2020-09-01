@@ -1,4 +1,7 @@
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.1.0"
+version = "1.2.0"
 tag_format = "$version"
+version_files = [
+    'repolib/__version__.py:__version__'
+]

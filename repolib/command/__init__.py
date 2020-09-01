@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019-2020, Ian Santopietro
+Copyright (c) 2020, Ian Santopietro
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+This subpackage contains tools for use in developing CLI applications using 
+repolib. apt-manage uses this library.
 """
 
-from .source import Source
-from .system import SystemSource
-from .legacy_deb import LegacyDebSource
-from .deb import DebLine
-from .ppa import PPALine
-from .util import AptSourceEnabled, AptSourceType, RepoError
-from . import util
-from . import __version__
+from . import add
+from . import argparser
 
-VERSION = __version__.__version__
+add = add.add
+
+parser = argparser.get_argparser()
