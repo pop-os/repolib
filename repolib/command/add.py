@@ -21,17 +21,17 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 Module for adding repos to the system in CLI applications.
 """
-#pylint: disable=too-many-branches,too-many-statements
-# This file will be rewritten soon
 
 import os
-import sys
 
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
+from ..util import DISTRO_CODENAME
 
-def add(log, args, parser):
+from . import command
+
+class Add(command.Command):
     """ Add subcommand.
 
     The add command is used for adding new software sources to the system. It
@@ -43,78 +43,90 @@ def add(log, args, parser):
         --expand, -e
     """
 
-    if os.geteuid() != 0:
-        parser.print_usage()
-        log.error('You need to root, or use sudo.')
-        sys.exit(1)
+    # pylint: disable=too-few-public-methods
+    # Thinking of ways to add more, but otherwise this is just simple.
 
-    verbose = False
-    if args.debug > 1:
-        verbose = True
+    def __init__(self, log, args, parser):
+        super().__init__(log, args, parser)
 
-    expand = args.expand
+        self.verbose = False
+        if self.args.debug > 1:
+            self.verbose = True
 
-    debline = ' '.join(args.deb_line)
-    if args.deb_line == '822styledeb':
-        parser.print_usage()
-        log.error('A repository is required.')
-        sys.exit(1)
+        self.expand = args.expand
+        self.source_code = args.source_code
+        self.disable = args.disable
 
-    if debline.startswith('http'):
-        debline = f'deb {debline}'
+    def run(self):
+        """ Run the command."""
+        # pylint: disable=too-many-branches
+        # We just need all these different checks.
 
-    new_source = LegacyDebSource()
-    if debline.startswith('ppa:'):
-        add_source = PPALine(debline, verbose=verbose)
+        if os.geteuid() != 0:
+            self.parser.print_usage()
+            self.log.error('You need to root, or use sudo.')
+            return False
 
-    elif debline.startswith('deb'):
-        expand = False
-        add_source = DebLine(debline)
+        debline = ' '.join(self.args.deb_line)
+        if self.args.deb_line == '822styledeb':
+            self.parser.print_usage()
+            self.log.error('A repository is required.')
+            return False
 
-    else:
-        log.critical(
-            'The line "%s" is malformed. Double-check the spelling.',
-            debline
-        )
-        sys.exit(1)
+        if debline.startswith('http') and len(debline.split()) == 1:
+            debline = f'deb {debline} {DISTRO_CODENAME} main'
 
-    new_source.sources.append(add_source)
+        new_source = LegacyDebSource()
+        if debline.startswith('ppa:'):
+            add_source = PPALine(debline, verbose=self.verbose)
 
-    if not debline.startswith('deb-src'):
-        src_source = add_source.copy()
-        src_source.enabled = False
-    else:
-        src_source = add_source
+        elif debline.startswith('deb'):
+            expand = False
+            add_source = DebLine(debline)
 
-    if args.source_code:
-        src_source.enabled = True
+        else:
+            self.log.critical(
+                'The line "%s" is malformed. Double-check the spelling.',
+                debline
+            )
+            return False
 
-    if not debline.startswith('deb-src'):
-        new_source.sources.append(src_source)
+        new_source.sources.append(add_source)
 
-    new_source.sources[0].enabled = True
+        if not debline.startswith('deb-src'):
+            src_source = add_source.copy()
+            src_source.enabled = False
+        else:
+            src_source = add_source
 
-    if args.disable:
-        for repo in new_source.sources:
-            repo.enabled = False
+        src_source.enabled = self.source_code
 
-    new_source.make_names()
+        if not debline.startswith('deb-src'):
+            new_source.sources.append(src_source)
 
-    if args.debug > 0:
-        log.info('Debug mode set, not saving.')
-        for src in new_source.sources:
-            print(f'{src.dump()}\n')
-        log.info('Filename to save: %s', new_source.filename)
-        print(f'{new_source.make_deblines()}')
+        add_source.enabled = True
 
+        if self.disable:
+            for repo in new_source.sources:
+                repo.enabled = False
 
-    if expand:
-        print(new_source.sources[0].make_source_string())
-        print(f'{add_source.ppa_info["description"]}\n')
-        print('Press [ENTER] to contine or Ctrl + C to cancel.')
-        input()
+        new_source.make_names()
 
-    if args.debug == 0:
-        new_source.save_to_disk()
-    else:
-        sys.exit(2)
+        if self.args.debug > 0:
+            self.log.info('Debug mode set, not saving.')
+            for src in new_source.sources:
+                print(f'{src.dump()}\n')
+            self.log.info('Filename to save: %s', new_source.filename)
+            print(f'{new_source.make_deblines()}')
+
+        if expand:
+            print(new_source.sources[0].make_source_string())
+            print(f'{add_source.ppa_info["description"]}\n')
+            print('Press [ENTER] to contine or Ctrl + C to cancel.')
+            input()
+
+        if self.args.debug == 0:
+            new_source.save_to_disk()
+            return True
+
+        return False
