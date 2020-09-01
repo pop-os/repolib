@@ -27,18 +27,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 This is a library for parsing deb lines into deb822-format data.
 """
+# pylint: disable=missing-function-docstring, missing-class-docstring
+# These aren't really relevant for unit testing (which is mostly automatic.)
 
 import unittest
-from pathlib import Path
 
 from . import system
 from . import util
 
 class SystemTestCase(unittest.TestCase):
+    #pylint: disable=invalid-name
+    # We're inheriting from unittest in this case.
+    sources_dir = util.get_sources_dir(testing=True)
+
     def setUpModule(self):
-        util.sources_dir = Path('/tmp/repolib_tests')
-        util.sources_dir.mkdir(parents=True, exist_ok=True)
-        with open(util.sources_dir / 'modified_system.sources', mode='w') as sources_file:
+        with open(self.sources_dir / 'modified_system.sources', mode='w') as sources_file:
             sources_file.write(
                 'X-Repolib_Name: Pop!_OS Sources\n'
                 'Enabled: no\n'
@@ -49,9 +52,7 @@ class SystemTestCase(unittest.TestCase):
             )
 
     def setUp(self):
-        util.sources_dir = Path('/tmp/repolib_tests')
-        util.sources_dir.mkdir(parents=True, exist_ok=True)
-        with open(util.sources_dir / 'system.sources', mode='w') as sources_file:
+        with open(self.sources_dir / 'system.sources', mode='w') as sources_file:
             sources_file.write(
                 'X-Repolib_Name: Pop!_OS Sources\n'
                 'Enabled: no\n'
@@ -75,14 +76,14 @@ class SystemTestCase(unittest.TestCase):
         self.source.set_component_enabled(component='restricted', enabled=False)
 
         self.assertEqual(self.source.components, expected)
-    
+
     def test_set_suite_enabled(self):
         expected = ['focal', 'focal-updates', 'focal-test']
         self.source.set_suite_enabled(suite='focal-backports', enabled=False)
         self.source.set_suite_enabled(suite='focal-test')
 
         self.assertEqual(self.source.suites, expected)
-    
+
     def test_set_source_enabled(self):
         expected = [util.AptSourceType.BINARY]
         self.source.set_source_enabled(False)

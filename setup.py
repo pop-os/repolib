@@ -149,16 +149,18 @@ class Release(Command):
 
 class Test(Command):
     """ Run pyflakes and pytest"""
-    description = 'Run pyflakes and pytest'
+    description = 'Run pyflakes, pytest, and pylint'
 
     user_options = [
         ('skip-flakes', None, 'Skip running pyflakes'),
-        ('skip-test', None, 'Skip running pytest')
+        ('skip-test', None, 'Skip running pytest'),
+        ('skip-lint', None, 'Skip running pylint')
     ]
 
     def initialize_options(self):
         self.skip_flakes = False
         self.skip_test = False
+        self.skip_lint = False
     
     def finalize_options(self):
         pass
@@ -166,12 +168,16 @@ class Test(Command):
     def run(self):
         pytest_command = ['pytest-3']
         flakes_command = ['pyflakes3', 'repolib']
+        lint_command = ['pylint', 'repolib']
         
         if not self.skip_test:
             subprocess.run(pytest_command)
 
         if not self.skip_flakes:
             subprocess.run(flakes_command)
+        
+        if not self.skip_lint:
+            subprocess.run(lint_command)
             
 setup(
     name = 'repolib',
@@ -184,7 +190,7 @@ setup(
     long_description = long_description,
     tests_require = ['pytest'],
     license = 'BSD-2',
-    packages=['repolib'],
+    packages=['repolib', 'repolib/command'],
     cmdclass={'release': Release, 'test': Test},
     scripts=['bin/apt-manage'],
     data_files=[

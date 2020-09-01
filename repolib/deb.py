@@ -27,131 +27,87 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 This is a library for parsing deb lines into deb822-format data.
 """
-
-import re
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
+# If we want to use the subclass, we don't have a lot of options.
 
 from . import source
 from . import util
 
-options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
-uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
-
 class DebLineSourceException(Exception):
-    
-    def __init__(self, code=1):
-        """Exception with a debline-format source
+    """ Exceptions with DebLine Sources. """
 
-        Arguments: 
+    def __init__(self, *args, code=1, **kwargs):
+        """Exception with a debline source object
+
+        Arguments:
             code (:obj:`int`, optional, default=1): Exception error code.
     """
+        super().__init__(*args, **kwargs)
         self.code = code
 
 class DebLine(source.Source):
+    """ Sources input via a deb line. """
 
-    outoptions_d = {
-        'Architectures': 'arch',
-        'Languages': 'lang',
-        'Targets': 'target',
-        'PDiffs': 'pdiffs',
-        'By-Hash': 'by-hash'
-    }
-    
     def __init__(self, line):
         super().__init__()
-        # Clean up deb line by making spaces consistent 
-        self.name = ''
-        self.enabled = util.AptSourceEnabled.TRUE
-        self.types = []
-        self.uris = []
-        self.suites = []
-        self.components = []
-        self.options = {}
-        
+
         self.deb_line = line
         if 'cdrom:' in self.deb_line:
-            raise util.RepoError(
+            raise DebLineSourceException(
                 'RepoLib does not support \'cdrom:\' URIs via this DebLine Class. '
                 'Please use a Source() class to add these sources'
             )
         self._parse_debline(self.deb_line)
-        self.filename = self._make_name(prefix="deb-")
+        self.filename = self.make_name(prefix="deb-")
         self.name = self.filename.replace('.sources', '')
-        
-    def make_debline(self):
-        """ Output a one-line entry for this source.
 
-        Note that this is expected to fail if somehow there is more than one 
-        type, URI, or suite, because this format does not support multiples of 
-        these items.
+    def copy(self, source_code=True):
+        """ Copies the source and returns an identical source object.
+
+        Arguments:
+            source_code (bool): if True, output an identical source, except with
+                source code enabled.
+
+        Returns:
+            A Source() object identical to self.
         """
-        line = ''
-
-        if len(self.uris) > 1:
-            raise DebLineSourceException(
-                'The source has too many URIs. One-line format sources support '
-                'one URI only.'
-            )
-        if len(self.suites) > 1:
-            raise DebLineSourceException(
-                'The source has too many suites. One-line format sources support '
-                'one suite only.'
-            )
-        if len(self.uris) > 1:
-            raise DebLineSourceException(
-                'The source has too many types. One-line format sources support '
-                'one type only.'
-            )
-        
-        if self.enabled == util.AptSourceEnabled.FALSE:
-            line += '# '
-        
-        line += f'{self.types[0].get_string()} '
-        
-        if self.options:
-            line += '['
-            line += self._get_options()
-            line = line.strip()
-            line += '] '
-
-        line += f'{self.uris[0]} '
-        line += f'{self.suites[0]} '
-        
-        for component in self.components:
-            line += f'{component} '
-        
-        return line.strip()
-
-    def _make_name(self, prefix=''):
-        uri = self.uris[0].replace('/', ' ')
-        uri_list = uri.split()
-        name = '{}{}.sources'.format(
-            prefix,
-            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
-        )
-        return name
+        new_source = DebLine(self.deb_line)
+        new_source = self._copy(new_source, source_code=source_code)
+        return new_source
+    
+    def save_to_disk(self, save=True):
+        """
+        Saves the repo to disk
+        """
+        if save:
+            super().save_to_disk()
 
     def _parse_debline(self, line):
+        self.init_values()
+
         # Enabled vs. Disabled
+        self.enabled = True
         if line.startswith('#'):
-            self.set_enabled(False)
+            self.enabled = False
             line = line.replace('#', '', 1)
             line = line.strip()
-        
+
         # URI parsing
-        for uri in uri_re.finditer(line):
+        for uri in self.uri_re.finditer(line):
             self.uris = [uri[0]]
             line_uri = line.replace(uri[0], '')
-        
+
         # Options parsing
         try:
-            options = options_re.search(line_uri).group()
-            self._set_options(options.strip())
+            options = self.options_re.search(line_uri).group()
+            opts = self._set_options(options.strip())
+            self.options = opts.copy()
             line_uri = line_uri.replace(options, '')
         except AttributeError:
             pass
-        
+
         deb_list = line_uri.split()
-        
+
         # Type Parsing
         self.types = [util.AptSourceType.BINARY]
         if deb_list[0] == 'deb-src':
@@ -161,58 +117,56 @@ class DebLine(source.Source):
         self.suites = [deb_list[1]]
 
         # Components parsing
+        comps = []
         for item in deb_list[2:]:
             if not item.startswith('#'):
-                self.components.append(item)
+                comps.append(item)
             else:
                 break
-    
+        self.components = comps
+
     def _validate(self, valid):
         """
         Ensure we have a valid debian repository line.
         """
         if valid.startswith('#'):
-            self.set_enabled(False)
+            self.enabled = False
             valid = valid.replace('#', '')
         valid = valid.strip()
         if not valid.startswith('deb'):
             raise util.RepoError(
                 'The line %s does not appear to be a valid repo' % self.deb_line
             )
-    
-    def _get_options(self):
-        opt_str = ''
-        for key in self.options:
-            opt_str += '{key}={values} '.format(key=self.outoptions_d[key], values=','.join(self.options[key]))
-        return opt_str
 
     def _set_type(self, deb_type):
         """
         Set the type of repository (deb or deb-src)
         """
         self.types = [util.AptSourceType(deb_type)]
-    
+
     def _set_options(self, options):
         """
         Set the options.
         """
         # Split the option string into a list of chars, so that we can replace
         # the first and last characters ([ and ]) with spaces.
-        op = list(options)
-        op[0] = " "
-        op[-1] = " "
-        options = "".join(op).strip()
-        
+        ops = list(options)
+        ops[0] = " "
+        ops[-1] = " "
+        options = "".join(ops).strip()
+
         for replacement in self.options_d:
-                options = options.replace(replacement, self.options_d[replacement])
-        
+            options = options.replace(replacement, self.options_d[replacement])
+
         options = options.replace('=', ',')
         options_list = options.split()
-        
+
+        options_output = {}
+
         for i in options_list:
             option = i.split(',')
             values_list = []
             for value in option[1:]:
                 values_list.append(value)
-            self.options[option[0]] = values_list
-            
+            options_output[option[0]] = ' '.join(values_list)
+        return options_output

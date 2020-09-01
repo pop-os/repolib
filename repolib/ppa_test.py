@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 This is a library for parsing deb lines into deb822-format data.
 """
+# pylint: disable=missing-function-docstring, missing-class-docstring
+# These aren't really relevant for unit testing (which is mostly automatic.)
 
 import unittest
 
@@ -41,44 +43,45 @@ class PPATestCase(unittest.TestCase):
             'ppa:system76/pop',
             fetch_data=False
         )
-    
+
     def test_uri(self):
         self.assertEqual(
-            self.source.uris, 
+            self.source.uris,
             ['http://ppa.launchpad.net/system76/pop/ubuntu']
         )
-    
+
     def test_name(self):
         self.assertEqual(self.source.name, 'ppa-system76-pop')
-    
+
     def test_suite(self):
         self.assertEqual(self.source.suites, [util.DISTRO_CODENAME])
-    
+
     def test_components(self):
         self.assertEqual(self.source.components, ['main'])
-    
+
     def test_type(self):
         self.assertEqual(self.source.types, [util.AptSourceType.BINARY])
-    
+
     def test_options(self):
-        self.assertDictEqual(self.source.options, {})
+        self.assertIsNone(self.source.options)
 
     def test_internet_features(self):
         try:
             self.source.load_from_ppa()
             self.assertEqual(self.source.name, 'Pop!_OS PPA')
             self.assertNotEqual(self.source.ppa_info, {})
-        except util.RepoError as e:
-            if isinstance(e.args[-1], URLError):
-                if "Name or service not known" in str(e.args[-1].reason):
+        except util.RepoError as err:
+            # pylint: disable=no-else-raise, no-member
+            # This is a valid time to else raise since we're catching
+            # a different type of error.
+            if isinstance(err.args[-1], URLError):
+                if "Name or service not known" in str(err.args[-1].reason):
                     raise unittest.SkipTest(
                         'Can\'t test internet features without network.'
                     )
-                elif "Connection refused" in str(e.args[-1].reason):
+                elif "Connection refused" in str(err.args[-1].reason):
                     raise unittest.SkipTest(
                         'Couldn\'t fetch details from network.'
                     )
-                else:
-                    raise e
             else:
-                raise e
+                raise err

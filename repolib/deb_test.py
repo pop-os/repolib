@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 This is a library for parsing deb lines into deb822-format data.
 """
+# pylint: disable=missing-function-docstring, missing-class-docstring
+# These aren't really relevant for unit testing (which is mostly automatic.)
 
 import unittest
 
@@ -40,91 +42,99 @@ class DebTestCase(unittest.TestCase):
         )
         self.assertEqual(source.name, 'deb-example-com')
         self.assertEqual(source.types, [util.AptSourceType.BINARY])
+        # pylint: disable=no-member
+        # This works fine, so I think pylint is just confused.
         self.assertTrue(source.enabled.get_bool())
+        # pylint: enable=no-member
         self.assertEqual(source.uris, ['http://example.com/'])
         self.assertEqual(source.suites, ['suite'])
         self.assertEqual(source.components, ['main'])
-        self.assertDictEqual(source.options, {})
+        self.assertIsNone(source.options)
         self.assertEqual(source.filename, 'deb-example-com.sources')
-    
+
     def test_source_with_multiple_components(self):
         source = deb.DebLine(
             'deb http://example.com/ suite main nonfree'
         )
         self.assertEqual(source.suites, ['suite'])
         self.assertEqual(source.components, ['main', 'nonfree'])
-    
+
     def test_source_with_option(self):
         source = deb.DebLine(
             'deb [ arch=amd64 ] http://example.com/ suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/'])
-        self.assertDictEqual(source.options, {'Architectures': ['amd64']})
-    
+        self.assertDictEqual(source.options, {'Architectures': 'amd64'})
+
     def test_source_uri_with_brackets(self):
         source = deb.DebLine(
             'deb http://example.com/[release]/ubuntu suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/[release]/ubuntu'])
-        self.assertDictEqual(source.options, {})
-    
+        self.assertIsNone(source.options, {})
+
     def test_source_options_with_colons(self):
         source = deb.DebLine(
             'deb [ arch=arm:2 ] http://example.com/ suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/'])
-        self.assertDictEqual(source.options, {'Architectures': ['arm:2']})
-    
+        self.assertDictEqual(source.options, {'Architectures': 'arm:2'})
+
     def test_source_with_multiple_option_values(self):
         source = deb.DebLine(
             'deb [ arch=armel,amd64 ] http://example.com/ suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/'])
-        self.assertDictEqual(source.options, {'Architectures': ['armel','amd64']})
-    
+        self.assertDictEqual(source.options, {'Architectures': 'armel amd64'})
+
     def test_source_with_multiple_options(self):
         source = deb.DebLine(
             'deb [ arch=amd64 lang=en_US ] http://example.com/ suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/'])
         self.assertDictEqual(
-            source.options, 
-            {'Architectures': ['amd64'], 'Languages': ['en_US']}
+            source.options,
+            {'Architectures': 'amd64', 'Languages': 'en_US'}
         )
-    
+
     def test_source_with_multiple_options_with_multiple_values(self):
         source = deb.DebLine(
-            'deb [ arch=amd64,armel lang=en_US,en_CA ] http://example.com/ suite main'
+            'deb [ arch=amd64,armel lang=en_US,en_CA ] '
+            'http://example.com/ suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/'])
         self.assertDictEqual(
-            source.options, 
-            {'Architectures': ['amd64','armel'], 'Languages': ['en_US', 'en_CA']}
+            source.options,
+            {'Architectures': 'amd64 armel', 'Languages': 'en_US en_CA'}
         )
-    
+
     def test_source_uri_with_brackets_and_options(self):
         source = deb.DebLine(
-            'deb [ arch=amd64 lang=en_US,en_CA ] http://example][.com/[release]/ubuntu suite main'
+            'deb [ arch=amd64 lang=en_US,en_CA ] '
+            'http://example][.com/[release]/ubuntu suite main'
         )
         self.assertEqual(source.uris, ['http://example][.com/[release]/ubuntu'])
         self.assertDictEqual(
-            source.options, 
-            {'Architectures': ['amd64'], 'Languages': ['en_US', 'en_CA']}
+            source.options,
+            {'Architectures': 'amd64', 'Languages': 'en_US en_CA'}
         )
-    
+
     def test_source_uri_with_brackets_and_options_with_colons(self):
         source = deb.DebLine(
-            'deb [ arch=amd64,arm:2 lang=en_US,en_CA ] http://example][.com/[release]/ubuntu suite main'
+            'deb [ arch=amd64,arm:2 lang=en_US,en_CA ] '
+            'http://example][.com/[release]/ubuntu suite main'
         )
         self.assertEqual(source.uris, ['http://example][.com/[release]/ubuntu'])
         self.assertDictEqual(
-            source.options, 
-            {'Architectures': ['amd64', 'arm:2'], 'Languages': ['en_US', 'en_CA']}
+            source.options,
+            {'Architectures': 'amd64 arm:2', 'Languages': 'en_US en_CA'}
         )
-    
+
     def test_worst_case_sourcenario(self):
         source = deb.DebLine(
-            'deb [ arch=amd64,arm:2,arm][ lang=en_US,en_CA ] http://example][.com/[release:good]/ubuntu suite main restricted nonfree not-a-component'
+            'deb [ arch=amd64,arm:2,arm][ lang=en_US,en_CA ] '
+            'http://example][.com/[release:good]/ubuntu suite main restricted '
+            'nonfree not-a-component'
         )
         self.assertEqual(source.uris, ['http://example][.com/[release:good]/ubuntu'])
         self.assertEqual(source.suites, ['suite'])
@@ -132,34 +142,40 @@ class DebTestCase(unittest.TestCase):
             'main', 'restricted', 'nonfree', 'not-a-component'
         ])
         self.assertDictEqual(
-            source.options, 
+            source.options,
             {
-                'Architectures': ['amd64', 'arm:2', 'arm]['], 
-                'Languages': ['en_US', 'en_CA']
+                'Architectures': 'amd64 arm:2 arm][',
+                'Languages': 'en_US en_CA'
             }
         )
-    
+
     def test_source_code_source(self):
         source = deb.DebLine(
             'deb-src http://example.com/ suite main'
         )
         self.assertEqual(source.name, 'deb-example-com')
         self.assertEqual(source.types, [util.AptSourceType.SOURCE])
-    
+
     def test_disabled_source(self):
         source = deb.DebLine(
             '# deb http://example.com/ suite main'
         )
         self.assertEqual(source.name, 'deb-example-com')
+        # pylint: disable=no-member
+        # This works fine, so I think pylint is just confused.
         self.assertFalse(source.enabled.get_bool())
-    
+        # pylint: enable=no-member
+
     def test_disabled_source_without_space(self):
         source = deb.DebLine(
             '#deb http://example.com/ suite main'
         )
         self.assertEqual(source.name, 'deb-example-com')
+        # pylint: disable=no-member
+        # This works fine, so I think pylint is just confused.
         self.assertFalse(source.enabled.get_bool())
-    
+        # pylint: enable=no-member
+
     def test_source_with_trailing_comment(self):
         source = deb.DebLine(
             'deb http://example.com/ suite main # This is a comment'
@@ -167,16 +183,19 @@ class DebTestCase(unittest.TestCase):
         self.assertEqual(source.name, 'deb-example-com')
         self.assertEqual(source.suites, ['suite'])
         self.assertEqual(source.components, ['main'])
-    
+
     def test_disabled_source_with_trailing_comment(self):
         source = deb.DebLine(
             '# deb http://example.com/ suite main # This is a comment'
         )
         self.assertEqual(source.name, 'deb-example-com')
         self.assertEqual(source.suites, ['suite'])
+        # pylint: disable=no-member
+        # This works fine, so I think pylint is just confused.
         self.assertFalse(source.enabled.get_bool())
+        # pylint: enable=no-member
         self.assertEqual(source.components, ['main'])
-    
+
     @unittest.expectedFailure
     def test_cdrom_source(self):
         source = deb.DebLine(
