@@ -72,12 +72,13 @@ def main(options=None):
 
     action = {
     #     'source': source,
-        'add': repolib.command.add,
+        'add': repolib.command.Add,
     #     'list': listall,
     #     'repo': repo,
     #     'convert': convert
     }
-    action[args.action](log, args, parser)
+    subcommand = action[args.action](log, args, parser)
+    subcommand.run()
 
 if __name__ == '__main__':
     try:

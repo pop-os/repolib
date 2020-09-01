@@ -23,9 +23,7 @@ This subpackage contains tools for use in developing CLI applications using
 repolib. apt-manage uses this library.
 """
 
-from . import add
 from . import argparser
-
-add = add.add
+from .add import Add
 
 parser = argparser.get_argparser()
