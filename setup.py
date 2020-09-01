@@ -183,7 +183,7 @@ setup(
     download_url = 'https://github.com/isantop/repolib/releases',
     long_description = long_description,
     tests_require = ['pytest'],
-    license = 'BSD-2',
+    license = 'LGPLv3',
     packages=['repolib', 'repolib/command'],
     cmdclass={'release': Release, 'test': Test},
     scripts=['bin/apt-manage'],
