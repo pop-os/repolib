@@ -107,6 +107,8 @@ class PPALine(source.Source):
             self.name = self.ppa_info['displayname']
         self.enabled = util.AptSourceEnabled.TRUE
 
+    #pylint: disable=arguments-differ
+    # Just doing something different than the super class.
     def make_name(self):
         """ Make a name suitable for a PPA.
 
