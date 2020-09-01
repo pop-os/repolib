@@ -23,11 +23,11 @@ Module for adding repos to the system in CLI applications.
 """
 
 import os
-import sys
 
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
+from ..util import DISTRO_CODENAME
 
 from . import command
 
@@ -42,19 +42,30 @@ class Add(command.Command):
         --source-code, -s
         --expand, -e
     """
+
+    # pylint: disable=too-few-public-methods
+    # Thinking of ways to add more, but otherwise this is just simple.
+
+    def __init__(self, log, args, parser):
+        super().__init__(log, args, parser)
+
+        self.verbose = False
+        if self.args.debug > 1:
+            self.verbose = True
+
+        self.expand = args.expand
+        self.source_code = args.source_code
+        self.disable = args.disable
+
     def run(self):
         """ Run the command."""
+        # pylint: disable=too-many-branches
+        # We just need all these different checks.
 
         if os.geteuid() != 0:
             self.parser.print_usage()
             self.log.error('You need to root, or use sudo.')
             return False
-
-        verbose = False
-        if self.args.debug > 1:
-            verbose = True
-
-        expand = self.args.expand
 
         debline = ' '.join(self.args.deb_line)
         if self.args.deb_line == '822styledeb':
@@ -62,12 +73,12 @@ class Add(command.Command):
             self.log.error('A repository is required.')
             return False
 
-        if debline.startswith('http'):
-            debline = f'deb {debline}'
+        if debline.startswith('http') and len(debline.split()) == 1:
+            debline = f'deb {debline} {DISTRO_CODENAME} main'
 
         new_source = LegacyDebSource()
         if debline.startswith('ppa:'):
-            add_source = PPALine(debline, verbose=verbose)
+            add_source = PPALine(debline, verbose=self.verbose)
 
         elif debline.startswith('deb'):
             expand = False
@@ -88,15 +99,14 @@ class Add(command.Command):
         else:
             src_source = add_source
 
-        if self.args.source_code:
-            src_source.enabled = True
+        src_source.enabled = self.source_code
 
         if not debline.startswith('deb-src'):
             new_source.sources.append(src_source)
 
-        new_source.sources[0].enabled = True
+        add_source.enabled = True
 
-        if self.args.disable:
+        if self.disable:
             for repo in new_source.sources:
                 repo.enabled = False
 
@@ -109,7 +119,6 @@ class Add(command.Command):
             self.log.info('Filename to save: %s', new_source.filename)
             print(f'{new_source.make_deblines()}')
 
-
         if expand:
             print(new_source.sources[0].make_source_string())
             print(f'{add_source.ppa_info["description"]}\n')
@@ -119,5 +128,5 @@ class Add(command.Command):
         if self.args.debug == 0:
             new_source.save_to_disk()
             return True
-        else:
-            return False
+
+        return False
