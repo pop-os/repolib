@@ -24,9 +24,7 @@ repolib. apt-manage uses this library.
 """
 #pylint: disable=invalid-name
 
-from . import add
 from . import argparser
-
-add = add.add
+from .add import Add
 
 parser = argparser.get_argparser()
