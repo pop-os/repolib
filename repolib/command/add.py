@@ -21,6 +21,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 Module for adding repos to the system in CLI applications.
 """
+#pylint: disable=too-many-branches,too-many-statements
+# This file will be rewritten soon
 
 import os
 import sys
@@ -30,10 +32,10 @@ from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
 
 def add(log, args, parser):
-    """ Add subcommand. 
-    
+    """ Add subcommand.
+
     The add command is used for adding new software sources to the system. It
-    requires root. 
+    requires root.
 
     Options:
         --disable, -d
@@ -49,7 +51,7 @@ def add(log, args, parser):
     verbose = False
     if args.debug > 1:
         verbose = True
-    
+
     expand = args.expand
 
     debline = ' '.join(args.deb_line)
@@ -57,25 +59,25 @@ def add(log, args, parser):
         parser.print_usage()
         log.error('A repository is required.')
         sys.exit(1)
-    
+
     if debline.startswith('http'):
         debline = f'deb {debline}'
 
     new_source = LegacyDebSource()
     if debline.startswith('ppa:'):
         add_source = PPALine(debline, verbose=verbose)
-    
+
     elif debline.startswith('deb'):
         expand = False
         add_source = DebLine(debline)
-    
+
     else:
         log.critical(
             'The line "%s" is malformed. Double-check the spelling.',
             debline
         )
         sys.exit(1)
-    
+
     new_source.sources.append(add_source)
 
     if not debline.startswith('deb-src'):
@@ -83,7 +85,7 @@ def add(log, args, parser):
         src_source.enabled = False
     else:
         src_source = add_source
-    
+
     if args.source_code:
         src_source.enabled = True
 
@@ -91,27 +93,27 @@ def add(log, args, parser):
         new_source.sources.append(src_source)
 
     new_source.sources[0].enabled = True
-    
+
     if args.disable:
         for repo in new_source.sources:
             repo.enabled = False
-    
+
     new_source.make_names()
-    
+
     if args.debug > 0:
         log.info('Debug mode set, not saving.')
         for src in new_source.sources:
             print(f'{src.dump()}\n')
         log.info('Filename to save: %s', new_source.filename)
         print(f'{new_source.make_deblines()}')
-        
-    
+
+
     if expand:
         print(new_source.sources[0].make_source_string())
         print(f'{add_source.ppa_info["description"]}\n')
         print('Press [ENTER] to contine or Ctrl + C to cancel.')
         input()
-    
+
     if args.debug == 0:
         new_source.save_to_disk()
     else:

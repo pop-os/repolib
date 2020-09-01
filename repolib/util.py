@@ -42,7 +42,7 @@ try:
     import lsb_release
     DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
 except ImportError:
-    raise RepoError("The system can't find version information!")
+    DISTRO_CODENAME = 'linux'
 
 class AptSourceType(Enum):
     """ Helper Enum to simplify saving data. """
