@@ -22,19 +22,22 @@ Command line application helper class.
 """
 
 class Command:
+    # pylint: disable=no-self-use,too-few-public-methods
+    # This is a base class for other things to inherit and give other programs
+    # a standardized interface for interacting with commands.
     """ CLI helper class for developing command line applications."""
 
     def __init__(self, log, args, parser):
         self.log = log
         self.args = args
         self.parser = parser
-    
+
     def run(self):
-        """ The initial base for running the command. 
-        
-        This needs to have a standardized format, argument list, and return 
+        """ The initial base for running the command.
+
+        This needs to have a standardized format, argument list, and return
         either True or False depending on whether the command was successful or
-        not. 
+        not.
 
         Returns:
             True if the command succeeded, otherwise False.

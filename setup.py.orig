@@ -19,8 +19,8 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-#pylint: disable=invalid-name,subprocess-run-check
-# We don't need to check these in setup
+#pylint: disable=subprocess-run-check,invalid-name
+# We don't need to check the values here, this is just setup.
 
 import os
 import subprocess
@@ -28,9 +28,9 @@ from distutils.cmd import Command
 from distutils.core import setup
 
 def get_version():
-    """ Get the program version. """
+    """ Get program version."""
     #pylint: disable=exec-used
-    # Just getting the version.
+    # Just getting the version here, no user input involved.
     version = {}
     with open(os.path.join('repolib', '__version__.py')) as fp:
         exec(fp.read(), version)
@@ -176,16 +176,29 @@ class Test(Command):
             subprocess.run(lint_command)
 
 setup(
+<<<<<<< HEAD
+    name = 'repolib',
+    version = get_version(),
+    author = 'Ian Santopietro',
+    author_email = 'isantop@gmail.com',
+    url = 'https://github.com/isantop/repolib',
+    description = 'Easily manage software sources',
+    download_url = 'https://github.com/isantop/repolib/releases',
+    long_description = long_description,
+    tests_require = ['pytest'],
+    license = 'LGPLv3',
+=======
     name='repolib',
     version=get_version(),
     author='Ian Santopietro',
-    author_email='ian@system76.com',
-    url='https://github.com/pop-os/repolib',
+    author_email='isantop@gmail.com',
+    url='https://github.com/isantop/repolib',
     description='Easily manage software sources',
-    download_url='https://github.com/pop-os/repolib/releases',
+    download_url='https://github.com/isantop/repolib/releases',
     long_description=long_description,
     tests_require=['pytest'],
-    license='LGPLv3',
+    license='BSD-2',
+>>>>>>> build(python): Fix/disable pylint checks for docs and setup.py
     packages=['repolib', 'repolib/command'],
     cmdclass={'release': Release, 'test': Test},
     scripts=['bin/apt-manage'],

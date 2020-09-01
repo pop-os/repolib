@@ -68,13 +68,13 @@ class DebLine(source.Source):
         new_source = DebLine(self.deb_line)
         new_source = self._copy(new_source, source_code=source_code)
         return new_source
-    
+
     def save_to_disk(self, save=True):
         """
         Saves the repo to disk
         """
         if save:
-            super().save_to_disk()
+            super().save_to_disk(save=save)
 
     def _parse_debline(self, line):
         self.init_values()
