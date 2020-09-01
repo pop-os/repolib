@@ -14,6 +14,30 @@ Documentation
 
 Documentation is available online at `Read The Docs <https://repolib.rtfd.io/>`_.
 
+
+Basic CLI Usage
+-----------
+
+RepoLib includes a CLI program for managing software repositories, 
+:code:`apt-manage`
+.
+
+Usage is divided into subcommands for most tasks. Currently implemented commands
+are:
+
+    apt-manage add # Adds repositories to the system
+
+Additional information is available with the built-in help:
+
+    apt-manage --help
+    
+Add
+^^^
+
+Apt-manage allows entering a URL for a repository, a complete debian line, or a
+Launchpad PPA shortcut (e.g. "ppa:user/repo"). It also adds signing keys for PPA
+style repositories automatically. 
+
 Installation
 ============
 
