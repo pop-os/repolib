@@ -19,16 +19,18 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
+#pylint: disable=invalid-name,subprocess-run-check
+# We don't need to check these in setup
 
-import subprocess
-
-from distutils.core import setup
-from distutils.cmd import Command
 import os
 import subprocess
-import sys
+from distutils.cmd import Command
+from distutils.core import setup
 
 def get_version():
+    """ Get the program version. """
+    #pylint: disable=exec-used
+    # Just getting the version.
     version = {}
     with open(os.path.join('repolib', '__version__.py')) as fp:
         exec(fp.read(), version)
@@ -69,7 +71,7 @@ class Release(Command):
         self.skip_git = False
         self.prerelease = None
         self.increment = None
-    
+
     def finalize_options(self):
         pass
 
@@ -82,9 +84,9 @@ class Release(Command):
             output = sp_complete.stdout.decode('UTF-8').split('\n')
             print('\n'.join(output))
             for line in output:
-                    if 'tag to create' in line:
-                            version_line = line
-            
+                if 'tag to create' in line:
+                    version_line = line
+
             try:
                 return version_line.split()[-1].replace('v', '')
             except UnboundLocalError:
@@ -96,7 +98,7 @@ class Release(Command):
         if self.dry_run:
             print('Dry run: Not making actual changes')
             cz_command.append('--dry-run')
-        
+
         if self.prerelease:
             if self.prerelease.lower() not in ['alpha', 'beta', 'rc']:
                 raise Exception(
@@ -105,7 +107,7 @@ class Release(Command):
                 )
             cz_command.append('--prerelease')
             cz_command.append(self.prerelease.lower())
-        
+
         if self.increment:
             if self.increment.upper() not in ['MAJOR', 'MINOR', 'PATCH']:
                 raise Exception(
@@ -114,13 +116,13 @@ class Release(Command):
                 )
             cz_command.append('--increment')
             cz_command.append(self.increment.upper())
-        
-        # We need to get the new version from CZ, as the file hasn't been 
+
+        # We need to get the new version from CZ, as the file hasn't been
         # updated yet.
         version_command = cz_command.copy()
         version_command.append('--dry-run')
         version_complete = subprocess.run(version_command, capture_output=True)
-        
+
         version = capture_version(version_complete)
         print(f'Old Version: {get_version()}')
         print(f'New version: {version}')
@@ -131,7 +133,7 @@ class Release(Command):
             if not self.dry_run:
                 subprocess.run(ch_command)
                 subprocess.run(['dch', '-r', '""'])
-        
+
         if not self.skip_git:
             print(git_command)
             if not self.dry_run:
@@ -155,7 +157,7 @@ class Test(Command):
         self.skip_flakes = False
         self.skip_test = False
         self.skip_lint = False
-    
+
     def finalize_options(self):
         pass
 
@@ -163,16 +165,16 @@ class Test(Command):
         pytest_command = ['pytest-3']
         flakes_command = ['pyflakes3', 'repolib']
         lint_command = ['pylint', 'repolib']
-        
+
         if not self.skip_test:
             subprocess.run(pytest_command)
 
         if not self.skip_flakes:
             subprocess.run(flakes_command)
-        
+
         if not self.skip_lint:
             subprocess.run(lint_command)
-            
+
 setup(
     name='repolib',
     version=get_version(),
