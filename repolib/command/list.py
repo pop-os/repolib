@@ -50,6 +50,9 @@ class List(command.Command):
 
     def list_all_sources(self):
         """ List all sources on the system, potentially with their info."""
+        # pylint: disable=too-many-branches
+        # The branches involved control program output. Maybe this can be
+        # split into separate methods.
         sources_files = self.sources_dir.glob('*.sources')
         list_files = self.sources_dir.glob('*.list')
         try:
@@ -72,7 +75,7 @@ class List(command.Command):
         for file in list_files:
             source = LegacyDebSource(filename=file.name)
             source.load_from_file()
-            
+
             if len(source.sources) > 0:
                 self.log.debug('Found source: %s', file.name)
 
@@ -97,7 +100,7 @@ class List(command.Command):
         return True
 
     def get_source_path(self):
-        """ Tries to get the full path to the source. 
+        """ Tries to get the full path to the source.
 
         This is necessary because some sources end in .list, others in .sources
 
@@ -112,7 +115,7 @@ class List(command.Command):
             source = Source(filename=full_path.name)
             source.load_from_file()
             return source
-        
+
         full_name = f'{self.source}.list'
         full_path = self.sources_dir / full_name
         self.log.debug('Trying to load %s', full_path)
@@ -121,7 +124,7 @@ class List(command.Command):
             leg = LegacyDebSource(filename=full_path.name)
             leg.load_from_file()
             return leg.sources[0]
-        
+
         raise RepoError('The path does not exist (checked .sources and .list files.')
 
     def run(self):
@@ -129,7 +132,7 @@ class List(command.Command):
         ret = False
         if self.source == 'x-repolib-all-sources':
             ret = self.list_all_sources()
-        
+
         else:
             try:
                 source = self.get_source_path()
@@ -139,7 +142,7 @@ class List(command.Command):
                     self.source
                 )
                 return False
-            
+
             print(f'Details for source {self.source}:\n{source.make_source_string()}')
             ret = True
         return ret

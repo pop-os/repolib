@@ -81,7 +81,7 @@ class Add(command.Command):
             add_source = PPALine(debline, verbose=self.verbose)
 
         elif debline.startswith('deb'):
-            expand = False
+            self.expand = False
             add_source = DebLine(debline)
 
         else:
