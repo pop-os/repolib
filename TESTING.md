@@ -46,7 +46,7 @@ the correct `.list` file is added to `/etc/apt/sources.list.d`
 2. Test adding deb repositories 
 
 ```
-sudo apt-manage -b deb http://example.com ubuntu main
+sudo apt-manage -b add deb http://example.com ubuntu main
 ```
 Verify that the added repository matches the given input, and that there is a
 commented-out `deb-src` repository with it. 
