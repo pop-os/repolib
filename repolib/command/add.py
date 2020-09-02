@@ -119,7 +119,7 @@ class Add(command.Command):
             self.log.info('Filename to save: %s', new_source.filename)
             print(f'{new_source.make_deblines()}')
 
-        if expand:
+        if self.expand:
             print(new_source.sources[0].make_source_string())
             print(f'{add_source.ppa_info["description"]}\n')
             print('Press [ENTER] to contine or Ctrl + C to cancel.')
