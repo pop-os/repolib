@@ -19,11 +19,14 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
+#pylint: disable=too-many-ancestors
+# If we want to use the subclass, we don't have a lot of options.
 
 from . import deb
+from . import source
 from . import util
 
-class LegacyDebSource():
+class LegacyDebSource(source.Source):
     """Legacy deb sources
 
     Because Legacy Deb format entries have limitations on how many URIs or
@@ -38,8 +41,7 @@ class LegacyDebSource():
         filename (str): The name of the source file on disk
     """
 
-    def __init__(self, name='', filename='example.list'):
-        self.name = name
+    def __init__(self, *args, filename='example.list', **kwargs):
         self.filename = filename
         self.sources = []
 
@@ -60,8 +62,8 @@ class LegacyDebSource():
         """
         if filename:
             self.filename = filename
-        self.name = ''
         self.sources = []
+        name = None
 
         full_path = util.get_sources_dir() / self.filename
 
@@ -70,6 +72,11 @@ class LegacyDebSource():
                 if util.validate_debline(line):
                     deb_src = deb.DebLine(line)
                     self.sources.append(deb_src)
+                    deb_src.name = self.name
+                elif "X-Repolib-Name" in line:
+                    name = ':'.join(line.split(':')[1:])
+                    self.name = name.strip()
+                    
 
     def save_to_disk(self):
         """ Save the source to the disk. """
@@ -90,8 +97,23 @@ class LegacyDebSource():
             A str with the output entries.
         """
         toprint = '## Added/managed by repolib ##\n'
-        toprint += f'#\n## X-Repolib-Name: {self.sources[0].name}\n'
+        toprint += f'#\n## X-Repolib-Name: {self.name}\n'
         for source in self.sources:
             toprint += f'{source.make_debline()}\n'
 
         return toprint
+
+    @property
+    def name(self):
+        """str: The name for this source."""
+        try:
+            return self._name
+        except AttributeError:
+            try:
+                return self.sources[0].name
+            except IndexError:
+                return self.filename.replace('.list', '')
+
+    @name.setter
+    def name(self, name):
+        self._name = name
