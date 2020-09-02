@@ -212,12 +212,17 @@ def get_argparser():
         default='x-repolib-all-sources',
         help='The repository to list details about.'
     )
-
     parser_list.add_argument(
         '-v',
         '--verbose',
         action='store_true',
         help='Display details of all configured repositories.'
+    )
+    parser_list.add_argument(
+        '-l',
+        '--legacy',
+        action='store_true',
+        help='Include listing details about entries configured in sources.list'
     )
 
     # source subcommand
