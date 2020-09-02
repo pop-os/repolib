@@ -26,10 +26,12 @@ Usage is divided into subcommands for most tasks. Currently implemented commands
 are:
 
     apt-manage add # Adds repositories to the system
+    apt-manage list # Lists configuration details of repositories
 
 Additional information is available with the built-in help:
 
     apt-manage --help
+    
     
 Add
 ^^^
@@ -37,6 +39,16 @@ Add
 Apt-manage allows entering a URL for a repository, a complete debian line, or a
 Launchpad PPA shortcut (e.g. "ppa:user/repo"). It also adds signing keys for PPA
 style repositories automatically. 
+
+
+List
+^^^^
+
+With no options, it outputs a list of the currently configured repositories on 
+the system (all those found in 
+:code:`/etc/apt/sources.list.d/`
+. With a configured repository as an argument, it outputs the configuration
+details of the specified repository.
 
 Installation
 ============

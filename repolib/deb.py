@@ -79,6 +79,8 @@ class DebLine(source.Source):
     def _parse_debline(self, line):
         self.init_values()
 
+        self._validate(line)
+
         # Enabled vs. Disabled
         self.enabled = True
         if line.startswith('#'):

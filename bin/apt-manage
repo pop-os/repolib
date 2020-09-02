@@ -73,7 +73,7 @@ def main(options=None):
     action = {
     #     'source': source,
         'add': repolib.command.Add,
-    #     'list': listall,
+        'list': repolib.command.List,
     #     'repo': repo,
     #     'convert': convert
     }
