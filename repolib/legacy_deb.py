@@ -41,6 +41,9 @@ class LegacyDebSource(source.Source):
         filename (str): The name of the source file on disk
     """
 
+    # pylint: disable=super-init-not-called
+    # Because this is a sort of meta-source, it needs to be different from the
+    # super class.
     def __init__(self, *args, filename='example.list', **kwargs):
         self.filename = filename
         self.sources = []
@@ -76,8 +79,10 @@ class LegacyDebSource(source.Source):
                 elif "X-Repolib-Name" in line:
                     name = ':'.join(line.split(':')[1:])
                     self.name = name.strip()
-                    
 
+    # pylint: disable=arguments-differ
+    # This is operating on a very different kind of source, thus needs to be
+    # different.
     def save_to_disk(self):
         """ Save the source to the disk. """
         self.sources[0].save_to_disk(save=False)
@@ -98,8 +103,8 @@ class LegacyDebSource(source.Source):
         """
         toprint = '## Added/managed by repolib ##\n'
         toprint += f'#\n## X-Repolib-Name: {self.name}\n'
-        for source in self.sources:
-            toprint += f'{source.make_debline()}\n'
+        for repo in self.sources:
+            toprint += f'{repo.make_debline()}\n'
 
         return toprint
 

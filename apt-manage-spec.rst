@@ -141,6 +141,7 @@ configured source, it lists details about the specified source. It has the
 following option::
 
     --verbose, -v
+    --legacy, -l
 
 --verbose
 ^^^^^^^^^
