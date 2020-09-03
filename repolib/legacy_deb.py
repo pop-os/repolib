@@ -19,12 +19,28 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-#pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 # If we want to use the subclass, we don't have a lot of options.
 
 from . import deb
 from . import source
 from . import util
+
+def combine_lists(list1, list2):
+    """ Adds list2 to list1, without adding duplicates.
+
+    Arguments:
+        list1 (list): The list to add to
+        list2 (list): The list to add from
+
+    Returns:
+        A list of the two combined.
+    """
+    for item in list2:
+        if item not in list1:
+            list1.append(item)
+
+    return list1
 
 class LegacyDebSource(source.Source):
     """Legacy deb sources
@@ -45,17 +61,22 @@ class LegacyDebSource(source.Source):
     # Because this is a sort of meta-source, it needs to be different from the
     # super class.
     def __init__(self, *args, filename='example.list', **kwargs):
-        self.filename = filename
+        super().__init__(*args, filename=filename, **kwargs)
         self.sources = []
+        self._source_code_enabled = False
+        self.init_values()
 
     def make_names(self):
         """ Creates a filename for this source, if one is not provided.
 
         It also sets these values up.
         """
-        self.filename = self.sources[0].make_name()
-        self.filename = self.filename.replace('.sources', '.list')
-        self.name = self.filename.replace('.list', '')
+        if not self.filename:
+            self.filename = self.sources[0].make_name()
+            self.filename = self.filename.replace('.sources', '.list')
+
+        if not self.name:
+            self.name = self.filename.replace('.list', '')
 
     def load_from_file(self, filename=None):
         """ Loads the source from a file on disk.
@@ -80,6 +101,33 @@ class LegacyDebSource(source.Source):
                     name = ':'.join(line.split(':')[1:])
                     self.name = name.strip()
 
+        enabled = False
+        uris = []
+        suites = []
+        components = []
+        options = {}
+        for repo in self.sources:
+            if repo.types[0] not in self.types:
+                self.types.append(repo.types[0])
+            if repo.enabled.value == 'yes':
+                if util.AptSourceType.BINARY in repo.types:
+                    enabled = True
+                else:
+                    self.source_code_enabled = True
+            uris = combine_lists(uris, repo.uris)
+            suites = combine_lists(suites, repo.suites)
+            components = combine_lists(components, repo.components)
+            options.update(repo.options)
+
+        self.uris = uris.copy()
+        self.suites = suites.copy()
+        self.components = components.copy()
+        self.options = options.copy()
+        self.enabled = enabled
+
+        if not self.name:
+            self.make_names()
+
     # pylint: disable=arguments-differ
     # This is operating on a very different kind of source, thus needs to be
     # different.
@@ -103,22 +151,42 @@ class LegacyDebSource(source.Source):
         """
         toprint = '## Added/managed by repolib ##\n'
         toprint += f'#\n## X-Repolib-Name: {self.name}\n'
-        for repo in self.sources:
-            toprint += f'{repo.make_debline()}\n'
+
+        for suite in self.suites:
+            for uri in self.uris:
+                out_binary = source.Source()
+                out_binary.name = self.name
+                out_binary.enabled = self.enabled.value
+                out_binary.types = [util.AptSourceType.BINARY]
+                out_binary.uris = [uri]
+                out_binary.suites = [suite]
+                out_binary.components = self.components
+                out_binary.options = self.options
+                toprint += f'{out_binary.make_debline()}\n'
+
+                out_source = out_binary.copy()
+                out_source.enabled = self.source_code_enabled
+                out_source.types = [util.AptSourceType.SOURCE]
+                toprint += f'{out_source.make_debline()}\n'
 
         return toprint
 
     @property
-    def name(self):
-        """str: The name for this source."""
-        try:
-            return self._name
-        except AttributeError:
-            try:
-                return self.sources[0].name
-            except IndexError:
-                return self.filename.replace('.list', '')
+    def source_code_enabled(self):
+        """bool: whether source code should be enabled or not."""
+        code = False
+        for repo in self.sources:
+            if repo.enabled == util.AptSourceEnabled.TRUE:
+                if util.AptSourceType.SOURCE in repo.types:
+                    code = True
 
-    @name.setter
-    def name(self, name):
-        self._name = name
+        self._source_code_enabled = code
+        return self._source_code_enabled
+
+    @source_code_enabled.setter
+    def source_code_enabled(self, enabled):
+        """This needs to be tracked somewhat separately"""
+        self._source_code_enabled = enabled
+        for repo in self.sources:
+            if util.AptSourceType.SOURCE in repo.types:
+                repo.enabled = self.enabled
