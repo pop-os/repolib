@@ -216,7 +216,7 @@ class Source(deb822.Deb822):
         try:
             return self['X-Repolib-Name']
         except KeyError:
-            return None
+            return ""
 
     @name.setter
     def name(self, name):
@@ -228,12 +228,22 @@ class Source(deb822.Deb822):
         try:
             return util.AptSourceEnabled(self['enabled'])
         except KeyError:
-            return None
+            return ''
 
     @enabled.setter
     def enabled(self, enable):
         """ Accept a wide variety of data types/values for ease of use. """
-        if enable in [True, 'Yes', 'yes', 'YES', 'y', 'Y', 1]:
+        e_values = [True,
+                    'True',
+                    'true',
+                    'Yes',
+                    'yes',
+                    'YES',
+                    'y',
+                    'Y',
+                    util.AptSourceEnabled.TRUE,
+                    1]
+        if enable in e_values:
             self['Enabled'] = util.AptSourceEnabled.TRUE.value
         else:
             self['Enabled'] = util.AptSourceEnabled.FALSE.value
@@ -247,7 +257,7 @@ class Source(deb822.Deb822):
                 types.append(util.AptSourceType(dtype.strip()))
             return types
         except KeyError:
-            return None
+            return []
 
     @types.setter
     def types(self, types):
@@ -263,7 +273,7 @@ class Source(deb822.Deb822):
         try:
             return self['URIs'].split()
         except KeyError:
-            return None
+            return []
 
     @uris.setter
     def uris(self, uris):
@@ -272,7 +282,7 @@ class Source(deb822.Deb822):
             self['URIs'] = ' '.join(uris)
         else:
             self['URIs'] = ''
-            self.enabled = False
+            # self.enabled = False
 
     @property
     def suites(self):
@@ -280,7 +290,7 @@ class Source(deb822.Deb822):
         try:
             return self['Suites'].split()
         except KeyError:
-            return None
+            return []
 
     @suites.setter
     def suites(self, suites):
@@ -289,7 +299,7 @@ class Source(deb822.Deb822):
             self['Suites'] = ' '.join(suites)
         else:
             self['Suites'] = ''
-            self.enabled = False
+            # self.enabled = False
 
     @property
     def components(self):
@@ -297,7 +307,7 @@ class Source(deb822.Deb822):
         try:
             return self['Components'].split()
         except KeyError:
-            return None
+            return []
 
     @components.setter
     def components(self, components):
@@ -306,7 +316,7 @@ class Source(deb822.Deb822):
             self['Components'] = ' '.join(components)
         else:
             self['Components'] = ''
-            self.enabled = False
+            # self.enabled = False
 
     @property
     def options(self):
@@ -320,7 +330,7 @@ class Source(deb822.Deb822):
                 options[key] = self[key]
         if len(options) > 0:
             return options
-        return None
+        return {}
 
     @options.setter
     def options(self, options):

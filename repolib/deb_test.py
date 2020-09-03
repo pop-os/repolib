@@ -43,7 +43,7 @@ class DebTestCase(unittest.TestCase):
         self.assertEqual(source.uris, ['http://example.com/'])
         self.assertEqual(source.suites, ['suite'])
         self.assertEqual(source.components, ['main'])
-        self.assertIsNone(source.options)
+        self.assertFalse(source.options)
         self.assertEqual(source.filename, 'deb-example-com.sources')
 
     def test_source_with_multiple_components(self):
@@ -65,7 +65,7 @@ class DebTestCase(unittest.TestCase):
             'deb http://example.com/[release]/ubuntu suite main'
         )
         self.assertEqual(source.uris, ['http://example.com/[release]/ubuntu'])
-        self.assertIsNone(source.options, {})
+        self.assertFalse(source.options, {})
 
     def test_source_options_with_colons(self):
         source = deb.DebLine(
