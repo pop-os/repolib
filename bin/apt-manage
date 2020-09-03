@@ -74,7 +74,7 @@ def main(options=None):
     #     'source': source,
         'add': repolib.command.Add,
         'list': repolib.command.List,
-    #     'repo': repo,
+        'remove': repolib.command.Remove,
     #     'convert': convert
     }
     subcommand = action[args.action](log, args, parser)

@@ -27,5 +27,6 @@ repolib. apt-manage uses this library.
 from . import argparser
 from .add import Add
 from .list import List
+from .remove import Remove
 
 parser = argparser.get_argparser()
