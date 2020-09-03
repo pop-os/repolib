@@ -47,6 +47,10 @@ class LegacyDebSource(source.Source):
     def __init__(self, *args, filename='example.list', **kwargs):
         self.filename = filename
         self.sources = []
+        self._uris = []
+        self._suites = []
+        self._components = []
+        self._source_code_enabled = False
 
     def make_names(self):
         """ Creates a filename for this source, if one is not provided.
@@ -90,6 +94,11 @@ class LegacyDebSource(source.Source):
 
         source_output = self.make_deblines()
 
+        output_sources = []
+        for suite in self.suites:
+            for uri in self.uris:
+
+
         with open(full_path, 'w') as source_file:
             source_file.write(source_output)
 
@@ -122,3 +131,167 @@ class LegacyDebSource(source.Source):
     @name.setter
     def name(self, name):
         self._name = name
+
+    @property
+    def enabled(self):
+        """ util.AptSourceEnabled: Whether the source is enabled or not. """
+        return self.sources[0].enabled
+
+    @enabled.setter
+    def enabled(self, enable):
+        """ Accept a wide variety of data types/values for ease of use. 
+        
+        We also only operate on Binary package repositories, as source code 
+        repos are handled through the `types` property.
+        """
+        if enable in [True, 'Yes', 'yes', 'YES', 'y', 'Y', 1]:
+            for repo in self.sources:
+                if util.AptSourceType.BINARY in repo.types:
+                    repo.enabled = True
+                if util.AptSourceType.SOURCE in repo.types:
+                    repo.enabled = self._source_code_enabled
+        else:
+            for repo in self.sources:
+                repo.enabled = False
+    
+    @property
+    def source_code_enabled(self):
+        """bool: whether source code should be enabled or not."""
+        code = False
+        for repo in self.sources:
+            if repo.enabled:
+                if util.AptSourceType.SOURCE in repo.types:
+                    code = True
+        
+        self._source_code_enabled = code
+        return self._source_code_enabled
+    
+    @source_code_enabled.setter
+    def source_code_enabled(self, enabled):
+        """This needs to be tracked somewhat separately"""
+        self._source_code_enabled = enabled
+        for repo in self.sources:
+            if util.AptSourceType.SOURCE in repo.types:
+                repo.enabled = self.enabled
+
+    @property
+    def types(self):
+        """ list of util.AptSourceTypes: The types of packages provided. 
+        
+        We want to list anything that's enabled in the file.
+        """
+        binary = False
+        code = False
+        for repo in self.sources:
+            if repo.enabled:
+                if util.AptSourceType.BINARY in repo.types:
+                    binary = True
+                if util.AptSourceType.SOURCE in repo.types:
+                    code = True
+        
+        types = []
+        if binary:
+            types.append(util.AptSourceType.BINARY)
+        if code:
+            types.append(util.AptSourceType.SOURCE)
+        
+        if len(types) > 1:
+            self._source_code_enabled = True
+        return types
+
+    @types.setter
+    def types(self, types):
+        """ 
+        This source type doesn't directly store the list of types, so instead 
+        we need to look at the input and determine how to apply changes to the
+        various sources inside this one.
+        """
+        if types == [util.AptSourceType.BINARY]:
+            self._source_code_enabled = False
+        else:
+            self._source_code_enabled = True
+        
+        if self.enabled:
+            for repo in self.sources:
+                if util.AptSourceType.SOURCE in repo.types:
+                    repo.enabled = self._source_code_enabled
+
+    @property
+    def uris(self):
+        """ [str]: The list of URIs providing packages. """
+        if self._uris:
+            return self._uris
+        else:
+            for repo in self.sources:
+                if repo.uri not in self._uris:
+                    self._uris.append(repo.uris[0])
+            return self._uris
+
+    @uris.setter
+    def uris(self, uris):
+        """ If the user tries to remove the last URI, disable instead. """
+        if len(uris) > 0:
+            for repo in self.sources:
+                repo.uris = self._uris
+            self._uris = uris
+        else:
+            self.enabled = False
+
+    @property
+    def suites(self):
+        """ [str]: The list of enabled Suites. """
+        if self._suites:
+            return self._suites
+        else:
+            for repo in self.sources:
+                if repo.suite not in self._suites:
+                    self._suites.append(repo.suites[0])
+            return self._suites
+
+    @suites.setter
+    def suites(self, suites):
+        """ If user removes the last suite, disable instead. """
+        if len(suites) > 0:
+            for repo in self.sources:
+                repo.suites = self._suites
+            self._suites = suites
+        else:
+            self.enabled = False
+
+    @property
+    def components(self):
+        """[str]: The list of components enabled. """
+        for repo in self.sources:
+            for component in repo.components:
+                if component not in self._components:
+                    components.append(component)
+        return self._components
+
+    @components.setter
+    def components(self, components):
+        if len(components) > 0:
+            for repo in self.sources:
+                repo.components = components.copy()
+        else:
+            self.enabled = False
+
+    @property
+    def options(self):
+        """ dict: Addtional options for the repository."""
+        opts = {}
+        for repo in self.sources:
+            opts.update(repo.options)
+        
+        if opts:
+            return opts
+        return None
+
+    @options.setter
+    def options(self, options):
+        if options:
+            for repo in self.sources:
+                repo.options = options.copy()
+        else:
+            for repo in self.sources:
+                repo.options = None
+
