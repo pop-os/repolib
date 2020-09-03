@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-#pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 # If we want to use the subclass, we don't have a lot of options.
 
 from . import deb
@@ -47,6 +47,7 @@ class LegacyDebSource(source.Source):
     def __init__(self, *args, filename='example.list', **kwargs):
         self.filename = filename
         self.sources = []
+        self._enabled = ''
         self._uris = []
         self._suites = []
         self._components = []
@@ -94,11 +95,6 @@ class LegacyDebSource(source.Source):
 
         source_output = self.make_deblines()
 
-        output_sources = []
-        for suite in self.suites:
-            for uri in self.uris:
-
-
         with open(full_path, 'w') as source_file:
             source_file.write(source_output)
 
@@ -112,8 +108,23 @@ class LegacyDebSource(source.Source):
         """
         toprint = '## Added/managed by repolib ##\n'
         toprint += f'#\n## X-Repolib-Name: {self.name}\n'
-        for repo in self.sources:
-            toprint += f'{repo.make_debline()}\n'
+
+        for suite in self.suites:
+            for uri in self.uris:
+                out_binary = source.Source()
+                out_binary.name = self.name
+                out_binary.enabled = self.enabled.value
+                out_binary.types = [util.AptSourceType.BINARY]
+                out_binary.uris = [uri]
+                out_binary.suites = [suite]
+                out_binary.components = self.components
+                out_binary.options = self.options
+                toprint += f'{out_binary.make_debline()}\n'
+
+                out_source = out_binary.copy()
+                out_source.enabled = self.source_code_enabled
+                out_source.types = [util.AptSourceType.SOURCE]
+                toprint += f'{out_source.make_debline()}\n'
 
         return toprint
 
@@ -132,16 +143,23 @@ class LegacyDebSource(source.Source):
     def name(self, name):
         self._name = name
 
+    # pylint: disable=no-else-return
+    # We're returning outside the else. It shouldn't be failing.
+
     @property
     def enabled(self):
         """ util.AptSourceEnabled: Whether the source is enabled or not. """
-        return self.sources[0].enabled
+        if self._enabled:
+            return util.AptSourceEnabled(self._enabled)
+        else:
+            self._enabled = self.sources[0].enabled.value
+        return util.AptSourceEnabled(self._enabled)
 
     @enabled.setter
     def enabled(self, enable):
-        """ Accept a wide variety of data types/values for ease of use. 
-        
-        We also only operate on Binary package repositories, as source code 
+        """ Accept a wide variety of data types/values for ease of use.
+
+        We also only operate on Binary package repositories, as source code
         repos are handled through the `types` property.
         """
         if enable in [True, 'Yes', 'yes', 'YES', 'y', 'Y', 1]:
@@ -153,7 +171,7 @@ class LegacyDebSource(source.Source):
         else:
             for repo in self.sources:
                 repo.enabled = False
-    
+
     @property
     def source_code_enabled(self):
         """bool: whether source code should be enabled or not."""
@@ -162,10 +180,10 @@ class LegacyDebSource(source.Source):
             if repo.enabled:
                 if util.AptSourceType.SOURCE in repo.types:
                     code = True
-        
+
         self._source_code_enabled = code
         return self._source_code_enabled
-    
+
     @source_code_enabled.setter
     def source_code_enabled(self, enabled):
         """This needs to be tracked somewhat separately"""
@@ -176,8 +194,8 @@ class LegacyDebSource(source.Source):
 
     @property
     def types(self):
-        """ list of util.AptSourceTypes: The types of packages provided. 
-        
+        """ list of util.AptSourceTypes: The types of packages provided.
+
         We want to list anything that's enabled in the file.
         """
         binary = False
@@ -188,21 +206,21 @@ class LegacyDebSource(source.Source):
                     binary = True
                 if util.AptSourceType.SOURCE in repo.types:
                     code = True
-        
+
         types = []
         if binary:
             types.append(util.AptSourceType.BINARY)
         if code:
             types.append(util.AptSourceType.SOURCE)
-        
+
         if len(types) > 1:
             self._source_code_enabled = True
         return types
 
     @types.setter
     def types(self, types):
-        """ 
-        This source type doesn't directly store the list of types, so instead 
+        """
+        This source type doesn't directly store the list of types, so instead
         we need to look at the input and determine how to apply changes to the
         various sources inside this one.
         """
@@ -210,7 +228,7 @@ class LegacyDebSource(source.Source):
             self._source_code_enabled = False
         else:
             self._source_code_enabled = True
-        
+
         if self.enabled:
             for repo in self.sources:
                 if util.AptSourceType.SOURCE in repo.types:
@@ -223,9 +241,9 @@ class LegacyDebSource(source.Source):
             return self._uris
         else:
             for repo in self.sources:
-                if repo.uri not in self._uris:
+                if repo.uris[0] not in self._uris:
                     self._uris.append(repo.uris[0])
-            return self._uris
+        return self._uris
 
     @uris.setter
     def uris(self, uris):
@@ -244,9 +262,9 @@ class LegacyDebSource(source.Source):
             return self._suites
         else:
             for repo in self.sources:
-                if repo.suite not in self._suites:
+                if repo.suites[0] not in self._suites:
                     self._suites.append(repo.suites[0])
-            return self._suites
+        return self._suites
 
     @suites.setter
     def suites(self, suites):
@@ -264,7 +282,7 @@ class LegacyDebSource(source.Source):
         for repo in self.sources:
             for component in repo.components:
                 if component not in self._components:
-                    components.append(component)
+                    self._components.append(component)
         return self._components
 
     @components.setter
@@ -280,8 +298,11 @@ class LegacyDebSource(source.Source):
         """ dict: Addtional options for the repository."""
         opts = {}
         for repo in self.sources:
-            opts.update(repo.options)
-        
+            try:
+                opts.update(repo.options)
+            except TypeError:
+                pass
+
         if opts:
             return opts
         return None
@@ -294,4 +315,3 @@ class LegacyDebSource(source.Source):
         else:
             for repo in self.sources:
                 repo.options = None
-
