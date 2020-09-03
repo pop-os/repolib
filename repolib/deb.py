@@ -80,7 +80,6 @@ class DebLine(source.Source):
         self.init_values()
 
         self._validate(line)
-
         # Enabled vs. Disabled
         self.enabled = True
         if line.startswith('#'):
@@ -121,12 +120,12 @@ class DebLine(source.Source):
                 break
         self.components = comps
 
+
     def _validate(self, valid):
         """
         Ensure we have a valid debian repository line.
         """
         if valid.startswith('#'):
-            self.enabled = False
             valid = valid.replace('#', '')
         valid = valid.strip()
         if not valid.startswith('deb'):
