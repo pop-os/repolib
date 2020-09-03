@@ -31,6 +31,8 @@ class Command:
         self.log = log
         self.args = args
         self.parser = parser
+        if self.args.debug != 0:
+            self.log.info('Debug mode set, not-saving any changes.')
 
     def run(self):
         """ The initial base for running the command.
