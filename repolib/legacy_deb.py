@@ -45,13 +45,14 @@ class LegacyDebSource(source.Source):
     # Because this is a sort of meta-source, it needs to be different from the
     # super class.
     def __init__(self, *args, filename='example.list', **kwargs):
-        self.filename = filename
+        super().__init__(*args, filename=filename, **kwargs)
         self.sources = []
-        self._enabled = ''
+        self['Enabled'] = ''
         self._uris = []
         self._suites = []
         self._components = []
         self._source_code_enabled = False
+        self.init_values()
 
     def make_names(self):
         """ Creates a filename for this source, if one is not provided.
@@ -132,7 +133,7 @@ class LegacyDebSource(source.Source):
     def name(self):
         """str: The name for this source."""
         try:
-            return self._name
+            return self['X-Repolib-Name']
         except AttributeError:
             try:
                 return self.sources[0].name
@@ -141,7 +142,7 @@ class LegacyDebSource(source.Source):
 
     @name.setter
     def name(self, name):
-        self._name = name
+        self['X-Repolib-Name'] = name
 
     # pylint: disable=no-else-return
     # We're returning outside the else. It shouldn't be failing.
@@ -149,11 +150,11 @@ class LegacyDebSource(source.Source):
     @property
     def enabled(self):
         """ util.AptSourceEnabled: Whether the source is enabled or not. """
-        if self._enabled:
-            return util.AptSourceEnabled(self._enabled)
+        if self['Enabled']:
+            return util.AptSourceEnabled(self['Enabled'])
         else:
-            self._enabled = self.sources[0].enabled.value
-        return util.AptSourceEnabled(self._enabled)
+            self['Enabled'] = self.sources[0].enabled.value
+        return util.AptSourceEnabled(self['Enabled'])
 
     @enabled.setter
     def enabled(self, enable):
@@ -163,12 +164,14 @@ class LegacyDebSource(source.Source):
         repos are handled through the `types` property.
         """
         if enable in [True, 'Yes', 'yes', 'YES', 'y', 'Y', 1]:
+            self['Enabled'] = 'yes'
             for repo in self.sources:
                 if util.AptSourceType.BINARY in repo.types:
                     repo.enabled = True
                 if util.AptSourceType.SOURCE in repo.types:
                     repo.enabled = self._source_code_enabled
         else:
+            self['Enabled'] = 'no'
             for repo in self.sources:
                 repo.enabled = False
 
@@ -177,7 +180,7 @@ class LegacyDebSource(source.Source):
         """bool: whether source code should be enabled or not."""
         code = False
         for repo in self.sources:
-            if repo.enabled:
+            if repo.enabled == util.AptSourceEnabled.TRUE:
                 if util.AptSourceType.SOURCE in repo.types:
                     code = True
 
@@ -213,8 +216,11 @@ class LegacyDebSource(source.Source):
         if code:
             types.append(util.AptSourceType.SOURCE)
 
+        self['types'] = 'deb'
         if len(types) > 1:
+            self['types'] = 'deb deb-src'
             self._source_code_enabled = True
+        
         return types
 
     @types.setter
@@ -224,10 +230,14 @@ class LegacyDebSource(source.Source):
         we need to look at the input and determine how to apply changes to the
         various sources inside this one.
         """
+        otypes = 'deb'
         if types == [util.AptSourceType.BINARY]:
             self._source_code_enabled = False
         else:
+            otypes += ' deb-src'
             self._source_code_enabled = True
+        
+        self['Types'] = otypes
 
         if self.enabled:
             for repo in self.sources:
@@ -238,11 +248,13 @@ class LegacyDebSource(source.Source):
     def uris(self):
         """ [str]: The list of URIs providing packages. """
         if self._uris:
+            self['URIs'] = self._uris
             return self._uris
         else:
             for repo in self.sources:
                 if repo.uris[0] not in self._uris:
                     self._uris.append(repo.uris[0])
+        self['URIs'] = self._uris
         return self._uris
 
     @uris.setter
@@ -251,7 +263,7 @@ class LegacyDebSource(source.Source):
         if len(uris) > 0:
             for repo in self.sources:
                 repo.uris = self._uris
-            self._uris = uris
+            self._uris = self['URIs'] = uris
         else:
             self.enabled = False
 
@@ -259,11 +271,13 @@ class LegacyDebSource(source.Source):
     def suites(self):
         """ [str]: The list of enabled Suites. """
         if self._suites:
+            self['Suites'] = self._suites
             return self._suites
         else:
             for repo in self.sources:
                 if repo.suites[0] not in self._suites:
                     self._suites.append(repo.suites[0])
+        self['Suites'] = self._suites
         return self._suites
 
     @suites.setter
@@ -272,7 +286,7 @@ class LegacyDebSource(source.Source):
         if len(suites) > 0:
             for repo in self.sources:
                 repo.suites = self._suites
-            self._suites = suites
+            self._suites = self['Suites'] = suites 
         else:
             self.enabled = False
 
@@ -283,6 +297,7 @@ class LegacyDebSource(source.Source):
             for component in repo.components:
                 if component not in self._components:
                     self._components.append(component)
+        self['Components'] = self._components
         return self._components
 
     @components.setter
@@ -305,7 +320,7 @@ class LegacyDebSource(source.Source):
 
         if opts:
             return opts
-        return None
+        return {}
 
     @options.setter
     def options(self, options):
