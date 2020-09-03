@@ -72,10 +72,17 @@ class Remove(command.Command):
             self.parser.print_usage()
             self.log.error('You need to be root, or use sudo, to remove.')
             return False
+
+        if self.source.lower() == 'system':
+            self.log.error("You cannot remove the system sources!")
+            return False
+
         try:
             remove_path, remove_path_save = self.get_source_path()
         except RepoError:
-            print('No source %s found on system. Check the spelling.', self.source)
+            self.log.error(
+                'No source %s found on system. Check the spelling.', self.source
+            )
             return False
 
         print(
