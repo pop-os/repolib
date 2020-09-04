@@ -74,11 +74,13 @@ def main(options=None):
     #     'source': source,
         'add': repolib.command.Add,
         'list': repolib.command.List,
-    #     'repo': repo,
+        'remove': repolib.command.Remove,
     #     'convert': convert
     }
     subcommand = action[args.action](log, args, parser)
-    subcommand.run()
+    result = subcommand.run()
+    if not result:
+        sys.exit(1)
 
 if __name__ == '__main__':
     try:

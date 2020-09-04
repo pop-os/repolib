@@ -99,3 +99,39 @@ cat /etc/apt/sources.list
 Verify that in addition to the main sources, the repositories in the system-wide
 `/etc/apt/sources.list` are presented in the output, and that they match the 
 entries in the file.
+
+#### Removing repositories
+
+1. Test cancelling removal
+
+```
+sudo apt-manage remove example-com-ubuntu
+sudo apt-manage remove example-com-ubuntu
+sudo apt-manage remove example-com-ubuntu
+```
+
+On the first run, enter 'n' and press enter. Verify that the source is not 
+removed using `apt-manage list`.
+
+On the second run, simply press enter. Verify that the source is not removed by
+using `apt-manage list`.
+
+On the third run, enter 'v' and press enter. Verify that the prompt re-appears
+and waits for valid input ('y', 'n', or Enter).
+
+2. Test removing sources
+
+```
+sudo apt-manage remove example-com-ubuntu
+```
+
+Enter 'y'. Verify that the source is removed using `apt-manage list`.
+
+3. Verify protection of system sources
+
+```
+sudo apt-manage remove system
+```
+
+Verify that the command returns an error and that no action is taken (even if a
+system.sources file does not exist) using `apt-manage list`
