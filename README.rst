@@ -50,6 +50,14 @@ the system (all those found in
 . With a configured repository as an argument, it outputs the configuration
 details of the specified repository.
 
+Remove
+^^^^^^
+
+Accepts one repository as an argument. Removes the specified repository. 
+
+NOTE: The system repository (/etc/at/sources.list.d/system.sources) cannot be 
+removed.
+
 Installation
 ============
 
