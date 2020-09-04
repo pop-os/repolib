@@ -148,13 +148,13 @@ class Test(Command):
     description = 'Run pyflakes, pytest, and pylint'
 
     user_options = [
-        ('skip-flakes', None, 'Skip running pyflakes'),
+        ('run-flakes', None, 'Run pyflakes'),
         ('skip-test', None, 'Skip running pytest'),
         ('skip-lint', None, 'Skip running pylint')
     ]
 
     def initialize_options(self):
-        self.skip_flakes = False
+        self.run_flakes = True
         self.skip_test = False
         self.skip_lint = False
 
@@ -169,7 +169,7 @@ class Test(Command):
         if not self.skip_test:
             subprocess.run(pytest_command)
 
-        if not self.skip_flakes:
+        if not self.run_flakes:
             subprocess.run(flakes_command)
 
         if not self.skip_lint:
