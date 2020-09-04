@@ -123,7 +123,7 @@ class List(command.Command):
             self.log.debug('Path %s exists!', full_path)
             leg = LegacyDebSource(filename=full_path.name)
             leg.load_from_file()
-            return leg.sources[0]
+            return leg
 
         raise RepoError('The path does not exist (checked .sources and .list files.')
 

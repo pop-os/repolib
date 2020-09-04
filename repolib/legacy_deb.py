@@ -190,3 +190,36 @@ class LegacyDebSource(source.Source):
         for repo in self.sources:
             if util.AptSourceType.SOURCE in repo.types:
                 repo.enabled = self.enabled
+
+    @property
+    def types(self):
+        """ list of util.AptSourceTypes: The types of packages provided.
+
+        We need to override in order to learn this from the source_code_enabled
+        property.
+        """
+        if self.source_code_enabled:
+            self['Types'] = 'deb deb-src'
+        else:
+            self['Types'] = 'deb'
+
+        types = []
+        try:
+            for dtype in self['Types'].split():
+                types.append(util.AptSourceType(dtype.strip()))
+            return types
+
+        except KeyError:
+            return []
+
+    @types.setter
+    def types(self, types):
+        if util.AptSourceType.SOURCE in types:
+            self.source_code_enabled = True
+        else:
+            self.source_code_enabled = False
+
+        output_types = []
+        for dtype in types:
+            output_types.append(dtype.value)
+        self['Types'] = ' '.join(output_types)
