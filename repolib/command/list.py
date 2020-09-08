@@ -45,7 +45,7 @@ class List(command.Command):
         super().__init__(log, args, parser)
         self.verbose = args.verbose
         self.legacy = args.legacy
-        self.source = ''.join(args.repository)
+        self.source = ' '.join(args.repository)
         self.sources_dir = get_sources_dir()
 
     def list_all_sources(self):
