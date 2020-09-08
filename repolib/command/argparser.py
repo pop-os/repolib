@@ -57,7 +57,7 @@ def get_argparser():
     parser_add.add_argument(
         'deb_line',
         nargs='*',
-        default='822styledeb',
+        default=['822styledeb'],
         help='The deb line of the repository to add'
     )
     parser_add.add_argument(
@@ -97,7 +97,7 @@ def get_argparser():
     parser_modify.add_argument(
         'repository',
         nargs='*',
-        default='system',
+        default=['system'],
         help='The repository to modify. Default is the system repository.'
     )
 
@@ -209,7 +209,7 @@ def get_argparser():
     parser_list.add_argument(
         'repository',
         nargs='*',
-        default='x-repolib-all-sources',
+        default=['x-repolib-all-sources'],
         help='The repository to list details about.'
     )
     parser_list.add_argument(
@@ -233,7 +233,7 @@ def get_argparser():
     parser_source.add_argument(
         'repository',
         nargs='*',
-        default='x-repolib-all-sources',
+        default=['x-repolib-all-sources'],
         help=(
             'The repository for which to modify source code packages. If not '
             'specified, then attempt to modify for all repositories.'
