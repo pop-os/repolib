@@ -55,7 +55,7 @@ class List(command.Command):
                 'show details about that repository.'
                 )
         )
-        
+
         options.add_argument(
             'repository',
             nargs='*',

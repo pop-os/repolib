@@ -1,3 +1,6 @@
+# pylint: disable=unused-import,cyclic-import
+# It isn't used by the base class, but is used by subclasses.
+# Can't seem to find the cyclic import being complained about.
 
 """
 Copyright (c) 2020, Ian Santopietro
@@ -47,16 +50,16 @@ class Command:
         self.sources_dir = get_sources_dir()
         if args.debug != 0:
             self.log.info('Debug mode set, not-saving any changes.')
-        
+
         self.finalize_options(args)
-    
+
     def finalize_options(self, args):
         """ Base options parsing class.
 
-        Use this class in commands to set up the final options parsing and set 
+        Use this class in commands to set up the final options parsing and set
         instance variables for later use.
         """
-        # This is set for backwards-compatibility with existing commands. It 
+        # This is set for backwards-compatibility with existing commands. It
         # will be removed in future versions.
         self.args = args
 
