@@ -41,6 +41,42 @@ class List(command.Command):
         --verbose, v
     """
 
+    @classmethod
+    def init_options(cls, subparsers):
+        """ Sets up this command's options parser.
+
+        Returns:
+            The subparser for this command.
+        """
+        options = subparsers.add_parser(
+            'list',
+            help=(
+                'List configured repositories. If a repository name is provided, '
+                'show details about that repository.'
+                )
+        )
+        
+        options.add_argument(
+            'repository',
+            nargs='*',
+            default=['x-repolib-all-sources'],
+            help='The repository to list details about.'
+        )
+        options.add_argument(
+            '-v',
+            '--verbose',
+            action='store_true',
+            help='Display details of all configured repositories.'
+        )
+        options.add_argument(
+            '-l',
+            '--legacy',
+            action='store_true',
+            help='Include listing details about entries configured in sources.list'
+        )
+
+
+
     def __init__(self, log, args, parser):
         super().__init__(log, args, parser)
         self.verbose = args.verbose
