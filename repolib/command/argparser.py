@@ -25,8 +25,9 @@ Module for getting an argparser. Used by apt-manage
 import argparse
 import inspect
 
+from repolib import command as cmd
+
 from .. import __version__
-from repolib import command
 
 def get_argparser():
     """ Get an argument parser with our arguments.
@@ -53,14 +54,14 @@ def get_argparser():
         metavar='COMMAND'
     )
 
-    objs = []
-    for cl in inspect.getmembers(command, inspect.isclass):
-        obj = getattr(command, cl[0])
-        objs.append(obj)
-    
-    for obj in objs:
-        obj.init_options(subparsers)
-    
+    subcommands = []
+    for i in inspect.getmembers(cmd, inspect.isclass):
+        obj = getattr(cmd, i[0])
+        subcommands.append(obj)
+
+    for i in subcommands:
+        i.init_options(subparsers)
+
 
     # modify subcommand - This will be moved to it's own file.
     # parser_modify = subparsers.add_parser(

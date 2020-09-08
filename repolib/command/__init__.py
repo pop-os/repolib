@@ -22,7 +22,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 This subpackage contains tools for use in developing CLI applications using
 repolib. apt-manage uses this library.
 """
-#pylint: disable=invalid-name
+#pylint: disable=invalid-name,cyclic-import
+# Can't seem to find the cyclic import being complained about.
 
 from .argparser import get_argparser
 from .add import Add
