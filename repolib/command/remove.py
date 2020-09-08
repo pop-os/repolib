@@ -37,6 +37,22 @@ class Remove(command.Command):
     that the system sources cannot be removed. This requires root.
     """
 
+    @classmethod
+    def init_options(cls, subparsers):
+        """ Sets up this command's options parser.
+
+        Returns:
+            The subparser for this command.
+        """
+        parser_remove = subparsers.add_parser(
+            'remove',
+            help='Remove a configured repository.'
+        )
+        parser_remove.add_argument(
+            'repository',
+            help='The name of the repository to remove. See LIST'
+        )
+
     def __init__(self, log, args, parser):
         super().__init__(log, args, parser)
         self.source = args.repository
