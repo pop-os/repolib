@@ -115,8 +115,8 @@ class PPALine(source.Source):
         Returns:
             str: The name generated.
         """
-        ppa_list = self.ppa_line.split('/')
-        name = f'ppa-{ppa_list[0].replace("ppa:", "")}-{ppa_list[1]}'
+        name = self.ppa_line.replace(':', '-')
+        name = name.replace('/', '-')
 
         return name
 
