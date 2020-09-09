@@ -141,9 +141,9 @@ class Add(command.Command):
 
         if not debline.startswith('deb-src'):
             new_source.sources.append(src_source)
-        
+
         new_source.load_from_sources()
-        
+
         add_source.enabled = True
 
         if self.disable:
@@ -151,7 +151,7 @@ class Add(command.Command):
                 repo.enabled = False
 
         new_source.make_names()
-        
+
         self.log.debug(new_source.name)
         self.log.debug(new_source.filename)
 

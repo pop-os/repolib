@@ -77,7 +77,7 @@ class LegacyDebSource(source.Source):
 
         if not self.name:
             self.name = self.filename.replace('.list', '')
-    
+
     def load_from_sources(self):
         """ Loads the source from its consituent source lines."""
         enabled = False
@@ -175,16 +175,16 @@ class LegacyDebSource(source.Source):
 
         return toprint
 
+
     @property
     def source_code_enabled(self):
         """bool: whether source code should be enabled or not."""
-        code = False
+        source_code = False
         for repo in self.sources:
             if repo.enabled == util.AptSourceEnabled.TRUE:
                 if util.AptSourceType.SOURCE in repo.types:
-                    code = True
-
-        self._source_code_enabled = code
+                    source_code = True
+        self._source_code_enabled = source_code
         return self._source_code_enabled
 
     @source_code_enabled.setter

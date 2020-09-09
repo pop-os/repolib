@@ -135,3 +135,32 @@ sudo apt-manage remove system
 
 Verify that the command returns an error and that no action is taken (even if a
 system.sources file does not exist) using `apt-manage list`
+
+#### Enabling/Disabling Source Code
+
+##### Setup
+
+Add a testing repository:
+
+```
+sudo apt-manage add ppa:system76/proposed
+apt-manage list ppa-system76-proposed
+```
+Verify that the details are correct in the output and that `Types:` is just 
+`deb`.
+
+1. Enable source code for one repo
+
+```
+sudo apt-manage source -e ppa-system76-proposed
+apt-manage list ppa-system76-proposed
+```
+Verify that the `Types:` is now `deb deb-src`.
+
+2. Disable source code for one repo
+
+```
+sudo apt-manage source -d ppa-system76-proposed
+apt-manage list ppa-system76-proposed
+```
+Verify that the `Types:` is now just `deb`.
