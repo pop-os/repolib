@@ -115,13 +115,10 @@ class PPALine(source.Source):
         Returns:
             str: The name generated.
         """
-        try:
-            ref = self.ppa_info['reference'].replace('/', '-')
-            name = f'{ref}-{self.suites[0]}.sources'
-        except (TypeError, AttributeError):
-            name = f'{self.ppa_line.split(":")[1]}'
+        ppa_list = self.ppa_line.split('/')
+        name = f'ppa-{ppa_list[0].replace("ppa:", "")}-{ppa_list[1]}'
 
-        return name.replace("~", "")
+        return name
 
     def save_to_disk(self, save=True):
         """

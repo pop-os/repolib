@@ -77,30 +77,9 @@ class LegacyDebSource(source.Source):
 
         if not self.name:
             self.name = self.filename.replace('.list', '')
-
-    def load_from_file(self, filename=None):
-        """ Loads the source from a file on disk.
-
-        Keyword arguments:
-          filename -- STR, Containing the path to the file. (default: self.filename)
-        """
-        if filename:
-            self.filename = filename
-        self.sources = []
-        name = None
-
-        full_path = util.get_sources_dir() / self.filename
-
-        with open(full_path, 'r') as source_file:
-            for line in source_file:
-                if util.validate_debline(line):
-                    deb_src = deb.DebLine(line)
-                    self.sources.append(deb_src)
-                    deb_src.name = self.name
-                elif "X-Repolib-Name" in line:
-                    name = ':'.join(line.split(':')[1:])
-                    self.name = name.strip()
-
+    
+    def load_from_sources(self):
+        """ Loads the source from its consituent source lines."""
         enabled = False
         uris = []
         suites = []
@@ -127,6 +106,31 @@ class LegacyDebSource(source.Source):
 
         if not self.name:
             self.make_names()
+
+    def load_from_file(self, filename=None):
+        """ Loads the source from a file on disk.
+
+        Keyword arguments:
+          filename -- STR, Containing the path to the file. (default: self.filename)
+        """
+        if filename:
+            self.filename = filename
+        self.sources = []
+        name = None
+
+        full_path = util.get_sources_dir() / self.filename
+
+        with open(full_path, 'r') as source_file:
+            for line in source_file:
+                if util.validate_debline(line):
+                    deb_src = deb.DebLine(line)
+                    self.sources.append(deb_src)
+                    deb_src.name = self.name
+                elif "X-Repolib-Name" in line:
+                    name = ':'.join(line.split(':')[1:])
+                    self.name = name.strip()
+
+        self.load_from_sources()
 
     # pylint: disable=arguments-differ
     # This is operating on a very different kind of source, thus needs to be
