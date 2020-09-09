@@ -62,6 +62,13 @@ class Command:
         # This is set for backwards-compatibility with existing commands. It
         # will be removed in future versions.
         self.args = args
+        
+        self.verbose = False
+        if args.debug > 1:
+            self.verbose = True
+        self.debug = False
+        if args.debug != 0:
+            self.debug = True
 
     def run(self):
         """ The initial base for running the command.
