@@ -96,6 +96,8 @@ CLEAN_CHARS = {
 }
 
 
+# pylint: disable=inconsistent-return-statements
+# I can't seem to figure out where this is inconsistent. :|
 def get_source_path(name, log=None):
     """ Tries to get the full path to the source.
 
@@ -111,7 +113,7 @@ def get_source_path(name, log=None):
     if full_path.exists():
         if log:
             log.debug('Path %s exists!', full_path)
-        full_path
+        return full_path
 
     full_name = f'{name}.list'
     full_path = get_sources_dir() / full_name

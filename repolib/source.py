@@ -261,7 +261,6 @@ class Source(deb822.Deb822):
 
     @source_code_enabled.setter
     def source_code_enabled(self, enabled):
-        """This needs to be tracked somewhat separately"""
         self._source_code_enabled = enabled
         self.types = [util.AptSourceType.BINARY]
         if enabled:

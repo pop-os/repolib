@@ -62,7 +62,7 @@ class Command:
         # This is set for backwards-compatibility with existing commands. It
         # will be removed in future versions.
         self.args = args
-        
+
         self.verbose = False
         if args.debug > 1:
             self.verbose = True

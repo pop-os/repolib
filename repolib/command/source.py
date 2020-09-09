@@ -92,52 +92,11 @@ class Source(command.Command):
         if args.source_disable:
             self.enable = False
 
-    def get_sources_files(self):
-        """ Gets the current sources files from the system.
-
-        Returns:
-            sources_files, list_files, the files ending in .sources, and .list
-        """
-        sources_files_glob = self.sources_dir.glob('*.sources')
-        list_files_glob = self.sources_dir.glob('*.list')
-        sources_files = []
-        list_files = []
-
-        for file in sources_files_glob:
-            self.log.debug('Found source %s', file)
-            source = Source_obj(filename=file.name)
-            source.load_from_file()
-            sources_files.append(source)
-        for file in list_files_glob:
-            self.log.debug('Found source %s', file)
-            source = LegacyDebSource(filename=file.name)
-            source.load_from_file()
-            list_files.append(source)
-
-        return sources_files, list_files
-
     def run(self):
         """ Run the command."""
         if self.repo == 'x-repolib-all-sources':
-            self.log.debug('Setting for all repos: Source Code: %s', self.enable)
-            sources_files, list_files = self.get_sources_files()
-            sources_files += list_files
-
-            for repo in sources_files:
-                try:
-                    set_source_enabled(repo, self.enable)
-                    if self.verbose:
-                        print(repo.make_source_string())
-                    if not self.debug:
-                        repo.save_to_disk()
-                except command.RepolibCommandError as e:
-                    self.log.error(
-                        'Could not change source code for %s:\n%s',
-                        self.repo,
-                        e
-                    )
-
-            return True
+            self.log.error('You must specify a Repository')
+            return False
 
         self.log.debug('Setting for repo %s: Source Code: %s', self.repo, self.enable)
         file_path = get_source_path(self.repo, log=self.log)
@@ -145,7 +104,7 @@ class Source(command.Command):
             repo = Source_obj(filename=file_path.name)
         elif file_path.suffix == '.list':
             repo = LegacyDebSource(filename=file_path.name)
-        
+
         repo.load_from_file()
 
         try:
@@ -154,6 +113,9 @@ class Source(command.Command):
                 print(repo.make_source_string())
             if not self.debug:
                 repo.save_to_disk()
+
+        # pylint: disable=invalid-name
+        # This is a pretty widely used convention
         except command.RepolibCommandError as e:
             self.log.error(
                 'Could not change source code for %s:\n%s',
