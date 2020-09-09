@@ -188,8 +188,8 @@ class LegacyDebSource(source.Source):
         """This needs to be tracked somewhat separately"""
         self._source_code_enabled = enabled
         for repo in self.sources:
-            if util.AptSourceType.SOURCE in repo.types:
-                repo.enabled = self.enabled
+            if util.AptSourceType.SOURCE in repo.types and self.enabled:
+                repo.enabled = enabled
 
     @property
     def types(self):

@@ -249,6 +249,25 @@ class Source(deb822.Deb822):
             self['Enabled'] = util.AptSourceEnabled.FALSE.value
 
     @property
+    def source_code_enabled(self):
+        """bool: whether source code should be enabled or not."""
+        code = False
+        if self.enabled == util.AptSourceEnabled.TRUE:
+            if util.AptSourceType.SOURCE in self.types:
+                code = True
+
+        self._source_code_enabled = code
+        return self._source_code_enabled
+
+    @source_code_enabled.setter
+    def source_code_enabled(self, enabled):
+        """This needs to be tracked somewhat separately"""
+        self._source_code_enabled = enabled
+        self.types = [util.AptSourceType.BINARY]
+        if enabled:
+            self.types.append(util.AptSourceType.SOURCE)
+
+    @property
     def types(self):
         """ list of util.AptSourceTypes: The types of packages provided. """
         try:
