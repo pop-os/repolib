@@ -127,6 +127,8 @@ class Add(command.Command):
             )
             return False
 
+        new_source.name = add_source.name
+        new_source.filename = f'{add_source.make_name()}.list'
         new_source.sources.append(add_source)
 
         if not debline.startswith('deb-src'):
@@ -139,7 +141,9 @@ class Add(command.Command):
 
         if not debline.startswith('deb-src'):
             new_source.sources.append(src_source)
-
+        
+        new_source.load_from_sources()
+        
         add_source.enabled = True
 
         if self.disable:
@@ -147,6 +151,9 @@ class Add(command.Command):
                 repo.enabled = False
 
         new_source.make_names()
+        
+        self.log.debug(new_source.name)
+        self.log.debug(new_source.filename)
 
         if self.args.debug > 0:
             self.log.info('Debug mode set, not saving.')
