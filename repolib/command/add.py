@@ -43,6 +43,42 @@ class Add(command.Command):
         --expand, -e
     """
 
+    @classmethod
+    def init_options(cls, subparsers):
+        """ Sets up this command's options parser.
+
+        Returns:
+            The subparser for this command.
+        """
+        options = subparsers.add_parser(
+            'add',
+            help='Add a new repository to the system.'
+        )
+        options.add_argument(
+            'deb_line',
+            nargs='*',
+            default=['822styledeb'],
+            help='The deb line of the repository to add'
+        )
+        options.add_argument(
+            '-d',
+            '--disable',
+            action='store_true',
+            help='Add the repository and then set it to disabled.'
+        )
+        options.add_argument(
+            '-s',
+            '--source-code',
+            action='store_true',
+            help='Also enable source code packages for the repository.'
+        )
+        options.add_argument(
+            '-e',
+            '--expand',
+            action='store_true',
+            help='Display expanded details about the repository before adding it.'
+        )
+
     # pylint: disable=too-few-public-methods
     # Thinking of ways to add more, but otherwise this is just simple.
 

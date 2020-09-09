@@ -63,22 +63,16 @@ def main(options=None):
     log.setLevel(verbosity[args.debug])
     log.debug('Logging set up!')
 
-    log.debug('Arguments passed: %s', str(args))
-
     if not args.action:
-        args.action = 'list'
-
+        args = parser.parse_args(sys.argv[1:] + ['list'])
+    
+    log.debug('Arguments passed: %s', str(args))
     log.debug('Got command: %s', args.action)
 
-    action = {
-    #     'source': source,
-        'add': repolib.command.Add,
-        'list': repolib.command.List,
-        'remove': repolib.command.Remove,
-    #     'convert': convert
-    }
-    subcommand = action[args.action](log, args, parser)
-    result = subcommand.run()
+    subcommand = args.action.capitalize()
+
+    command = getattr(repolib.command, subcommand)(log, args, parser)
+    result = command.run()
     if not result:
         sys.exit(1)
 
