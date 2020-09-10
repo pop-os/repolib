@@ -29,5 +29,6 @@ from .argparser import get_argparser
 from .add import Add
 from .list import List
 from .remove import Remove
+from .source import Source
 
 parser = get_argparser()
