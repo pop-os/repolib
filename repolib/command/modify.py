@@ -208,36 +208,72 @@ class Modify(command.Command):
 
     def endisable(self, value):
         """ Enable or disable the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Enable/Disable: %s', value)
 
     def add_uri(self, value):
         """ Add URIs to the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Add uris: %s', value)
 
     def remove_uri(self, value):
         """ Remove URIs from the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Remove uris: %s', value)
 
     def add_suite(self, value):
         """ Add suites to the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Add suites: %s', value)
 
     def remove_suite(self, value):
         """ Remove suites from the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Remove suites: %s', value)
 
     def add_component(self, value):
         """ Add components to the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Add components: %s', value)
 
     def remove_component(self, value):
         """ Remove components from the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Remove components: %s', value)
 
     def add_option(self, value):
         """ Add options to the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Add options: %s', value)
 
     def remove_option(self, value):
         """ Remove options from the source. """
+        if not value:
+            # No value provided, take no action
+            return 
+        
         self.log.debug('Remove options: %s', value)
