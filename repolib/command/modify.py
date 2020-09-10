@@ -20,6 +20,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 Module for modifying repos in CLI applications.
 """
 
+from argparse import SUPPRESS
+
 from . import command
 
 from ..legacy_deb import LegacyDebSource
@@ -77,6 +79,13 @@ class Modify(command.Command):
                 'Disable the repository, if enabled. The system repository cannot '
                 'be disabled.'
             )
+        )
+
+        # Name
+        parser.add_argument(
+            '-n',
+            '--name',
+            help='Set the repository name to NAME'
         )
 
         # Suites
@@ -142,26 +151,30 @@ class Modify(command.Command):
         parser.add_argument(
             '--add-option',
             metavar='OPTION=VALUE[,OPTION=VALUE]',
-            help=(
-                'Add the specified option(s) and value(s) to the repository. '
-                'Multiple option-value pairs should be separated with commas.'
-            )
+            help=SUPPRESS
+            # help=(
+            #     'Add the specified option(s) and value(s) to the repository. '
+            #     'Multiple option-value pairs should be separated with commas.'
+            # )
         )
         parser.add_argument(
             '--remove-option',
             metavar='OPTION=VALUE[,OPTION=VALUE]',
-            help=(
-                'Remove the specified option(s) and value(s) from the repository. '
-                'Multiple option-value pairs should be separated with commas.'
-            )
+            help=SUPPRESS
+            # help=(
+            #     'Remove the specified option(s) and value(s) from the repository. '
+            #     'Multiple option-value pairs should be separated with commas.'
+            # )
         )
 
     def __init__(self, log, args, parser):
         super().__init__(log, args, parser)
         self.source = None
+        self.count = 0
 
     def finalize_options(self, args):
         """ Finish setting up our options/arguments."""
+        super().finalize_options(args)
         self.repo = ' '.join(args.repository)
         self.enable = args.enable
         self.disable = args.disable
@@ -174,6 +187,7 @@ class Modify(command.Command):
                 self.actions['endisable'] = i
 
         for i in [
+                'name',
                 'add_uri',
                 'remove_uri',
                 'add_suite',
@@ -199,81 +213,155 @@ class Modify(command.Command):
         else:
             self.source = LegacyDebSource(filename=full_path.name)
 
+        self.source.load_from_file()
         self.log.debug('Actions taken: \n%s', self.actions)
+        self.log.info('Source before:\n%s', self.source.make_source_string())
 
         for i in self.actions:
             getattr(self, i)(self.actions[i])
 
+        self.log.info('Source after:\n%s', self.source.make_source_string())
+        self.log.debug('Lines output:\n%s', self.source.make_deblines())
+
+        if self.count == 0:
+            self.log.error('No changes specified, no actions taken')
+            return False
+
+        if not self.debug:
+            self.source.save_to_disk()
+            return True
+
         return True
+
+    def name(self, value):
+        """ Set the source name. """
+        if not value:
+            # No value provided, take no action
+            return
+        self.count += 1
+        self.log.info('Set name: %s', value)
+
+        self.source.name = value
 
     def endisable(self, value):
         """ Enable or disable the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Enable/Disable: %s', value)
+            return
+        self.count += 1
+        self.log.info('Enable/Disable: %s', value)
+
+        if value == 'disable':
+            self.source.enabled = False
+            return
+        self.source.enabled = True
 
     def add_uri(self, value):
         """ Add URIs to the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Add uris: %s', value)
+            return
+        self.count += 1
+        self.log.info('Add uris: %s', value)
 
+        for uri in value.split():
+            if uri not in self.source.uris:
+                self.source.uris = self.source.uris + [uri]
+                self.log.debug('Added uri: %s', uri)
     def remove_uri(self, value):
         """ Remove URIs from the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Remove uris: %s', value)
+            return
+        self.count += 1
+        self.log.info('Remove uris: %s', value)
 
+        for uri in value.split():
+            if uri in self.source.uris:
+                uris = self.source.uris
+                uris.remove(uri)
+                self.source.uris = uris
+                self.log.debug('Removed uri %s', uri)
     def add_suite(self, value):
         """ Add suites to the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Add suites: %s', value)
+            return
+        self.count += 1
+        self.log.info('Add suites: %s', value)
+
+        for suite in value.split():
+            if suite not in self.source.suites:
+                self.source.suites = self.source.suites + [suite]
+                self.log.debug('Added suite: %s', suite)
 
     def remove_suite(self, value):
         """ Remove suites from the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Remove suites: %s', value)
+            return
+        self.count += 1
+        self.log.info('Remove suites: %s', value)
+
+        for suite in value.split():
+            if suite in self.source.suites:
+                suites = self.source.suites
+                suites.remove(suite)
+                self.source.suites = suites
+                self.log.debug('Removed suite %s', suite)
 
     def add_component(self, value):
         """ Add components to the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Add components: %s', value)
+            return
+        self.count += 1
+        self.log.info('Add components: %s', value)
+
+        for component in value.split():
+            if component not in self.source.components:
+                self.source.components = self.source.components + [component]
+                self.log.debug('Added component: %s', component)
 
     def remove_component(self, value):
         """ Remove components from the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Remove components: %s', value)
+            return
+        self.count += 1
+        self.log.info('Remove components: %s', value)
+
+        for component in value.split():
+            if component in self.source.components:
+                components = self.source.components
+                components.remove(component)
+                self.source.components = components
+                self.log.debug('Removed component %s', component)
 
     def add_option(self, value):
         """ Add options to the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Add options: %s', value)
+            return
+        self.count += 1
+        self.log.info('Add options: %s', value)
+
+        for option in value.split():
+            if option not in self.source.options:
+                self.source.options = self.source.options + [option]
+                self.log.debug('Added option: %s', option)
 
     def remove_option(self, value):
         """ Remove options from the source. """
         if not value:
             # No value provided, take no action
-            return 
-        
-        self.log.debug('Remove options: %s', value)
+            return
+        self.count += 1
+        self.log.info('Remove options: %s', value)
+
+        for option in value.split():
+            if option in self.source.options:
+                options = self.source.options
+                options.remove(option)
+                self.source.options = options
+                self.log.debug('Removed option %s', option)
