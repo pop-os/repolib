@@ -22,13 +22,15 @@ Module for modifying repos in CLI applications.
 
 from . import command
 
+from ..legacy_deb import LegacyDebSource
+from ..source import Source
 from ..util import get_source_path
 
 class Modify(command.Command):
     """ Modify subcommand.
 
     The modify command will allow making modifications to the specified repository.
-    It requires providing a repository to modify. 
+    It requires providing a repository to modify.
 
     Options:
         --enable, -e
@@ -160,19 +162,39 @@ class Modify(command.Command):
         self.enable = args.enable
         self.disable = args.disable
 
-        self.add_uris = args.add_uri
-        self.remove_uris = args.remove_uri
-        
-        self.add_suites = args.add_suite
-        self.remove_suites = args.remove_suite
+        self.actions = {}
 
-        self.add_components = args.add_component
-        self.remove_components = args.remove_component
+        self.actions['endisable'] = None
+        for i in ['enable', 'disable']:
+            if getattr(args, i):
+                self.actions['endisable'] = i
 
-        self.add_options = args.add_option
-        self.remove_options = args.remove_option
-    
+        for i in [
+            'add_uri',
+            'remove_uri',
+            'add_suite',
+            'remove_suite',
+            'add_component',
+            'remove_component',
+            'add_option',
+            'remove_option'
+        ]:
+            self.actions[i] = getattr(args, i)
+
     def run(self):
         """ Run the command."""
         self.log.debug('Modifying repository %s', self.repo)
+        full_path = get_source_path(self.repo, log=self.log)
+
+        if not full_path:
+            self.log.error('Could not find source %s', self.repo)
+            return False
+
+        if full_path.suffix == '.sources':
+            source = Source(filename=full_path.name)
+        else:
+            source = LegacyDebSource(filename=full_path.name)
+
+        self.log.debug('Actions taken: \n%s', self.actions)
+
         return True
