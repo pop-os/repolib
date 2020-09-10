@@ -21,6 +21,10 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 Source Subcommand.
 """
 
+from ..legacy_deb import LegacyDebSource
+from ..source import Source as Source_obj
+from ..util import get_source_path
+
 from . import command
 
 class Source(command.Command):
@@ -82,19 +86,44 @@ class Source(command.Command):
         args.repository [str]: The repository to modify
         args.enable | args.disable: whether to enable or disable source code.
         """
+        super().finalize_options(args)
         self.repo = ' '.join(args.repository)
         self.enable = True
-        if args.disable:
+        if args.source_disable:
             self.enable = False
-
-        self.verbose = False
-        if args.debug > 1:
-            self.verbose = True
 
     def run(self):
         """ Run the command."""
         if self.repo == 'x-repolib-all-sources':
-            pass
+            self.log.error('You must specify a Repository')
+            return False
+
+        self.log.debug('Setting for repo %s: Source Code: %s', self.repo, self.enable)
+        file_path = get_source_path(self.repo, log=self.log)
+        if file_path.suffix == '.sources':
+            repo = Source_obj(filename=file_path.name)
+        elif file_path.suffix == '.list':
+            repo = LegacyDebSource(filename=file_path.name)
+
+        repo.load_from_file()
+
+        try:
+            set_source_enabled(repo, self.enable)
+            if self.verbose:
+                print(repo.make_source_string())
+            if not self.debug:
+                repo.save_to_disk()
+
+        # pylint: disable=invalid-name
+        # This is a pretty widely used convention
+        except command.RepolibCommandError as e:
+            self.log.error(
+                'Could not change source code for %s:\n%s',
+                self.repo,
+                e
+            )
+
+        return True
 
 def set_source_enabled(repo, enabled):
     """ Enables or disables Source Code for the given repository.
