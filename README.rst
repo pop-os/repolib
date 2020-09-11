@@ -58,6 +58,16 @@ Accepts one repository as an argument. Removes the specified repository.
 NOTE: The system repository (/etc/at/sources.list.d/system.sources) cannot be 
 removed.
 
+Source
+^^^^^^
+
+Allows enabling or disabling source code for the given repository. 
+
+Modify
+^^^^^^
+
+Allows changing configuration details of a given repository
+
 Installation
 ============
 
