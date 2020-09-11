@@ -48,9 +48,6 @@ class Command:
         self.log = log
         self.parser = parser
         self.sources_dir = get_sources_dir()
-        if args.debug != 0:
-            self.log.info('Debug mode set, not-saving any changes.')
-
         self.finalize_options(args)
 
     def finalize_options(self, args):
@@ -68,6 +65,7 @@ class Command:
             self.verbose = True
         self.debug = False
         if args.debug != 0:
+            self.log.info('Debug mode set, not-saving any changes.')
             self.debug = True
 
     def run(self):
