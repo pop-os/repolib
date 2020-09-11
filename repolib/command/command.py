@@ -61,12 +61,13 @@ class Command:
         self.args = args
 
         self.verbose = False
-        if args.debug > 1:
-            self.verbose = True
         self.debug = False
-        if args.debug != 0:
-            self.log.info('Debug mode set, not-saving any changes.')
-            self.debug = True
+        if args.debug:
+            if args.debug > 1:
+                self.verbose = True
+            if args.debug != 0:
+                self.log.info('Debug mode set, not-saving any changes.')
+                self.debug = True
 
     def run(self):
         """ The initial base for running the command.

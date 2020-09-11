@@ -128,7 +128,6 @@ class Add(command.Command):
             return False
 
         new_source.name = add_source.name
-        new_source.filename = f'{add_source.make_name()}.list'
         new_source.sources.append(add_source)
 
         if not debline.startswith('deb-src'):
@@ -149,6 +148,7 @@ class Add(command.Command):
         if self.disable:
             for repo in new_source.sources:
                 repo.enabled = False
+            new_source.enabled = False
 
         new_source.make_names()
 
