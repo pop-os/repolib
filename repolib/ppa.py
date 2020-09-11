@@ -118,7 +118,7 @@ class PPALine(source.Source):
         name = self.ppa_line.replace(':', '-')
         name = name.replace('/', '-')
 
-        return name
+        return f'{name}.list'
 
     def save_to_disk(self, save=True):
         """

@@ -60,7 +60,7 @@ class LegacyDebSource(source.Source):
     # pylint: disable=super-init-not-called
     # Because this is a sort of meta-source, it needs to be different from the
     # super class.
-    def __init__(self, *args, filename='example.list', **kwargs):
+    def __init__(self, *args, filename=None, **kwargs):
         super().__init__(*args, filename=filename, **kwargs)
         self.sources = []
         self._source_code_enabled = False
