@@ -136,6 +136,81 @@ sudo apt-manage remove system
 Verify that the command returns an error and that no action is taken (even if a
 system.sources file does not exist) using `apt-manage list`
 
+
+#### Modifying a repository
+
+##### Setup
+
+Add a testing repository:
+
+```
+sudo apt-manage add ppa:system76/proposed
+apt-manage list ppa-system76-proposed
+```
+Verify that the details are correct in the output.
+
+1. Change Repository Name
+
+```
+sudo apt-manage modify ppa-system76-proposed --name 'Testing Repo'
+apt-manage list ppa-system76-proposed
+```
+
+Verify that the name was updated in the final output to match the given input
+`Testing Repo`
+
+2. Disable Repository
+
+```
+sudo apt-manage modify ppa-system76-proposed --disable
+apt-manage list ppa-system76-proposed
+```
+Ensure that the repository is now listed as `Enabled: no`.
+
+3. Add/Remove URI
+
+```
+sudo apt-manage modify ppa-system76-proposed --add-uri http://example.com/
+apt-manage list ppa-system76-proposed
+```
+Ensure that the `http://example.com` URI was added to the source.
+
+```
+sudo apt-manage modify ppa-system76-proposed --remove-uri http://example.com
+apt-manage list ppa-system76-proposed
+```
+Ensure that the `http://example.com` URI was removed.
+
+4. Add/Remove Suite
+
+```
+sudo apt-manage modify ppa-system76-proposed --add-suite xenial
+apt-manage list ppa-system76-proposed
+```
+Ensure that the suite `xenial` was added to the source.
+
+```
+sudo apt-manage modify ppa-system76-proposed --remove-suite xenial
+apt-manage list ppa-system76-proposed
+```
+
+Ensure that the suite `xenial` was removed from the source.
+
+5. Add/Remove Components
+
+```
+sudo apt-manage modify ppa-system76-proposed --add-component 'universe multiverse'
+apt-manage list ppa-system76-proposed
+```
+Ensure that the components `universe` and `multiverse` were added to the source.
+
+```
+sudo apt-manage modify ppa-system76-proposed --remove-component 'main multiverse'
+apt-manage list ppa-system76-proposed
+```
+Ensure that the components `main` and `multiverse` were removed from the source.
+
+
 #### Enabling/Disabling Source Code
 
 ##### Setup

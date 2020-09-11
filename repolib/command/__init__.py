@@ -28,6 +28,7 @@ repolib. apt-manage uses this library.
 from .argparser import get_argparser
 from .add import Add
 from .list import List
+from .modify import Modify
 from .remove import Remove
 from .source import Source
 
