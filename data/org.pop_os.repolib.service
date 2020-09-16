@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.pop_os.repolib
+Exec=/usr/bin/python3 /usr/lib/repolib/service.py
+User=root
