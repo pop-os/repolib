@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+
+  <vendor>Repoman</vendor>
+  <vendor_url>https://github.com/pop-os/repolib</vendor_url>
+  <icon_name>x-system-software-sources</icon_name>
+
+  <action id="org.pop_os.repolib.modifysources">
+    <description>Modifies a Debian Repository in the system software sources.</description>
+    <message>Authentication is required to change software sources.</message>
+    <defaults>
+      <allow_any>auth_admin_keep</allow_any>
+      <allow_inactive>auth_admin_keep</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+</policyconfig> 
