@@ -82,7 +82,7 @@ class Source(deb822.Deb822):
         if not self.filename:
             raise SourceError("No filename to load from")
 
-        full_path = util.get_sources_dir() / filename
+        full_path = util.get_sources_dir() / self.filename
 
         with open(full_path, mode='r') as source_file:
             super().__init__(source_file)
