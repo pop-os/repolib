@@ -21,14 +21,10 @@
 import gi
 from gi.repository import GObject, GLib
 
-import apt
 import dbus
 import dbus.service
 import dbus.mainloop.glib
-import logging
-import sys
 import time
-import os
 
 import repolib
 
@@ -56,7 +52,6 @@ class Repo(dbus.service.Object):
             self.system_repo = None
         
         self.source = None
-        self.cache = apt.Cache()
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
