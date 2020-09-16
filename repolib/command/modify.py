@@ -221,7 +221,6 @@ class Modify(command.Command):
             getattr(self, i)(self.actions[i])
 
         self.log.info('Source after:\n%s', self.source.make_source_string())
-        self.log.debug('Lines output:\n%s', self.source.make_deblines())
 
         if self.count == 0:
             self.log.error('No changes specified, no actions taken')
