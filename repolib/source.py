@@ -22,6 +22,7 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 #pylint: disable=too-many-ancestors
 # If we want to use the subclass, we don't have a lot of options.
 
+import dbus
 import re
 
 from debian import deb822
@@ -94,8 +95,14 @@ class Source(deb822.Deb822):
         full_path = util.get_sources_dir() / self.filename
 
         if save:
-            with open(full_path, mode='w') as sources_file:
-                sources_file.write(self.dump())
+            try:
+                with open(full_path, mode='w') as sources_file:
+                    sources_file.write(self.dump())
+            except PermissionError:
+                bus = dbus.SystemBus()
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.output_file_to_disk(self.filename, self.dump())
+                privileged_object.exit()
 
     def make_source_string(self):
         """ Makes a printable string of the source.

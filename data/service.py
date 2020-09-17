@@ -21,6 +21,7 @@
 import gi
 from gi.repository import GObject, GLib
 
+from pathlib import Path
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -52,7 +53,25 @@ class Repo(dbus.service.Object):
             self.system_repo = None
         
         self.source = None
+        self.sources_dir = Path('/etc/apt/sources.list.d')
     
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='ss', out_signature='b',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def output_file_to_disk(self, filename, source, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        full_path = self.sources_dir / filename
+        try:
+            with open(full_path, mode='w') as output_file:
+                output_file.write(source)
+            return True
+        except:
+            return False
+
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
         in_signature='s', out_signature='b',
