@@ -21,8 +21,9 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 Command to remove sources from the system.
 """
 
-import os
 from pathlib import Path
+
+import dbus
 
 from . import command
 from ..util import get_sources_dir, RepoError
@@ -84,10 +85,6 @@ class Remove(command.Command):
 
     def run(self):
         """ Run the command. """
-        if os.geteuid() != 0:
-            self.parser.print_usage()
-            self.log.error('You need to be root, or use sudo, to remove.')
-            return False
 
         if self.source.lower() == 'system':
             self.log.error("You cannot remove the system sources!")
@@ -116,8 +113,14 @@ class Remove(command.Command):
                 self.log.info('Simulate: Remove %s', remove_path)
                 self.log.info('Simulate: Remove %s', remove_path_save)
             else:
-                remove_path.unlink()
-                remove_path_save.unlink(missing_ok=True)
+                try:
+                    remove_path.unlink()
+                    remove_path_save.unlink(missing_ok=True)
+                except PermissionError:
+                    bus = dbus.SystemBus()
+                    privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                    privileged_object.delete_source(remove_path.name)
+                    privileged_object.exit()
 
         else:
             print('Canceled.')

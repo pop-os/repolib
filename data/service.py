@@ -77,156 +77,16 @@ class Repo(dbus.service.Object):
         in_signature='s', out_signature='b',
         sender_keyword='sender', connection_keyword='conn'
     )
-    def load_source(self, filename, sender=None, conn=None):
-        if filename.endswith('.source'):
-            self.source = repolib.Source(filename=filename)
-            self.source.load_from_file()
-            return True
-
-        elif filename.endswith('.list'):
-            self.source = repolib.LegacyDebSource(filename=filename)
-            self.source.load_from_file()
-            return True
-        
-        return False
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def reload_source(self, sender=None, conn=None):
-        self.source.load_from_file()
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='s',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_name(self, sender=None, conn=None):
-        return self.source.name
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_name(self, name, sender=None, conn=None):
-        self.source.name = name
-        
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='s',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_filename(self, sender=None, conn=None):
-        return self.source.filename
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_filename(self, name, sender=None, conn=None):
-        self.source.filename = name
-        
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='b',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_enabled(self, sender=None, conn=None):
-        return self.source.enabled
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='b', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_enabled(self, enabled, sender=None, conn=None):
-        self.source.enabled = enabled
-        
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='b',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_code_enabled(self, sender=None, conn=None):
-        return self.source.source_code_enabled
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='b', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_code_enabled(self, enabled, sender=None, conn=None):
-        self.source.set_source_enabled(enabled)
-        
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='s',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_uris(self, sender=None, conn=None):
-        return self.source['URIs']
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_uris(self, uris, sender=None, conn=None):
-        self.source['URIs'] = uris
-        
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='s',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_suites(self, sender=None, conn=None):
-        return self.source['Suites']
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_suites(self, suites, sender=None, conn=None):
-        self.source['Suites'] = suites
-        
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='s',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def get_source_components(self, sender=None, conn=None):
-        return self.source['Components']
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def set_source_components(self, components, sender=None, conn=None):
-        self.source['Components'] = components
-        
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='', out_signature='b',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def save_source_to_disk(self, sender=None, conn=None):
+    def delete_source(self, filename, sender=None, conn=None):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        self.source.save_to_disk()
-        return True
+        try:
+            source_file = self.sources_dir / filename
+            source_file.unlink()
+            return True
+        except:
+            return False
 
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
