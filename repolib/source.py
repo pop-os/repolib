@@ -22,12 +22,13 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 #pylint: disable=too-many-ancestors
 # If we want to use the subclass, we don't have a lot of options.
 
-import dbus
 import re
 
+import dbus
 from debian import deb822
 
 from . import util
+
 
 class SourceError(Exception):
     """ Exception from a source object."""
