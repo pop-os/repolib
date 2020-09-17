@@ -17,6 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with Repolib.  If not, see <http://www.gnu.org/licenses/>.
 '''
+#pylint: skip-file
 
 import gi
 from gi.repository import GObject, GLib
