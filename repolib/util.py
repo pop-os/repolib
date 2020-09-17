@@ -150,10 +150,11 @@ def validate_debline(valid):
     Returns:
         True if the line is valid, False otherwise.
     """
-    if valid.endswith('.flatpakrepo'):
-        return False
+    if valid.startswith('#'):
+        valid = valid.replace('#', '')
+        valid = valid.strip()
 
-    elif valid.startswith("deb"):
+    if valid.startswith("deb"):
         if "http" in valid:
             return True
 
@@ -163,7 +164,8 @@ def validate_debline(valid):
 
     elif valid.startswith("http"):
         if "://" in valid:
+            if valid.endswith('.flatpakrepo'):
+                return False
             return True
 
-    else:
-        return False
+    return False
