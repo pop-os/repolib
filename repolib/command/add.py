@@ -22,8 +22,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 Module for adding repos to the system in CLI applications.
 """
 
-import os
-
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
@@ -97,11 +95,6 @@ class Add(command.Command):
         """ Run the command."""
         # pylint: disable=too-many-branches
         # We just need all these different checks.
-
-        if os.geteuid() != 0:
-            self.parser.print_usage()
-            self.log.error('You need to root, or use sudo.')
-            return False
 
         debline = ' '.join(self.args.deb_line)
         if self.args.deb_line == '822styledeb':

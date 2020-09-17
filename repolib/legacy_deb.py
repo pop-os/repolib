@@ -22,6 +22,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
 # If we want to use the subclass, we don't have a lot of options.
 
+import dbus
+
 from . import deb
 from . import source
 from . import util
@@ -141,9 +143,14 @@ class LegacyDebSource(source.Source):
         full_path = util.get_sources_dir() / self.filename
 
         source_output = self.make_deblines()
-
-        with open(full_path, 'w') as source_file:
-            source_file.write(source_output)
+        try:
+            with open(full_path, 'w') as source_file:
+                source_file.write(source_output)
+        except PermissionError:
+            bus = dbus.SystemBus()
+            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+            privileged_object.output_file_to_disk(self.filename, source_output)
+            privileged_object.exit()
 
     def make_deblines(self):
         """ Create a string representation of the enties as they would be saved.
