@@ -6,6 +6,7 @@ Build-Depends: debhelper (>= 11),
                dh-python,
                lsb-release,
                python3-all,
+               python3-dbus,
                python3-debian,
                python3-setuptools,
                python3-distutils,
@@ -22,6 +23,7 @@ Depends: ${python3:Depends},
          ${misc:Depends},
          apt,
          lsb-release,
+         python3-dbus,
          python3-debian
 Description: Repository Management for APT in Python (Python 3)
  RepoLib is a Python library and CLI tool-set for managing your software
