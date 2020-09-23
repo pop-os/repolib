@@ -95,8 +95,6 @@ CLEAN_CHARS = {
     59: None,
 }
 
-
-
 def get_source_path(name, log=None):
     """ Tries to get the full path to the source.
 
