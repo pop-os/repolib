@@ -24,7 +24,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 # is a command rather than a python module, and thus this is correct anyway.
 
 import argparse
-from pathlib import Path
 import os
 import subprocess
 
@@ -164,7 +163,18 @@ else:
         if not args.yes:
             command.append('--expand')
 
-command.append(sourceline)
+if not remove:
+    command.append(sourceline)
+else:
+    sources = repolib.get_all_sources()
+    comp_source = repolib.DebLine(sourceline)
+    for source in sources:
+        if comp_source.uris[0] in source.uris:
+            name = str(source.filename.name)
+            name = name.replace(".list", "")
+            name = name.replace(".sources", "")
+            command.append(name)
+
 run = True
 
 if os.geteuid() != 0:
