@@ -78,7 +78,8 @@ class LegacyDebSource(source.Source):
             self.filename = self.filename.replace('.sources', '.list')
 
         if not self.name:
-            self.name = self.filename.replace('.list', '')
+            self.name = self.sources[0].make_name()
+            self.name = self.name.replace('.sources', '')
 
     def load_from_sources(self):
         """ Loads the source from its consituent source lines."""
