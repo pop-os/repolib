@@ -82,6 +82,12 @@ class Add(command.Command):
             default=['x-repolib-default-name'],
             help='A name to set for the new repo'
         )
+        options.add_argument(
+            '-i',
+            '--identifier',
+            default=['x-repolib-default-id'],
+            help='The identifier/filename to use for the new repo'
+        )
 
     # pylint: disable=too-few-public-methods
     # Thinking of ways to add more, but otherwise this is just simple.
@@ -97,6 +103,7 @@ class Add(command.Command):
         self.source_code = args.source_code
         self.disable = args.disable
         self.name = ' '.join(args.name)
+        self.ident = '-'.join(args.ident).translate(CLEAN_CHARS)
 
     def run(self):
         """ Run the command."""
@@ -156,6 +163,9 @@ class Add(command.Command):
             new_source.name = self.name
             file = self.name.lower().split()
             new_source.ident = '-'.join(file).translate(CLEAN_CHARS)
+        
+        if self.name != 'x-repolib-default-id':
+            new_source.ident = self.ident.lower()
 
         self.log.debug(new_source.name)
         self.log.debug(new_source.filename)
