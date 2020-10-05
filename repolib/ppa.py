@@ -99,7 +99,7 @@ class PPALine(source.Source):
         self.components = ['main']
         ppa_name = ppa_info[1].split('/')
         self.name = 'ppa-{}'.format('-'.join(ppa_name))
-        self.filename = '{}.sources'.format(self.name)
+        self.ident = '{}'.format(self.name)
         if fetch_data:
             self.ppa_info = get_info_from_lp(ppa_owner, ppa_name[1])
             if self.verbose:
@@ -118,7 +118,7 @@ class PPALine(source.Source):
         name = self.ppa_line.replace(':', '-')
         name = name.replace('/', '-')
 
-        return f'{name}.list'
+        return f'{name}'
 
     def save_to_disk(self, save=True):
         """

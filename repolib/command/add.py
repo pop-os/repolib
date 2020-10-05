@@ -103,7 +103,21 @@ class Add(command.Command):
         self.source_code = args.source_code
         self.disable = args.disable
         self.name = ' '.join(args.name)
-        self.ident = '-'.join(args.ident).translate(CLEAN_CHARS)
+        self.ident = '-'.join(args.identifier).translate(CLEAN_CHARS)
+
+    def set_names(self, source):
+        """Set up names for the source.
+
+        Arguments:
+            source(repolib.Source): The source for which to set names
+        """
+        source.make_names()
+
+        if self.name != 'x-repolib-default-name':
+            source.name = self.name
+
+        if self.ident != 'x-repolib-default-id':
+            source.ident = self.ident.lower()
 
     def run(self):
         """ Run the command."""
@@ -156,16 +170,8 @@ class Add(command.Command):
             for repo in new_source.sources:
                 repo.enabled = False
             new_source.enabled = False
-        
-        new_source.make_names()
 
-        if self.name != 'x-repolib-default-name':
-            new_source.name = self.name
-            file = self.name.lower().split()
-            new_source.ident = '-'.join(file).translate(CLEAN_CHARS)
-        
-        if self.name != 'x-repolib-default-id':
-            new_source.ident = self.ident.lower()
+        self.set_names(new_source)
 
         self.log.debug(new_source.name)
         self.log.debug(new_source.filename)

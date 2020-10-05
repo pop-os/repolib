@@ -53,7 +53,7 @@ class DebLine(source.Source):
             )
         self._parse_debline(self.deb_line)
         self.filename = self.make_name(prefix="deb-")
-        self.name = self.filename
+        self.name = self.ident
 
     def copy(self, source_code=True):
         """ Copies the source and returns an identical source object.

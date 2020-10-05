@@ -82,11 +82,8 @@ class Source(deb822.Deb822):
         Arguments:
             filename (str): The name of the file on disk.
         """
-        if filename:
-            self.filename = filename
-        if ident:
-            self.ident = ident
-        if not self.filename:
+        self._set_filename_ident(filename, ident)
+        if not self.ident:
             raise SourceError("No filename to load from")
 
         full_path = util.get_sources_dir() / self.filename
@@ -223,6 +220,19 @@ class Source(deb822.Deb822):
 
         return line.strip()
 
+    def _set_filename_ident(self, filename, ident):
+        if filename:
+            self.filename = filename
+        if ident:
+            self.ident = ident
+
+    # pylint: disable=no-self-use
+    # Handy to have for subclasses
+    def _clean_name(self, name):
+        name = name.replace('.list', '')
+        name = name.replace('.sources', '')
+        return name
+
     @property
     def name(self):
         """ str: The name of the source."""
@@ -234,7 +244,7 @@ class Source(deb822.Deb822):
     @name.setter
     def name(self, name):
         self['X-Repolib-Name'] = name
-    
+
     @property
     def ident(self):
         """str: a system-scope identifier for this source. Used for filename."""
@@ -243,21 +253,19 @@ class Source(deb822.Deb822):
         except AttributeError:
             self._ident = None
             return self._ident
-    
+
     @ident.setter
     def ident(self, ident):
         self._ident = ident
-    
+
     @property
     def filename(self):
         """str: The filename of the source."""
         return f'{self.ident}.sources'
-    
+
     @filename.setter
     def filename(self, name):
-        name = name.replace('.list', '')
-        name = name.replace('.sources', '')
-        self._ident = name
+        self._ident = self._clean_name(name)
 
     @property
     def enabled(self):
