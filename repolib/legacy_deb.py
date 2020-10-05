@@ -63,7 +63,7 @@ class LegacyDebSource(source.Source):
     # Because this is a sort of meta-source, it needs to be different from the
     # super class.
     def __init__(self, *args, filename=None, ident=None, **kwargs):
-        super().__init__(*args, filename=filename, **kwargs)
+        super().__init__(*args, filename=filename, ident=ident, **kwargs)
         self.sources = []
         self._source_code_enabled = False
         self.init_values()
@@ -73,9 +73,8 @@ class LegacyDebSource(source.Source):
 
         It also sets these values up.
         """
-        if not self.filename:
-            self.filename = self.sources[0].make_name()
-            self.filename = self.filename.replace('.sources', '.list')
+        if not self.ident:
+            self.ident = self.sources[0].make_name()
 
         if not self.name:
             self.name = self.sources[0].make_name()
@@ -110,14 +109,13 @@ class LegacyDebSource(source.Source):
         if not self.name:
             self.make_names()
 
-    def load_from_file(self, filename=None):
+    def load_from_file(self, filename=None, ident=None):
         """ Loads the source from a file on disk.
 
         Keyword arguments:
           filename -- STR, Containing the path to the file. (default: self.filename)
         """
-        if filename:
-            self.filename = filename
+        self._set_filename_ident(filename, ident)
         self.sources = []
         name = None
 
@@ -202,17 +200,15 @@ class LegacyDebSource(source.Source):
         for repo in self.sources:
             if util.AptSourceType.SOURCE in repo.types and self.enabled:
                 repo.enabled = enabled
-    
+
     @property
     def filename(self):
         """str: The filename of the source."""
         return f'{self.ident}.list'
-    
+
     @filename.setter
     def filename(self, name):
-        name = name.replace('.list', '')
-        name = name.replace('.sources', '')
-        self._ident = name
+        self._ident = self._clean_name(name)
 
     @property
     def types(self):

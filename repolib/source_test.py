@@ -31,7 +31,7 @@ from . import util
 
 class SourceTestCase(unittest.TestCase):
     def setUp(self):
-        self.source = source.Source(filename='test.source')
+        self.source = source.Source(ident='test')
         self.source.name = 'Test Source'
         self.source.enabled = False
         self.source.types = [util.AptSourceType.BINARY, util.AptSourceType.SOURCE]
@@ -64,7 +64,7 @@ class SourceTestCase(unittest.TestCase):
             'Architectures': 'amd64 armel',
             'Languages': 'en_US en_CA'
         })
-        self.assertEqual(self.source.filename, 'test.source')
+        self.assertEqual(self.source.filename, 'test.sources')
 
     def test_make_source_string(self):
         source_string = (

@@ -44,7 +44,7 @@ class LegacyTestCase(unittest.TestCase):
                 'deb [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
                 'deb-src [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
             )
-        self.source = legacy_deb.LegacyDebSource(filename='test.list')
+        self.source = legacy_deb.LegacyDebSource(ident='test')
         self.source.load_from_file()
 
     def test_load_from_file(self):

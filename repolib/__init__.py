@@ -43,15 +43,19 @@ def get_all_sources(get_system=False):
 
     sources = []
 
+    if get_system:
+        source = SystemSource()
+        sources.append(source)
+
     for file in sources_files:
-        if file.name == 'system' and not get_system:
+        if file.stem == 'system':
             continue
-        source = Source(filename=file)
+        source = Source(filename=file.stem)
         source.load_from_file()
         sources.append(source)
 
     for file in list_files:
-        source = LegacyDebSource(filename=file)
+        source = LegacyDebSource(filename=file.stem)
         source.load_from_file()
         sources.append(source)
 

@@ -50,7 +50,8 @@ class SystemSource(source.Source):
         a different location, please patch this in your packaging.
         """
         super().__init__()
-        self.load_from_file(filename=self.filename)
+        self.ident = ident
+        self.load_from_file()
 
     def set_component_enabled(self, component='main', enabled=True):
         """ Enables or disabled a repo component (e.g. 'main')
