@@ -90,8 +90,6 @@ class List(command.Command):
         # pylint: disable=too-many-branches
         # The branches involved control program output. Maybe this can be
         # split into separate methods.
-        sources_files = self.sources_dir.glob('*.sources')
-        list_files = self.sources_dir.glob('*.list')
         try:
             sources_list_d_file = self.sources_dir.parent / 'sources.list'
         except FileNotFoundError:
