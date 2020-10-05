@@ -42,7 +42,7 @@ class SystemSourceException(Exception):
 class SystemSource(source.Source):
     """ System Sources. """
 
-    def __init__(self, filename='system.sources'):
+    def __init__(self, ident='system'):
         """ Constructor for System Sources
 
         Loads a source object for the System Sources. These are located (by
@@ -50,7 +50,7 @@ class SystemSource(source.Source):
         a different location, please patch this in your packaging.
         """
         super().__init__()
-        self.load_from_file(filename=filename)
+        self.load_from_file(filename=self.filename)
 
     def set_component_enabled(self, component='main', enabled=True):
         """ Enables or disabled a repo component (e.g. 'main')

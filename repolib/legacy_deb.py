@@ -62,7 +62,7 @@ class LegacyDebSource(source.Source):
     # pylint: disable=super-init-not-called
     # Because this is a sort of meta-source, it needs to be different from the
     # super class.
-    def __init__(self, *args, filename=None, **kwargs):
+    def __init__(self, *args, filename=None, ident=None, **kwargs):
         super().__init__(*args, filename=filename, **kwargs)
         self.sources = []
         self._source_code_enabled = False
@@ -202,6 +202,17 @@ class LegacyDebSource(source.Source):
         for repo in self.sources:
             if util.AptSourceType.SOURCE in repo.types and self.enabled:
                 repo.enabled = enabled
+    
+    @property
+    def filename(self):
+        """str: The filename of the source."""
+        return f'{self.ident}.list'
+    
+    @filename.setter
+    def filename(self, name):
+        name = name.replace('.list', '')
+        name = name.replace('.sources', '')
+        self._ident = name
 
     @property
     def types(self):
