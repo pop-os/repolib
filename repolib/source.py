@@ -69,11 +69,14 @@ class Source(deb822.Deb822):
     options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
     uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
-    def __init__(self, *args, filename=None, **kwargs):
+    def __init__(self, *args, filename=None, ident=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.filename = filename
+        if filename:
+            self.filename = filename
+        if ident:
+            self.ident = ident
 
-    def load_from_file(self, filename=None):
+    def load_from_file(self, filename=None, ident=None):
         """ Loads the data from a file path.
 
         Arguments:
@@ -81,6 +84,8 @@ class Source(deb822.Deb822):
         """
         if filename:
             self.filename = filename
+        if ident:
+            self.ident = ident
         if not self.filename:
             raise SourceError("No filename to load from")
 
@@ -155,7 +160,7 @@ class Source(deb822.Deb822):
         """ Create a name for this source. """
         uri = self.uris[0].replace('/', ' ')
         uri_list = uri.split()
-        name = '{}{}.sources'.format(
+        name = '{}{}'.format(
             prefix,
             '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
         )
@@ -229,6 +234,30 @@ class Source(deb822.Deb822):
     @name.setter
     def name(self, name):
         self['X-Repolib-Name'] = name
+    
+    @property
+    def ident(self):
+        """str: a system-scope identifier for this source. Used for filename."""
+        try:
+            return self._ident
+        except AttributeError:
+            self._ident = None
+            return self._ident
+    
+    @ident.setter
+    def ident(self, ident):
+        self._ident = ident
+    
+    @property
+    def filename(self):
+        """str: The filename of the source."""
+        return f'{self.ident}.sources'
+    
+    @filename.setter
+    def filename(self, name):
+        name = name.replace('.list', '')
+        name = name.replace('.sources', '')
+        self._ident = name
 
     @property
     def enabled(self):
