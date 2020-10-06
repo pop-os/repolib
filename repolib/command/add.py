@@ -102,8 +102,15 @@ class Add(command.Command):
         self.expand = args.expand
         self.source_code = args.source_code
         self.disable = args.disable
-        self.name = args.name
-        ident = args.identifier.split()
+        try:
+            name = args.name.split()
+        except AttributeError:
+            name = args.name
+        try:
+            ident = args.identifier.split()
+        except AttributeError:
+            ident = args.identifier
+        self.name = ' '.join(name)
         self.ident = '-'.join(ident).translate(CLEAN_CHARS)
 
     def set_names(self, source):
