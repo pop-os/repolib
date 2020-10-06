@@ -25,7 +25,7 @@ Module for adding repos to the system in CLI applications.
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
-from ..util import DISTRO_CODENAME
+from ..util import DISTRO_CODENAME, CLEAN_CHARS
 
 from . import command
 
@@ -76,6 +76,18 @@ class Add(command.Command):
             action='store_true',
             help='Display expanded details about the repository before adding it.'
         )
+        options.add_argument(
+            '-n',
+            '--name',
+            default=['x-repolib-default-name'],
+            help='A name to set for the new repo'
+        )
+        options.add_argument(
+            '-i',
+            '--identifier',
+            default=['x-repolib-default-id'],
+            help='The identifier/filename to use for the new repo'
+        )
 
     # pylint: disable=too-few-public-methods
     # Thinking of ways to add more, but otherwise this is just simple.
@@ -90,6 +102,32 @@ class Add(command.Command):
         self.expand = args.expand
         self.source_code = args.source_code
         self.disable = args.disable
+        try:
+            name = args.name.split()
+        except AttributeError:
+            name = args.name
+        try:
+            ident = args.identifier.split()
+        except AttributeError:
+            ident = args.identifier
+        self.name = ' '.join(name)
+        self.ident = '-'.join(ident).translate(CLEAN_CHARS)
+
+    def set_names(self, source):
+        """Set up names for the source.
+
+        Arguments:
+            source(repolib.Source): The source for which to set names
+        """
+        source.make_names()
+
+        if self.name != 'x-repolib-default-name':
+            self.log.debug('Got Name: %s', self.name)
+            source.name = self.name
+
+        if self.ident != 'x-repolib-default-id':
+            self.log.debug('Got Ident: %s', self.ident)
+            source.ident = self.ident.lower()
 
     def run(self):
         """ Run the command."""
@@ -143,7 +181,7 @@ class Add(command.Command):
                 repo.enabled = False
             new_source.enabled = False
 
-        new_source.make_names()
+        self.set_names(new_source)
 
         self.log.debug(new_source.name)
         self.log.debug(new_source.filename)

@@ -44,7 +44,7 @@ class DebTestCase(unittest.TestCase):
         self.assertEqual(source.suites, ['suite'])
         self.assertEqual(source.components, ['main'])
         self.assertFalse(source.options)
-        self.assertEqual(source.filename, 'deb-example-com.sources')
+        self.assertEqual(source.ident, 'deb-example-com')
 
     def test_source_with_multiple_components(self):
         source = deb.DebLine(
