@@ -69,19 +69,21 @@ class Source(deb822.Deb822):
     options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
     uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
-    def __init__(self, *args, filename=None, **kwargs):
+    def __init__(self, *args, filename=None, ident=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.filename = filename
+        if filename:
+            self.filename = filename
+        if ident:
+            self.ident = ident
 
-    def load_from_file(self, filename=None):
+    def load_from_file(self, filename=None, ident=None):
         """ Loads the data from a file path.
 
         Arguments:
             filename (str): The name of the file on disk.
         """
-        if filename:
-            self.filename = filename
-        if not self.filename:
+        self._set_filename_ident(filename, ident)
+        if not self.ident:
             raise SourceError("No filename to load from")
 
         full_path = util.get_sources_dir() / self.filename
@@ -155,7 +157,7 @@ class Source(deb822.Deb822):
         """ Create a name for this source. """
         uri = self.uris[0].replace('/', ' ')
         uri_list = uri.split()
-        name = '{}{}.sources'.format(
+        name = '{}{}'.format(
             prefix,
             '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
         )
@@ -218,6 +220,19 @@ class Source(deb822.Deb822):
 
         return line.strip()
 
+    def _set_filename_ident(self, filename, ident):
+        if filename:
+            self.filename = filename
+        if ident:
+            self.ident = ident
+
+    # pylint: disable=no-self-use
+    # Handy to have for subclasses
+    def _clean_name(self, name):
+        name = name.replace('.list', '')
+        name = name.replace('.sources', '')
+        return name
+
     @property
     def name(self):
         """ str: The name of the source."""
@@ -229,6 +244,28 @@ class Source(deb822.Deb822):
     @name.setter
     def name(self, name):
         self['X-Repolib-Name'] = name
+
+    @property
+    def ident(self):
+        """str: a system-scope identifier for this source. Used for filename."""
+        try:
+            return self._ident
+        except AttributeError:
+            self._ident = None
+            return self._ident
+
+    @ident.setter
+    def ident(self, ident):
+        self._ident = ident
+
+    @property
+    def filename(self):
+        """str: The filename of the source."""
+        return f'{self.ident}.sources'
+
+    @filename.setter
+    def filename(self, name):
+        self._ident = self._clean_name(name)
 
     @property
     def enabled(self):

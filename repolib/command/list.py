@@ -26,6 +26,7 @@ from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..source import Source
 from ..util import get_sources_dir, RepoError
+from .. import get_all_sources
 
 from . import command
 
@@ -89,38 +90,17 @@ class List(command.Command):
         # pylint: disable=too-many-branches
         # The branches involved control program output. Maybe this can be
         # split into separate methods.
-        sources_files = self.sources_dir.glob('*.sources')
-        list_files = self.sources_dir.glob('*.list')
         try:
             sources_list_d_file = self.sources_dir.parent / 'sources.list'
         except FileNotFoundError:
             sources_list_d_file = None
 
         print('Configured sources:')
-        for file in sources_files:
-            self.log.debug('Found source %s', file.name)
-            source = Source(filename=file.name)
-            source.load_from_file()
-
+        for source in get_all_sources(get_system=True):
+            self.log.debug('Found source file %s', source.filename)
+            print(f'{source.ident} - {source.name}')
             if self.verbose:
                 print(f'{source.make_source_string()}')
-            else:
-                filename = source.filename.replace(".sources", "")
-                print(f'{filename} - {source.name}')
-
-        for file in list_files:
-            source = LegacyDebSource(filename=file.name)
-            source.load_from_file()
-
-            if len(source.sources) > 0:
-                self.log.debug('Found source: %s', file.name)
-
-                if self.verbose:
-                    for debsrc in source.sources:
-                        print(debsrc.make_source_string())
-                else:
-                    filename = source.filename.replace('.list', '')
-                    print(f'{filename} - {source.name}')
 
         if sources_list_d_file and self.legacy:
             print('\n Legacy sources.list entries:\n')
