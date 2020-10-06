@@ -102,8 +102,9 @@ class Add(command.Command):
         self.expand = args.expand
         self.source_code = args.source_code
         self.disable = args.disable
-        self.name = ' '.join(args.name)
-        self.ident = '-'.join(args.identifier).translate(CLEAN_CHARS)
+        self.name = args.name
+        ident = args.identifier.split()
+        self.ident = '-'.join(ident).translate(CLEAN_CHARS)
 
     def set_names(self, source):
         """Set up names for the source.
@@ -114,9 +115,11 @@ class Add(command.Command):
         source.make_names()
 
         if self.name != 'x-repolib-default-name':
+            self.log.debug('Got Name: %s', self.name)
             source.name = self.name
 
         if self.ident != 'x-repolib-default-id':
+            self.log.debug('Got Ident: %s', self.ident)
             source.ident = self.ident.lower()
 
     def run(self):
