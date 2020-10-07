@@ -18,7 +18,7 @@ software repositories currently configured::
 one-line format sources (in ``/etc/apt/sources.list.d/*.list`` files). 
 
 .. toctree:: 
-    :maxdepth 2
+    :maxdepth 1
     :caption: apt-manage Documentation
 
     add
