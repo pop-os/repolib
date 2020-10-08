@@ -4,10 +4,29 @@
 Source object
 =============
 
-class repolib.Source (name='',enabled=True,types=[],uris=[],suites=[],components=[],options={},filename='example.source')
+The Source object is the base class for all of the sources used within RepoLib.
+The Source class itself is a subclass of the deb822() class from the Python 
+Debian module, which provides a dict-like interface for setting data as well as 
+several methods for dumping data to files and other helpful functions.
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Source
+
+    deb
+    legacy-deb
+    ppa-object
+    system
+
+class repolib.Source (ident='', filename='')
     Create a new :ref:`source-object`. All parameters should be passed as 
     keyword arguments. Each parameter has its own more detailed description 
     below, but in short they are:
+
+        * :ref:`ident` - The system-identifier to use for this source.
+        * :ref:`filename` - The filename to save to on disk.
+    
+    The following additional attributes are also specified:
 
         * :ref:`name` - The human-readable name of the source. (default: '')
         * :ref:`enabled` - Whether the source is enabled or not at creation. 
@@ -21,10 +40,27 @@ class repolib.Source (name='',enabled=True,types=[],uris=[],suites=[],components
         * :ref:`components` - Components of the source repository to enable. 
           (default: [])
         * :ref:`options` - Optional items affecting the source. (default: {})
-        * :ref:`filename` - The filename to save the source to on disk. 
-          (default: 'example.sources')
 
 The following decribe how each of these are used. 
+
+.. _ident:
+
+ident
+-----
+
+The ``ident`` is the system-identifier for this source. This determines the 
+filename the source will use on-disk as well as the way to specify a source to 
+load. 
+
+.. _filename:
+
+filename
+--------
+
+The ``filename`` is an alternate method to specify the ident, and is retained 
+for backwards compatibility with RepoLib 1.0.x. If the filename is specified, 
+any ``.list`` or ``.source`` suffixes are stripped, then the name is saved as 
+the :ref:`ident` attribute.
 
 .. _name:
 
@@ -83,7 +119,11 @@ and software for updates and installs. The currently recognized URI types are:
     * copy
     * rsh
     * ssh
-  
+
+DEB822 sources may directly contain an arbitrary number of URIs. Legacy sources 
+may also have multiple URIs; however, these require writing a new deb line for 
+each URI as the one-line format only allows a single URI per source.
+
 .. note::
     Although these are the currently-recognized official URI types, Apt can be 
     extended with additional URI schemes through extension packages. Thus it is 
@@ -99,6 +139,10 @@ The Suite, also known as the **distribution** specifies a subdirectory of the
 main archive root in which to look for software. This is typically used to 
 differentiate versions for the same OS, e.g. ``disco`` or ``cosmic`` for Ubuntu, 
 or ``squeeze`` and ``unstable`` for Debian. 
+
+DEB822 Sources allow specifying an arbitrary number of suites. One-line sources 
+also support multiple suites, but require an additional repo line for each as 
+the one-line format only allows a single suite for each source.
 
 This value maps to the ``Suites:`` field in the sources file. 
 
@@ -126,14 +170,6 @@ languages. Valid options include:
     * ``PDiffs``
     * ``By-Hash``
 
-.. _filename:
-
-filename
---------
-
-This is a string value describing the filename to save the source to when using 
-the :ref:`save-to-disk-method`. It defaults to ``example.sources``
-
 =======
 Methods
 =======
@@ -159,42 +195,75 @@ Source.make_source_string()
 save_to_disk() 
 --------------
 
-Source.save_to_disk()
+Source.save_to_disk(save=True)
     Takes all of the current data saved in the :ref:`source-object` and writes 
     it to the disk. It uses the current :ref:`filename` attribute as the storage 
     location within ``/etc/apt/sources.list.d``. 
-
+    
+    The ``save`` parameter affects whether the source is actually saved or not.
+    This is useful in some subclasses.
 
 .. _load-from-file:
 
 load_from_file()
 ----------------
 
-Source.load_from_file(filename=None)
+Source.load_from_file(filename=None, ident=None)
     Loads the source from a file on disk. The location loaded depends on the 
-    :ref:`lff-filename` parameter's value, as described below:
+    :ref:`lff-filename` and :refF`lff-ident` parameter's value, as described 
+    below:
 
+.. _lff-ident:
+
+ident
+^^^^^
+
+The ident of the source to load from the disk. If omitted, load from the 
+specified filename or the the current :ref:`ident` attribute. If provided, this
+method will set the :ref:`ident` attribute. For example::
+
+    >>> source = Source()
+    >>> source.filename 
+    'example.sources'
+    >>> source.load_from_file(ident='google-chrome')
+    >>> source.ident 
+    'google-chrome'
+    >>> source_with_name = Source()
+    >>> source_with_name.ident = 'ppa-system76-pop'
+    >>> source_with_name.load_from_file()
+    >>> source_with_name.ident
+    'ppa-system76-pop'
 
 .. _lff-filename:
 
 filename
 ^^^^^^^^
 
-The filename of the sources file to load from the disk. If ommitted, the method
-instead loads from the current :ref:`filename` attribute, otherwise the method 
-sets the :ref:`filename` attribute to the value of this argument. For example::
+The ident of the source to load from the disk. If omitted, load from the 
+specified filename or the the current :ref:`ident` attribute. If provided, this
+method will set the :ref:`ident` attribute. For example::
 
     >>> source = Source()
     >>> source.filename 
     'example.sources'
     >>> source.load_from_file(filename='google-chrome.sources')
-    >>> source.filename 
-    'google-chrome.sources'
+    >>> source.ident 
+    'google-chrome'
     >>> source_with_name = Source()
-    >>> source_with_name.filename = 'ppa-system76-pop.sources'
+    >>> source_with_name.ident = 'ppa-system76-pop'
     >>> source_with_name.load_from_file()
-    >>> source_with_name.filename
-    'ppa-system76-pop.sources'
+    >>> source_with_name.ident
+    'ppa-system76-pop'
+
+.. _make_source_string:
+
+make_source_string()
+--------------------
+
+Source.make_source_string()
+    This method returns a string-representation of the source. Note that this 
+    method is intended for user-facing output. If you need the string data as 
+    it will be written to disk, use the ``Source.dump()`` method instead.
 
 .. _set-source-enabled:
 
@@ -217,3 +286,51 @@ If ``True``, the :ref:`source-object` ``types`` attribute is set to
 [:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]. 
 Otherwise, it's set to [:ref:`aptsourcetype-enum`.BINARY] only.
 
+.. _copy:
+
+copy()
+------
+
+Source.copy(source_code=True)
+    Copies the source and returns an identical source object to the current 
+    source. This is useful for legacy one-line sources to create copies of 
+    sources with all data identical to the first source. 
+  
+.. _c-source-code:
+
+source_code
+^^^^^^^^^^^
+
+If ``True``, the returned Source will be identical except that the :ref:`types`
+attribute will be set equal to ``['deb-src']`` instead of the current value.
+
+.. _make-name:
+
+make_name()
+-----------
+
+Source.make_name(prefix='')
+    Creates a name for the source, with the optional ``prefix`` specified. If a 
+    ``prefix`` is specified, it will be appended to the name with a ``-``
+    character separating the prefix from the generated name. 
+
+.. _init-values:
+
+init_values()
+-------------
+
+Source.init_values()
+    Initializes the Source's attributes with default data in-order. This is 
+    recommended to ensure that the fields in the underlying deb822 Dict are 
+    in order.
+
+.. _make-debline:
+
+make_debline()
+--------------
+
+Source.make_debline()
+    Returns a one-line style source line for this source. If the :ref:`uris`, 
+    :ref:`suites`, or :ref:`types` fields contain more than a single value, the 
+    output will raise a ``SourceError`` exception, since one-line sources can 
+    only contain one of these different types.

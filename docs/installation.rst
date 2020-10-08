@@ -52,10 +52,15 @@ Debian
 On debian based distributions, you can build a .deb package locally and install 
 it onto your system. You will need the following build-dependencies:
 
-    * debhelper (>=11)
+    * debhelper (>= 11)
     * dh-python
+    * lsb-release
     * python3-all
+    * python3-dbus
+    * python3-debian
     * python3-setuptools
+    * python3-distutils
+    * python3-pytest
 
 You can use this command to install these all in one go::
 
