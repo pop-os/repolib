@@ -6,7 +6,6 @@ _apt-manage()
     _init_completion || return
 
     local GENERIC_APT_MANAGE_OPTIONS='
-        -v --verbose
         -h --help
     '
 
@@ -14,7 +13,8 @@ _apt-manage()
     local COMMANDS=(
         "add"
         "list"
-        "repo"
+        "modify"
+        "remove"
         "source")
 
     local command i
@@ -30,31 +30,49 @@ _apt-manage()
         case $command in
             add)
                 COMPREPLY=( $( compgen -W '
-                  -s --enable-source
-                  '"$GENERIC_APT_MANAGE_OPTIONS" -- "$cur" ) )
+                  -d --disable
+                  -s --source-code
+                  -e --expand
+                  -n --name
+                  -i --identifier
+                  -h --help
+                  ' -- "$cur" ) )
                 return 0
                 ;;
             list)
                 COMPREPLY=( $( compgen -W '
                   -h --help
+                  -v --verbose
+                  -l --legacy
+                  -n --no-names
                   ' -- "$cur" ) )
                 return 0
                 ;;
-            repo)
+            modify)
                 COMPREPLY=( $( compgen -W '
                   -h --help
-                  -i --info
-                  -e --enable
-                  -d --disable 
-                  -r --remove
-                  '"$GENERIC_APT_MANAGE_OPTIONS" -- "$cur" ) )
-                return 0
-                ;;
-            source)
-                COMPREPLY=( $( compgen -W '
                   -e --enable
                   -d --disable
-                  '"$GENERIC_APT_MANAGE_OPTIONS" -- "$cur" ) )
+                  -n --name
+                  --add-suite
+                  --remove-suite
+                  --add-component
+                  --remove-component
+                  --add-uri
+                  --remove-uri
+                  ' -- "$cur" ) )
+                return 0
+                ;;
+            remove)
+                COMPREPLY=( &( compgen -W '
+                  -h --help
+                  ' -- "$cur" ) )
+            source)
+                COMPREPLY=( $( compgen -W '
+                  -h --help
+                  -e --enable
+                  -d --disable
+                  ' -- "$cur" ) )
                 return 0
                 ;;
         esac
@@ -63,10 +81,8 @@ _apt-manage()
     # specific command arguments
     if [[ -n $command ]]; then
         case $command in 
-            repo | source )
-                COMPREPLY=( $( compgen -W '$(find /etc/apt/sources.list.d \
-                    -name "*.sources" \
-                    -exec basename --suffix=".sources" {} \;)' -- "$cur"))
+            repo | modify | remove | source )
+                COMPREPLY=( $( compgen -W '$(apt-manage list -n)' -- "$cur"))
                 return 0
                 ;;
         esac
