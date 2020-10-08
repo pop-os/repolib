@@ -75,6 +75,13 @@ class List(command.Command):
             action='store_true',
             help='Include listing details about entries configured in sources.list'
         )
+        options.add_argument(
+            '-n',
+            '--no-names',
+            action='store_true',
+            dest='names',
+            help='Do not print names of repositories.'
+        )
 
 
 
@@ -82,6 +89,7 @@ class List(command.Command):
         super().__init__(log, args, parser)
         self.verbose = args.verbose
         self.legacy = args.legacy
+        self.no_names = args.names
         self.source = ' '.join(args.repository)
         self.sources_dir = get_sources_dir()
 
@@ -95,10 +103,14 @@ class List(command.Command):
         except FileNotFoundError:
             sources_list_d_file = None
 
-        print('Configured sources:')
+        if not self.no_names:
+            print('Configured sources:')
         for source in get_all_sources(get_system=True):
             self.log.debug('Found source file %s', source.filename)
-            print(f'{source.ident} - {source.name}')
+            if self.no_names:
+                print(f'{source.ident}')
+            else:
+                print(f'{source.ident} - {source.name}')
             if self.verbose:
                 print(f'{source.make_source_string()}')
 
