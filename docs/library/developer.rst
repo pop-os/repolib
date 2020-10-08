@@ -13,13 +13,13 @@ which uses native data types where practicable. The :ref:`repolib-module` module
 also allows easy creation of new DEB822-style sources from user-supplied data.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :caption: RepoLib
 
-    source
-    enums
+    source/source
     ppa-module
     util-module
+    enums
 
 ==================
 ``repolib`` Module
