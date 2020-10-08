@@ -25,7 +25,7 @@ limited because of this, but the performance improvements gained are substantial
 ``SoftwareProperties`` also does not yet feature support for  managing DEB822 
 format sources, and instead only manages one-line sources. 
 
-RepoLib is available under the GNU LGPL. Full License below:
+RepoLib is available under the GNU LGPL.
 
 .. contents:: Table of Contents
    :local:
