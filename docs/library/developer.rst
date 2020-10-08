@@ -17,8 +17,41 @@ also allows easy creation of new DEB822-style sources from user-supplied data.
     :caption: RepoLib
 
     source
-    subclasses
     enums
+    ppa-module
+    util-module
+
+==================
+``repolib`` Module
+==================
+
+The ``repolib`` Module is the main module for the package. It allows interfacing 
+with the various Classes, Subclasses, and Functions provided by RepoLib. 
+
+Module-level Attributes
+=======================
+
+There are a couple of module-level attributes and functions provided directly in 
+the module.
+
+.. _module-version
+
+``VERSION``
+-----------
+
+repolib.VERSION
+    Provides the current version of the library.
+
+.. _module-get-all-sources
+
+get_all_sources()
+-----------------
+
+repolib.get_all_sources(get_system=False)
+    Returns a ``list`` of all configured sources currently on the system. If 
+    ```get_system`` (default: ``False``) is ``True``, then the system source (if 
+    configured and detected) will be included as the first item in the list.
+
 
 Example
 =======
@@ -29,15 +62,13 @@ suites used by the source and prints it to the console, before finally saving
 the new, modified source to disk::
 
     import repolib
-    source = repolib.Source(
-        filename='example.sources',
-        name='Example Source', enabled=True, types=['deb', 'deb-src'],
-        suites=['disco'], components=['main'], 
-        options={'Architectures': ['amd64', 'armel']}
-    )
+    source = repolib.Source(ident='example')
     
-    source.suites.append('cosmic')
-    source.uris.append('http://example.com/ubuntu')
+    source.name = 'Example Source'
+    source.types = ['deb', 'deb-src']
+    source.uris = ['http://example.com/ubuntu']
+    source.suites = ['focal']
+    source.components = ['main']
     
     print(source.make_source_string())
     
@@ -52,9 +83,8 @@ to console and then saves a new ``example.sources`` file in
     Enabled: yes
     Types: deb deb-src
     URIs: http://example.com/ubuntu
-    Suites: disco cosmic
+    Suites: focal
     Components: main
-    Architectures: amd64 armel
     $ ls -la /etc/apt/sources.list.d/example.sources
     -rw-r--r-- 1 root root 159 May  1 15:21 /etc/apt/sources.list.d/example.sources
 
@@ -65,12 +95,7 @@ Creating a Source Object
 
 The first step in using :ref:`repolib-module` is creating a :ref:`source-object`::
 
-    source = repolib.Source(
-        filename='example.sources',
-        name='Example Source', enabled=True, types=['deb', 'deb-src'],
-        suites=['disco'], components=['main'], 
-        options={'Architectures': ['amd64', 'armel']}
-    )
+    source = repolib.Source(ident='example')
 
 The :ref:'source-object' will hold all of the information about the 
 source we're working with.
@@ -83,12 +108,25 @@ the source that are required to fetch and install software. Generally, these
 attributes are lists of strings which describe the different parts of the source. 
 These attributes can be set or retrieved like any other attributes::
 
-    source.suites.append('cosmic')
-    source.uris.append('http://example.com/ubuntu')
+    source.suites = ['focal']
+    source.uris. = ['http://example.com/ubuntu']
 
-This will add a ``cosmic`` suite to our source (which already has a ``disco`` 
-suite added), and add a URI from which to fetch software (which wasn't 
-previously set during object instantiation. 
+This will add a ``focal`` suite to our source and add a URI from which to fetch 
+software. 
+
+:ref:`source-object` also presents a dict-like interface for setting and getting 
+data, due to the inherited deb822 class. Key values are case insensitive and 
+their order within the object are preserved. The Keys map to the corresponding 
+attributes as follows:
+
+    X-Repolib-Name: name
+    Enabled: enabled
+    Types: types
+    URIs: uris
+    Suites: suites
+    Components: components
+
+Option keys will mapt to the ``options`` attribute(``dict``).
 
 Saving Data to Disk
 -------------------
