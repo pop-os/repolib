@@ -27,6 +27,7 @@ from .deb import DebLine
 from .ppa import PPALine
 from .util import AptSourceEnabled, AptSourceType, RepoError
 from . import util
+from . import ppa
 from . import __version__
 
 VERSION = __version__.__version__
