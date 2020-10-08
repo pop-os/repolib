@@ -18,3 +18,15 @@ repolib.AptSourceType()
 
     * ``BINARY`` - Binary package source type (value: ``"deb"``).
     * ``SOURCE`` - Source code package type (value : ``"deb-src"``).
+
+.. _aptsourceenabled-enum:
+
+AptSourceEnabled
+================
+
+repolib.AptSourceEnabled()
+    Used to encode whether the source is enabled or not.
+
+    * ``TRUE`` - The source should be enabled (value: ``"yes"``).
+    * ``FALSE`` - The source should not be enabled (value: ``"no"``).
+    

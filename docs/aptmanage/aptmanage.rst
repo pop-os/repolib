@@ -7,23 +7,22 @@ using RepoLib. Run ``apt-manage`` standalone to get a listing of all of the
 software repositories currently configured::
 
     $ apt-manage
-    Current repositories:
+    Configured sources:
+    system - Pop_OS System Sources
+    pop-os-apps - Pop_OS Applications
+    ppa-system76-pop - Pop!_OS PPA
 
-    system
-    pop_OS-apps
-    pop_OS
-    google-chrome
 
-``apt-manage`` operates strictly on DEB822-style sources on your system; however, 
-it can accept traditional "deb lines" and ``ppa:`` shortcuts as input to add a 
-repository to your system. It also has the capability of converting legacy 
-one-line sources into DEB822 sources.
+``apt-manage`` operates on both DEB822-formated sources (located in the
+``/etc/apt/sources.list.d/*.sources`` files) as well as using traditional
+one-line format sources (in ``/etc/apt/sources.list.d/*.list`` files). 
 
 .. toctree:: 
-    :maxdepth 2
+    :maxdepth 1
     :caption: apt-manage Documentation
 
     add
-    repo
+    list
+    modify
+    remove
     source
-    convert
