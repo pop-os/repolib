@@ -191,6 +191,7 @@ setup(
     scripts=['bin/apt-manage'],
     data_files=[
         ('share/bash-completion/completions', ['data/bash-completion/apt-manage']),
+        ('share/zsh/vendor-completions', ['data/zsh-completion/_apt-manage']),
         ('/usr/share/dbus-1/system-services', ['data/org.pop_os.repolib.service']),
         ('/usr/share/polkit-1/actions', ['data/org.pop_os.repolib.policy']),
         ('/etc/dbus-1/system.d/', ['data/org.pop_os.repolib.conf']),
