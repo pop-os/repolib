@@ -1,0 +1,52 @@
+#compdef apt-manage
+typeset -A opt_args
+
+typeset -A opt_args
+
+_arguments -C \
+  '1:cmd:->cmds' \
+  '2:sources:->source_lists' \
+  '*:: :->args' \
+&& ret=0
+
+case "$state" in
+  (cmds)
+     local commands; commands=(
+      'add'
+      'list'
+      'modify'
+      'remove'
+      'source'
+     )
+      _describe -t commands 'command' commands && ret=0
+  ;;
+  (source_lists)
+    local sources
+    sources=( $(apt-manage list -n))
+    _describe -t sources 'source' sources && ret=0
+  ;;
+  (args)
+    local arguments
+    arguments=(
+      '--help'
+      '--disable'
+      '--source-code'
+      '--expand'
+      '--verbose'
+      '--legacy'
+      '--no-names'
+      '--enable'
+      '--disable'
+      '--name'
+      '--add-suite'
+      '--remove-suite'
+      '--add-component'
+      '--remove-component'
+      '--add-uri'
+      '--remove-uri'
+    )
+    _describe -t arguments 'argument' arguments && ret=0
+  ;;
+esac
+
+return 1

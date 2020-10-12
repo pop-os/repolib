@@ -1,82 +1,42 @@
-# Debian apt-manage completion                             
-_apt-manage()
+# Debian apt-manage completion    
+
+_apt_manage()
 {
-    local sourcesdir="/etc/apt/sources.list.d"
-    local cur prev words cword
-    _init_completion || return
+    local cur prev words cword package
+    _init_completion -n ':=' || return
 
-    local GENERIC_APT_MANAGE_OPTIONS='
-        -v --verbose
-        -h --help
-    '
-
-    # see if the user selected a command already
-    local COMMANDS=(
-        "add"
-        "list"
-        "repo"
-        "source")
-
-    local command i
+    local special i
+    i=0
     for (( i=0; i < ${#words[@]}-1; i++ )); do
-        if [[ ${COMMANDS[@]} =~ ${words[i]} ]]; then
-            command=${words[i]}
-            break
+        if [[ ${words[i]} == @(add|list|modify|remove|source) ]]; then
+            special=${words[i]}
         fi
     done
 
-    # supported options per command
+    if [[ -n $special ]]; then
+        case $special in
+            list|modify|remove|source)
+                COMPREPLY=( $( compgen -W '$(apt-manage list -n)' -- "$cur" ) )
+                return
+                ;;
+            *)
+                ;;
+        esac
+    fi
+
+
     if [[ "$cur" == -* ]]; then
-        case $command in
-            add)
-                COMPREPLY=( $( compgen -W '
-                  -s --enable-source
-                  '"$GENERIC_APT_MANAGE_OPTIONS" -- "$cur" ) )
-                return 0
-                ;;
-            list)
-                COMPREPLY=( $( compgen -W '
-                  -h --help
-                  ' -- "$cur" ) )
-                return 0
-                ;;
-            repo)
-                COMPREPLY=( $( compgen -W '
-                  -h --help
-                  -i --info
-                  -e --enable
-                  -d --disable 
-                  -r --remove
-                  '"$GENERIC_APT_MANAGE_OPTIONS" -- "$cur" ) )
-                return 0
-                ;;
-            source)
-                COMPREPLY=( $( compgen -W '
-                  -e --enable
-                  -d --disable
-                  '"$GENERIC_APT_MANAGE_OPTIONS" -- "$cur" ) )
-                return 0
-                ;;
-        esac
+        return
+    #     COMPREPLY=( $(compgen -W '
+    #         --help --disable --source-code --expand
+    #         --verbose --legacy --no-names
+    #         --enable --disable --name --add-suite --remove-suite
+    #           --add-component --remove-component --add-uri --remove-uri
+    #         ' -- "$cur") )
+    else
+        COMPREPLY=( $(compgen -W 'add list modify remove source' \
+            -- "$cur") )
     fi
 
-    # specific command arguments
-    if [[ -n $command ]]; then
-        case $command in 
-            repo | source )
-                COMPREPLY=( $( compgen -W '$(find /etc/apt/sources.list.d \
-                    -name "*.sources" \
-                    -exec basename --suffix=".sources" {} \;)' -- "$cur"))
-                return 0
-                ;;
-        esac
-    fi
-
-    # no command yet, show what commands we have
-    if [ "$command" = "" ]; then
-        COMPREPLY=( $( compgen -W '${COMMANDS[@]}' -- "$cur" ) )
-    fi
-
-    return 0
 } &&
 complete -F _apt-manage apt-manage
