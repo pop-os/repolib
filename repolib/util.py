@@ -22,6 +22,7 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from enum import Enum
 from pathlib import Path
+from urllib.parse import urlparse
 
 SOURCES_DIR = '/etc/apt/sources.list.d'
 TESTING = False
@@ -94,6 +95,28 @@ CLEAN_CHARS = {
     58: None,
     59: None,
 }
+
+def url_validator(url):
+    """ Validate a url and tell if it's good or not.
+
+    Arguments:
+        url (str): The URL to validate.
+
+    Returns:
+        `True` if `url` is not malformed, otherwise `False`.
+    """
+    try:
+        # pylint: disable=no-else-return,bare-except
+        # A) We want to return false if the URL doesn't contain those parts
+        # B) We need this to not throw any exceptions, regardless what they are
+        result = urlparse(url)
+        if result.netloc:
+            return all([result.scheme, result.netloc])
+        elif result.path:
+            return all([result.scheme, result.path])
+        return False
+    except:
+        return False
 
 def get_source_path(name, log=None):
     """ Tries to get the full path to the source.
