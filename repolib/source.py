@@ -342,6 +342,9 @@ class Source(deb822.Deb822):
     def uris(self, uris):
         """ If the user tries to remove the last URI, disable as well. """
         if len(uris) > 0:
+            for uri in uris:
+                if not util.url_validator(uri):
+                    raise SourceError(f'The URI "{uri}" is malformed.')
             self['URIs'] = ' '.join(uris)
         else:
             self['URIs'] = ''
