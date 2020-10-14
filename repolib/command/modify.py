@@ -86,7 +86,8 @@ class Modify(command.Command):
         )
         modify_enable.add_argument(
             '--default-mirror',
-            help='Sets the default mirror for the system source.'
+            help=SUPPRESS
+            #help='Sets the default mirror for the system source.'
         )
 
         # Name
