@@ -245,6 +245,11 @@ class Modify(command.Command):
     
     def default_mirror(self, value):
         """ Set the default mirror if this is the system source."""
+        if not value: 
+            # No value provided, take no action
+            return
+        self.count += 1
+
         if self.repo == 'system':
             self.source.default_mirror = value
 
