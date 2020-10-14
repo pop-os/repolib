@@ -28,7 +28,6 @@ from . import command
 from ..legacy_deb import LegacyDebSource
 from ..source import Source, SourceError
 from ..util import get_source_path
-from ..system import SystemSourceException
 
 class Modify(command.Command):
     """ Modify subcommand.
