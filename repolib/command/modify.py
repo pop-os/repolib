@@ -21,12 +21,14 @@ Module for modifying repos in CLI applications.
 """
 
 from argparse import SUPPRESS
+import sys
 
 from . import command
 
 from ..legacy_deb import LegacyDebSource
-from ..source import Source
+from ..source import Source, SourceError
 from ..util import get_source_path
+from ..system import SystemSourceException
 
 class Modify(command.Command):
     """ Modify subcommand.
@@ -265,7 +267,11 @@ class Modify(command.Command):
 
         for uri in value.split():
             if uri not in self.source.uris:
-                self.source.uris = self.source.uris + [uri]
+                try:
+                    self.source.uris = self.source.uris + [uri]
+                except SourceError:
+                    self.log.error('The URI "%s" is malformed', uri)
+                    sys.exit(1)
                 self.log.debug('Added uri: %s', uri)
     def remove_uri(self, value):
         """ Remove URIs from the source. """
