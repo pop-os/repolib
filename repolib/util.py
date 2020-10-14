@@ -111,8 +111,10 @@ def url_validator(url):
         # B) We need this to not throw any exceptions, regardless what they are
         result = urlparse(url)
         if result.netloc:
+            # We need at least a scheme and a netlocation/hostname or...
             return all([result.scheme, result.netloc])
         elif result.path:
+            # ...a scheme and a path (this allows file:/// URIs which are valid)
             return all([result.scheme, result.path])
         return False
     except:
