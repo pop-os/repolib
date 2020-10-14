@@ -106,7 +106,7 @@ class SystemSource(source.Source):
         raise SystemSourceException(
             msg=f"Couldn't toggle suite: {suite} to {enabled}"
         )
-    
+
     def set_default_mirror(self):
         """ Resets the System Sources to use the default mirrors.
 
@@ -124,7 +124,7 @@ class SystemSource(source.Source):
             return self['X-Repolib-Default-Mirror']
         except KeyError:
             return ''
-    
+
     @default_mirror.setter
     def default_mirror(self, uri):
         if util.url_validator(uri):

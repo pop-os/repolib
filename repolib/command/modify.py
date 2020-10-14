@@ -243,10 +243,10 @@ class Modify(command.Command):
             return True
 
         return True
-    
+
     def default_mirror(self, value):
         """ Set the default mirror if this is the system source."""
-        if not value: 
+        if not value:
             # No value provided, take no action
             return
         self.count += 1
