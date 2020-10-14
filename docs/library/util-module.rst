@@ -50,6 +50,13 @@ repolib.util.CLEAN_CHARS
 
 .. _util-get-source-path
 
+url_validator()
+===============
+
+repolib.util.url_validator(url):
+    Validates ``url`` to tell whether it is a malformed URI or not. If it is 
+    valid, returns ``True``. Otherwise, returns ``False``
+
 get_source_path()
 =================
 
