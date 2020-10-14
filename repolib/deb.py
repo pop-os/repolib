@@ -88,9 +88,10 @@ class DebLine(source.Source):
             line = line.strip()
 
         # URI parsing
-        for uri in self.uri_re.finditer(line):
-            self.uris = [uri[0]]
-            line_uri = line.replace(uri[0], '')
+        for word in line.split():
+            if util.url_validator(word):
+                self.uris = [word]
+                line_uri = line.replace(word, '')
 
         # Options parsing
         try:
