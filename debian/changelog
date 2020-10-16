@@ -1,3 +1,10 @@
+repolib (1.4.0) groovy; urgency=medium
+
+  * Added a new 'default-mirror' attribute to the system source
+    Allows Vendors to specify their recommended mirror
+
+ -- Ian Santopietro <ian@system76.com>  Wed, 14 Oct 2020 14:24:11 -0600
+
 repolib (1.3.0) focal; urgency=medium
 
   * New ident field for easier working with specific sources
