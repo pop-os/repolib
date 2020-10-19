@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-#pylint: disable=too-many-ancestors
+#pylint: disable=too-many-ancestors, too-many-instance-attributes
 # If we want to use the subclass, we don't have a lot of options.
 
 from . import source
@@ -106,3 +106,26 @@ class SystemSource(source.Source):
         raise SystemSourceException(
             msg=f"Couldn't toggle suite: {suite} to {enabled}"
         )
+
+    def set_default_mirror(self):
+        """ Resets the System Sources to use the default mirrors.
+
+        Requires that the `default_mirror` attribute be set.
+        """
+        if self.default_mirror:
+            self.uris = [self.default_mirror]
+            return
+        raise SystemSourceException('No default mirror set.')
+
+    @property
+    def default_mirror(self):
+        """str: The default system mirror."""
+        try:
+            return self['X-Repolib-Default-Mirror']
+        except KeyError:
+            return ''
+
+    @default_mirror.setter
+    def default_mirror(self, uri):
+        if util.url_validator(uri):
+            self['X-Repolib-Default-Mirror'] = uri
