@@ -28,6 +28,7 @@ from . import command
 from ..legacy_deb import LegacyDebSource
 from ..source import Source, SourceError
 from ..util import get_source_path
+from ..system import SystemSource
 
 class Modify(command.Command):
     """ Modify subcommand.
@@ -38,6 +39,8 @@ class Modify(command.Command):
     Options:
         --enable, -e
         --disable, -d
+        --default-mirror
+        --name
         --add-suite
         --remove-suite
         --add-component
@@ -80,6 +83,11 @@ class Modify(command.Command):
                 'Disable the repository, if enabled. The system repository cannot '
                 'be disabled.'
             )
+        )
+        modify_enable.add_argument(
+            '--default-mirror',
+            help=SUPPRESS
+            #help='Sets the default mirror for the system source.'
         )
 
         # Name
@@ -188,6 +196,7 @@ class Modify(command.Command):
                 self.actions['endisable'] = i
 
         for i in [
+                'default_mirror',
                 'name',
                 'add_uri',
                 'remove_uri',
@@ -209,10 +218,12 @@ class Modify(command.Command):
             self.log.error('Could not find source %s', self.repo)
             return False
 
-        if full_path.suffix == '.sources':
-            self.source = Source(filename=full_path.name)
+        if self.repo == 'system':
+            self.source = SystemSource()
+        elif full_path.suffix == '.sources':
+            self.source = Source(ident=self.repo)
         else:
-            self.source = LegacyDebSource(filename=full_path.name)
+            self.source = LegacyDebSource(ident=self.repo)
 
         self.source.load_from_file()
         self.log.debug('Actions taken: \n%s', self.actions)
@@ -232,6 +243,16 @@ class Modify(command.Command):
             return True
 
         return True
+
+    def default_mirror(self, value):
+        """ Set the default mirror if this is the system source."""
+        if not value:
+            # No value provided, take no action
+            return
+        self.count += 1
+
+        if self.repo == 'system':
+            self.source.default_mirror = value
 
     def name(self, value):
         """ Set the source name. """
