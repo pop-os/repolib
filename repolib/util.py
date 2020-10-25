@@ -110,6 +110,10 @@ def url_validator(url):
         # A) We want to return false if the URL doesn't contain those parts
         # B) We need this to not throw any exceptions, regardless what they are
         result = urlparse(url)
+        if not result.scheme:
+            return False
+        if result.scheme == 'x-repolib-name':
+            return False
         if result.netloc:
             # We need at least a scheme and a netlocation/hostname or...
             return all([result.scheme, result.netloc])
@@ -178,17 +182,16 @@ def validate_debline(valid):
         valid = valid.strip()
 
     if valid.startswith("deb"):
-        if "http" in valid:
-            return True
+        words = valid.split()
+        for word in words:
+            if url_validator(word):
+                return True
 
     elif valid.startswith("ppa:"):
         if "/" in valid:
             return True
 
-    elif valid.startswith("http"):
-        if "://" in valid:
-            if valid.endswith('.flatpakrepo'):
-                return False
-            return True
-
-    return False
+    else:
+        if valid.endswith('.flatpakrepo'):
+            return False
+        return url_validator(valid)
