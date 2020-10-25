@@ -108,6 +108,8 @@ class LegacyDebSource(source.Source):
 
         if not self.name:
             self.make_names()
+            for source in self.sources:
+                source.name = self.name
 
     def load_from_file(self, filename=None, ident=None):
         """ Loads the source from a file on disk.
@@ -120,17 +122,18 @@ class LegacyDebSource(source.Source):
         name = None
 
         full_path = util.get_sources_dir() / self.filename
-
+        sources = []
         with open(full_path, 'r') as source_file:
             for line in source_file:
                 if util.validate_debline(line):
                     deb_src = deb.DebLine(line)
-                    self.sources.append(deb_src)
                     deb_src.name = self.name
+                    sources.append(deb_src)
                 elif "X-Repolib-Name" in line:
                     name = ':'.join(line.split(':')[1:])
                     self.name = name.strip()
 
+        self.sources = sources
         self.load_from_sources()
 
     # pylint: disable=arguments-differ
