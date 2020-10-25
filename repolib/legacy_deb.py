@@ -108,8 +108,8 @@ class LegacyDebSource(source.Source):
 
         if not self.name:
             self.make_names()
-            for source in self.sources:
-                source.name = self.name
+            for src in self.sources:
+                src.name = self.name
 
     def load_from_file(self, filename=None, ident=None):
         """ Loads the source from a file on disk.

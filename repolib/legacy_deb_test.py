@@ -54,7 +54,7 @@ class LegacyTestCase(unittest.TestCase):
             )
         self.source = legacy_deb.LegacyDebSource(ident='test')
         self.source.load_from_file()
-    
+
     def test_no_suites(self):
         opts = {'Trusted': 'yes'}
         types = [util.AptSourceType.BINARY, util.AptSourceType.SOURCE]
