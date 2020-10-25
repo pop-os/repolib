@@ -168,6 +168,8 @@ def get_sources_dir(testing=False):
     sources_dir.mkdir(parents=True, exist_ok=True)
     return sources_dir
 
+# pylint: disable=inconsistent-return-statements
+# This is a better way to check these
 def validate_debline(valid):
     """ Basic checks to see if a given debline is valid or not.
 
