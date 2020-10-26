@@ -44,8 +44,30 @@ class LegacyTestCase(unittest.TestCase):
                 'deb [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
                 'deb-src [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
             )
+        with open(util.get_sources_dir(testing=True) / 'test3.list', mode='w') as test_file:
+            test_file.write(
+                '## Added/managed by repolib ##\n'
+                '#\n'
+                '## X-Repolib-Name: test no suites\n'
+                'deb [trusted=yes] file:///var/cache/apt/archives ./\n'
+                'deb-src [trusted=yes] file:///var/cache/apt/archives ./\n'
+            )
         self.source = legacy_deb.LegacyDebSource(ident='test')
         self.source.load_from_file()
+
+    def test_no_suites(self):
+        opts = {'Trusted': 'yes'}
+        types = [util.AptSourceType.BINARY, util.AptSourceType.SOURCE]
+        source = legacy_deb.LegacyDebSource(ident='test3')
+        source.load_from_file()
+
+        self.assertEqual(source.ident, 'test3')
+        self.assertEqual(source.name, 'test no suites')
+        self.assertEqual(source.types, types)
+        self.assertEqual(source.uris, ['file:///var/cache/apt/archives'])
+        self.assertEqual(source.suites, ['./'])
+        self.assertFalse(source.components)
+        self.assertDictEqual(source.options, opts)
 
     def test_load_from_file(self):
         opts = {'Architectures': 'amd64'}
@@ -73,8 +95,10 @@ class LegacyTestCase(unittest.TestCase):
         testline4 = 'deb-src http://example.com ubuntu main'
         testline5 = '# dbe http://example.com ubuntu main'
         testline6 = 'dba http://example.com ubuntu main'
+        testline7 = 'deb file:///var/cache/apt/archives ./'
+        testline8 = 'deb [trusted=yes] file:///var/cache/apt/archives ./'
 
-        for line in [testline1, testline2, testline3, testline4]:
+        for line in [testline1, testline2, testline3, testline4, testline7, testline8]:
             self.assertTrue(util.validate_debline(line))
 
         for line in [testline5, testline6]:
