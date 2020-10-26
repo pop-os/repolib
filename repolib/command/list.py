@@ -22,6 +22,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 Module for listing repos on the system in CLI applications.
 """
 
+import traceback
+
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..source import Source
@@ -105,7 +107,10 @@ class List(command.Command):
 
         if not self.no_names:
             print('Configured sources:')
-        for source in get_all_sources(get_system=True, pass_exceptions=self.verbose):
+        
+        sources, errors = get_all_sources(get_system=True, get_exceptions=True)
+        
+        for source in sources:
             self.log.debug('Found source file %s', source.filename)
             if self.no_names:
                 print(f'{source.ident}')
@@ -125,6 +130,21 @@ class List(command.Command):
                         print(f'{source.make_debline()}')
                     except RepoError:
                         pass
+        if errors:
+            print('\nThe following files have formatting errors:')
+            for err in errors:
+                print(err)
+            if self.verbose or self.debug:
+                print('\nDetails for the failing files:')
+                for err in errors:
+                    print(f'{err}:')
+                    with open(err) as error_file:
+                        print(error_file.read())
+                    print('Stack Trace:')
+                    traceback.print_tb(errors[err].__traceback__)
+                    print('\n')
+
+
         return True
 
     def get_source_path(self):
