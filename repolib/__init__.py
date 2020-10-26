@@ -55,27 +55,25 @@ def get_all_sources(get_system=False, pass_exceptions=False):
     for file in sources_files:
         if file.stem == 'system':
             continue
-        source = Source(filename=file.stem)
+        source = Source(filename=file.name)
         try:
             source.load_from_file()
         except Exception as err:
-            print(f'ERROR: Could not process source {file.name}')
-            print(f'Error details: \n{err}')
-            if pass_exceptions:
-                raise err
+            errors[file.stem] = err
         else:
             sources.append(source)
 
     for file in list_files:
-        source = LegacyDebSource(filename=file.stem)
+        source = LegacyDebSource(filename=file.name)
         try:
             source.load_from_file()
         except Exception as err:
-            print(f'ERROR: Could not process source {file.name}')
-            print(f'Error details: \n{err}')
-            if pass_exceptions:
-                raise err
+            errors[file.stem] = err
         else:
             sources.append(source)
 
-    return sources
+    if pass_exceptions:
+        for error in errors:
+            raise errors[error]
+
+    return sources, errors
