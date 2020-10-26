@@ -107,9 +107,9 @@ class List(command.Command):
 
         if not self.no_names:
             print('Configured sources:')
-        
+
         sources, errors = get_all_sources(get_system=True, get_exceptions=True)
-        
+
         for source in sources:
             self.log.debug('Found source file %s', source.filename)
             if self.no_names:
