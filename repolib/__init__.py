@@ -32,7 +32,7 @@ from . import __version__
 
 VERSION = __version__.__version__
 
-def get_all_sources(get_system=False):
+def get_all_sources(get_system=False, exit_on_failure=False):
     """ Returns a list of all the sources on the system.
 
     Arguments:
@@ -52,12 +52,20 @@ def get_all_sources(get_system=False):
         if file.stem == 'system':
             continue
         source = Source(filename=file.stem)
-        source.load_from_file()
+        try:
+            source.load_from_file()
+        except Exception as e:
+            print(f'ERROR: Could not process source {file.name}')
+            print(f'Error details: \n{e}')
         sources.append(source)
 
     for file in list_files:
         source = LegacyDebSource(filename=file.stem)
-        source.load_from_file()
+        try:
+            source.load_from_file()
+        except Exception as e:
+            print(f'ERROR: Could not process source {file.name}')
+            print(f'Error details: \n{e}')
         sources.append(source)
 
     return sources
