@@ -105,7 +105,7 @@ class List(command.Command):
 
         if not self.no_names:
             print('Configured sources:')
-        for source in get_all_sources(get_system=True):
+        for source in get_all_sources(get_system=True, pass_exceptions=self.verbose):
             self.log.debug('Found source file %s', source.filename)
             if self.no_names:
                 print(f'{source.ident}')
