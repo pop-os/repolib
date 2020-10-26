@@ -40,6 +40,14 @@ def get_all_sources(get_system=False, get_exceptions=False):
 
     Arguments:
         get_system (bool): Whether to include the system repository or not.
+        get_exceptions (bool): Whether to return information about failures.
+    
+    Returns:
+        Without `get_exceptions`, return the :obj:`list` of :obj:`Source`
+        With `get_exceptions`, return: (
+            :obj:`list` of :obj:`Source`,
+            :obj:`dict` of :obj:`Exception`
+        )
     """
     sources_path = util.get_sources_dir()
     sources_files = sources_path.glob('*.sources')
