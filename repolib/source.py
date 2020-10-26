@@ -56,7 +56,15 @@ class Source(deb822.Deb822):
         'lang': 'Languages',
         'target': 'Targets',
         'pdiffs': 'PDiffs',
-        'by-hash': 'By-Hash'
+        'by-hash': 'By-Hash',
+        'allow-insecure': 'Allow-Insecure',
+        'allow-weak': 'Allow-Weak',
+        'allow-downgrade-to-insecure': 'Allow-Downgrade-To-Insecure',
+        'trusted': 'Trusted',
+        'signed-by': 'Signed-By',
+        'check-valid-until': 'Check-Valid-Until',
+        'valid-until-min': 'Valid-Until-Min',
+        'valid-until-max': 'Valid-Until-Max'
     }
 
     outoptions_d = {
@@ -64,7 +72,15 @@ class Source(deb822.Deb822):
         'Languages': 'lang',
         'Targets': 'target',
         'PDiffs': 'pdiffs',
-        'By-Hash': 'by-hash'
+        'By-Hash': 'by-hash',
+        'Allow-Insecure': 'allow-insecure',
+        'Allow-Weak': 'allow-weak',
+        'Allow-Downgrade-To-Insecure': 'allow-downgrade-to-insecure',
+        'Trusted': 'trusted',
+        'Signed-By': 'signed-by',
+        'Check-Valid-Until': 'check-valid-until',
+        'Valid-Until-Min': 'valid-until-min',
+        'Valid-Until-Max': 'valid-until-max'
     }
     options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
     uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
