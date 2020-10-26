@@ -35,7 +35,7 @@ VERSION = __version__.__version__
 # pylint: disable=broad-except
 # We want to be broad in catching exceptions here, as failure could mean
 # applications unexpectedly close
-def get_all_sources(get_system=False, exit_on_failure=False):
+def get_all_sources(get_system=False, pass_exceptions=False):
     """ Returns a list of all the sources on the system.
 
     Arguments:
@@ -46,6 +46,7 @@ def get_all_sources(get_system=False, exit_on_failure=False):
     list_files = sources_path.glob('*.list')
 
     sources = []
+    errors = {}
 
     if get_system:
         source = SystemSource()
@@ -60,9 +61,10 @@ def get_all_sources(get_system=False, exit_on_failure=False):
         except Exception as err:
             print(f'ERROR: Could not process source {file.name}')
             print(f'Error details: \n{err}')
-            if exit_on_failure:
+            if pass_exceptions:
                 raise err
-        sources.append(source)
+        else:
+            sources.append(source)
 
     for file in list_files:
         source = LegacyDebSource(filename=file.stem)
@@ -71,8 +73,9 @@ def get_all_sources(get_system=False, exit_on_failure=False):
         except Exception as err:
             print(f'ERROR: Could not process source {file.name}')
             print(f'Error details: \n{err}')
-            if exit_on_failure:
+            if pass_exceptions:
                 raise err
-        sources.append(source)
+        else:
+            sources.append(source)
 
     return sources
