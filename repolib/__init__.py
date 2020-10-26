@@ -35,7 +35,7 @@ VERSION = __version__.__version__
 # pylint: disable=broad-except
 # We want to be broad in catching exceptions here, as failure could mean
 # applications unexpectedly close
-def get_all_sources(get_system=False, pass_exceptions=False):
+def get_all_sources(get_system=False, get_exceptions=False):
     """ Returns a list of all the sources on the system.
 
     Arguments:
@@ -68,12 +68,10 @@ def get_all_sources(get_system=False, pass_exceptions=False):
         try:
             source.load_from_file()
         except Exception as err:
-            errors[file.stem] = err
+            errors[file] = err
         else:
             sources.append(source)
 
-    if pass_exceptions:
-        for error in errors:
-            raise errors[error]
-
-    return sources, errors
+    if get_exceptions:
+        return sources, errors
+    return sources
