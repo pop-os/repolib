@@ -47,10 +47,25 @@ repolib.VERSION
 get_all_sources()
 -----------------
 
-repolib.get_all_sources(get_system=False)
-    Returns a ``list`` of all configured sources currently on the system. If 
-    ```get_system`` (default: ``False``) is ``True``, then the system source (if 
-    configured and detected) will be included as the first item in the list.
+repolib.get_all_sources(get_system=False, get_exceptions=False)
+    Get a list of all valid sources configured on the system. Invalid sources or 
+    sources with formatting errors are excluded.
+
+    Returns:
+        Either a ``list`` of :ref:`source-object`, or a tuple with this list 
+        plus a :obj:`dict` with :obj:`Exception` for any sources with errors 
+
+get_system
+^^^^^^^^^^
+:obj:`bool` - Whether to include the system source at the beginning of the list
+of sources.
+
+get_exceptions
+^^^^^^^^^^^^^^
+:obj:`bool` - Whether to return just the list of sources or to include the 
+exception Dictionary. If ``True``, then the Exception Dictionary will contain 
+keys for each failing filename, plus the :obj:`Exception` which triggered the 
+failure.
 
 
 Example

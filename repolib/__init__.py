@@ -32,17 +32,29 @@ from . import __version__
 
 VERSION = __version__.__version__
 
-def get_all_sources(get_system=False):
+# pylint: disable=broad-except
+# We want to be broad in catching exceptions here, as failure could mean
+# applications unexpectedly close
+def get_all_sources(get_system=False, get_exceptions=False):
     """ Returns a list of all the sources on the system.
 
     Arguments:
         get_system (bool): Whether to include the system repository or not.
+        get_exceptions (bool): Whether to return information about failures.
+
+    Returns:
+        Without `get_exceptions`, return the :obj:`list` of :obj:`Source`
+        With `get_exceptions`, return: (
+            :obj:`list` of :obj:`Source`,
+            :obj:`dict` of :obj:`Exception`
+        )
     """
     sources_path = util.get_sources_dir()
     sources_files = sources_path.glob('*.sources')
     list_files = sources_path.glob('*.list')
 
     sources = []
+    errors = {}
 
     if get_system:
         source = SystemSource()
@@ -51,13 +63,23 @@ def get_all_sources(get_system=False):
     for file in sources_files:
         if file.stem == 'system':
             continue
-        source = Source(filename=file.stem)
-        source.load_from_file()
-        sources.append(source)
+        source = Source(filename=file.name)
+        try:
+            source.load_from_file()
+        except Exception as err:
+            errors[file.stem] = err
+        else:
+            sources.append(source)
 
     for file in list_files:
-        source = LegacyDebSource(filename=file.stem)
-        source.load_from_file()
-        sources.append(source)
+        source = LegacyDebSource(filename=file.name)
+        try:
+            source.load_from_file()
+        except Exception as err:
+            errors[file] = err
+        else:
+            sources.append(source)
 
+    if get_exceptions:
+        return sources, errors
     return sources

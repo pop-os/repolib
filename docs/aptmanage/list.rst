@@ -66,7 +66,10 @@ Note
 
 Passing the ``--verbose`` flag only applies to listing all sources. It has no 
 effect if a source is specified using the system-identifier; in that case, only 
-the specified source is printed.
+the specified source is printed. Additionally, if there are sources files which 
+contain errors, the ``--verbose`` flag will print details about them, including 
+the contents of the files and the stack trace of the exception which caused the 
+error.
 
 
 Legacy sources.list entries
