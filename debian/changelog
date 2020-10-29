@@ -1,3 +1,22 @@
+repolib (1.5.0) groovy; urgency=medium
+
+  * Empty sources (without URIs or Suites, legacy sources without consituent
+    lines) are not shown in the list and aren't included in the list
+    via get_all_sources()
+  * Empty sources always report they are not Enabled.
+  * Empty sources cannot be set to Enabled.
+  * Empty sources do not throw exceptions
+  * Empty sources can have modifications made to them (making them        
+    no-longer empty). 
+  * Non-empty sources can have all URIs and Suites removed (making
+    them empty).
+  * URI Validation has been improved.
+  * Fault-tolerance is greatly improved
+  * apt-manage: files with syntax errors are displayed in output
+  * apt-manage: debug output includes contents of invalid files
+
+ -- Ian Santopietro <ian@system76.com>  Thu, 29 Oct 2020 15:33:04 -0600
+
 repolib (1.4.0) groovy; urgency=medium
 
   * Added a new 'default-mirror' attribute to the system source
