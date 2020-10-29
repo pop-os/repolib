@@ -171,12 +171,17 @@ class Source(deb822.Deb822):
 
     def make_name(self, prefix=''):
         """ Create a name for this source. """
-        uri = self.uris[0].replace('/', ' ')
-        uri_list = uri.split()
-        name = '{}{}'.format(
-            prefix,
-            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
-        )
+        if len(self.uris) > 0:
+            uri = self.uris[0].replace('/', ' ')
+            uri_list = uri.split()
+            name = '{}{}'.format(
+                prefix,
+                '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+            )
+        else:
+            # Use the ident as a fallback as it should be good enough
+            name = self.ident
+
         return name
 
     def init_values(self):
