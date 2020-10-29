@@ -132,6 +132,12 @@ class Source(deb822.Deb822):
         Returns:
             A str which can be printed to console.
         """
+        # The source can't be enabled if there are no uris or suites
+        no_uris = len(self.uris) <= 0
+        no_suites = len(self.suites) <= 0
+        if no_uris or no_suites:
+            self.enabled = False
+
         if not self.name:
             self.name = self.filename.replace('.sources', '')
 
@@ -291,6 +297,12 @@ class Source(deb822.Deb822):
     @property
     def enabled(self):
         """ util.AptSourceEnabled: Whether the source is enabled or not. """
+        # The source can't be enabled if there are no uris or suites
+        no_uris = len(self.uris) <= 0
+        no_suites = len(self.suites) <= 0
+        if no_uris or no_suites:
+            return util.AptSourceEnabled.FALSE
+
         try:
             return util.AptSourceEnabled(self['enabled'])
         except KeyError:
