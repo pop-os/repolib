@@ -73,6 +73,10 @@ class LegacyDebSource(source.Source):
 
         It also sets these values up.
         """
+
+        if len(self.sources) <= 0:
+            self.name = self.make_name()
+
         if not self.ident:
             self.ident = self.sources[0].make_name()
 
@@ -82,33 +86,33 @@ class LegacyDebSource(source.Source):
 
     def load_from_sources(self):
         """ Loads the source from its consituent source lines."""
-        # If the file is empty or contains no valid sources, skip it.
-        if len(self.sources) <= 0:
-            return 
-
         enabled = False
         uris = []
         suites = []
         components = []
         options = {}
-        for repo in self.sources:
-            if repo.types[0] not in self.types:
-                self.types.append(repo.types[0])
-            if repo.enabled.value == 'yes':
-                if util.AptSourceType.BINARY in repo.types:
-                    enabled = True
-                else:
-                    self.source_code_enabled = True
-            uris = combine_lists(uris, repo.uris)
-            suites = combine_lists(suites, repo.suites)
-            components = combine_lists(components, repo.components)
-            options.update(repo.options)
+
+        # If the file is empty or contains no valid sources, skip it.
+        if len(self.sources) > 0:
+            for repo in self.sources:
+                if repo.types[0] not in self.types:
+                    self.types.append(repo.types[0])
+                if repo.enabled.value == 'yes':
+                    if util.AptSourceType.BINARY in repo.types:
+                        enabled = True
+                    else:
+                        self.source_code_enabled = True
+                uris = combine_lists(uris, repo.uris)
+                suites = combine_lists(suites, repo.suites)
+                components = combine_lists(components, repo.components)
+                options.update(repo.options)
 
         self.uris = uris.copy()
         self.suites = suites.copy()
         self.components = components.copy()
         self.options = options.copy()
         self.enabled = enabled
+        self.enabled = self.enabled
 
         if not self.name:
             self.make_names()
@@ -140,13 +144,15 @@ class LegacyDebSource(source.Source):
         self.sources = sources
         self.load_from_sources()
 
-
     # pylint: disable=arguments-differ
     # This is operating on a very different kind of source, thus needs to be
     # different.
     def save_to_disk(self):
         """ Save the source to the disk. """
-        self.sources[0].save_to_disk(save=False)
+        try:
+            self.sources[0].save_to_disk(save=False)
+        except IndexError:
+            pass
         full_path = util.get_sources_dir() / self.filename
 
         source_output = self.make_deblines()
