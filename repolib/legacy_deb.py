@@ -82,6 +82,10 @@ class LegacyDebSource(source.Source):
 
     def load_from_sources(self):
         """ Loads the source from its consituent source lines."""
+        # If the file is empty or contains no valid sources, skip it.
+        if len(self.sources) <= 0:
+            return 
+
         enabled = False
         uris = []
         suites = []
@@ -135,6 +139,7 @@ class LegacyDebSource(source.Source):
 
         self.sources = sources
         self.load_from_sources()
+
 
     # pylint: disable=arguments-differ
     # This is operating on a very different kind of source, thus needs to be
