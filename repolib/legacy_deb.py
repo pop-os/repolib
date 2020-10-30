@@ -92,20 +92,18 @@ class LegacyDebSource(source.Source):
         components = []
         options = {}
 
-        # If the file is empty or contains no valid sources, skip it.
-        if len(self.sources) > 0:
-            for repo in self.sources:
-                if repo.types[0] not in self.types:
-                    self.types.append(repo.types[0])
-                if repo.enabled.value == 'yes':
-                    if util.AptSourceType.BINARY in repo.types:
-                        enabled = True
-                    else:
-                        self.source_code_enabled = True
-                uris = combine_lists(uris, repo.uris)
-                suites = combine_lists(suites, repo.suites)
-                components = combine_lists(components, repo.components)
-                options.update(repo.options)
+        for repo in self.sources:
+            if repo.types[0] not in self.types:
+                self.types.append(repo.types[0])
+            if repo.enabled.value == 'yes':
+                if util.AptSourceType.BINARY in repo.types:
+                    enabled = True
+                else:
+                    self.source_code_enabled = True
+            uris = combine_lists(uris, repo.uris)
+            suites = combine_lists(suites, repo.suites)
+            components = combine_lists(components, repo.components)
+            options.update(repo.options)
 
         self.uris = uris.copy()
         self.suites = suites.copy()
