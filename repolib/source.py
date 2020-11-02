@@ -132,6 +132,12 @@ class Source(deb822.Deb822):
         Returns:
             A str which can be printed to console.
         """
+        # The source can't be enabled if there are no uris or suites
+        no_uris = len(self.uris) <= 0
+        no_suites = len(self.suites) <= 0
+        if no_uris or no_suites:
+            self.enabled = False
+
         if not self.name:
             self.name = self.filename.replace('.sources', '')
 
@@ -171,12 +177,17 @@ class Source(deb822.Deb822):
 
     def make_name(self, prefix=''):
         """ Create a name for this source. """
-        uri = self.uris[0].replace('/', ' ')
-        uri_list = uri.split()
-        name = '{}{}'.format(
-            prefix,
-            '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
-        )
+        if len(self.uris) > 0:
+            uri = self.uris[0].replace('/', ' ')
+            uri_list = uri.split()
+            name = '{}{}'.format(
+                prefix,
+                '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+            )
+        else:
+            # Use the ident as a fallback as it should be good enough
+            name = self.ident
+
         return name
 
     def init_values(self):
@@ -286,6 +297,12 @@ class Source(deb822.Deb822):
     @property
     def enabled(self):
         """ util.AptSourceEnabled: Whether the source is enabled or not. """
+        # The source can't be enabled if there are no uris or suites
+        no_uris = len(self.uris) <= 0
+        no_suites = len(self.suites) <= 0
+        if no_uris or no_suites:
+            return util.AptSourceEnabled.FALSE
+
         try:
             return util.AptSourceEnabled(self['enabled'])
         except KeyError:

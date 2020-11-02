@@ -73,6 +73,10 @@ class LegacyDebSource(source.Source):
 
         It also sets these values up.
         """
+
+        if len(self.sources) <= 0:
+            self.name = self.make_name()
+
         if not self.ident:
             self.ident = self.sources[0].make_name()
 
@@ -87,6 +91,7 @@ class LegacyDebSource(source.Source):
         suites = []
         components = []
         options = {}
+
         for repo in self.sources:
             if repo.types[0] not in self.types:
                 self.types.append(repo.types[0])
@@ -105,6 +110,7 @@ class LegacyDebSource(source.Source):
         self.components = components.copy()
         self.options = options.copy()
         self.enabled = enabled
+        self.enabled = self.enabled
 
         if not self.name:
             self.make_names()
@@ -141,7 +147,10 @@ class LegacyDebSource(source.Source):
     # different.
     def save_to_disk(self):
         """ Save the source to the disk. """
-        self.sources[0].save_to_disk(save=False)
+        try:
+            self.sources[0].save_to_disk(save=False)
+        except IndexError:
+            pass
         full_path = util.get_sources_dir() / self.filename
 
         source_output = self.make_deblines()
