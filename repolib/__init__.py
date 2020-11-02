@@ -69,7 +69,11 @@ def get_all_sources(get_system=False, get_exceptions=False):
         except Exception as err:
             errors[file.stem] = err
         else:
-            sources.append(source)
+            # The source should not be listed if it is empty
+            has_uris = len(source.uris) > 0
+            has_suites = len(source.suites) > 0
+            if has_uris and has_suites:
+                sources.append(source)
 
     for file in list_files:
         source = LegacyDebSource(filename=file.name)
@@ -78,7 +82,11 @@ def get_all_sources(get_system=False, get_exceptions=False):
         except Exception as err:
             errors[file] = err
         else:
-            sources.append(source)
+            # The source should not be listed if it is empty
+            has_uris = len(source.uris) > 0
+            has_suites = len(source.suites) > 0
+            if has_uris and has_suites:
+                sources.append(source)
 
     if get_exceptions:
         return sources, errors
