@@ -40,8 +40,8 @@ class RepoError(Exception):
         self.code = code
 
 try:
-    import lsb_release
-    DISTRO_CODENAME = lsb_release.get_distro_information()['CODENAME']
+    import distro
+    DISTRO_CODENAME = distro.codename()
 except ImportError:
     DISTRO_CODENAME = 'linux'
 
