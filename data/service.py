@@ -58,7 +58,7 @@ class Repo(dbus.service.Object):
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
-        in_signature='ss', out_signature='b',
+        in_signature='ss', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
     def output_file_to_disk(self, filename, source, sender=None, conn=None):
@@ -66,28 +66,20 @@ class Repo(dbus.service.Object):
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
         full_path = self.sources_dir / filename
-        try:
-            with open(full_path, mode='w') as output_file:
-                output_file.write(source)
-            return True
-        except:
-            return False
+        with open(full_path, mode='w') as output_file:
+            output_file.write(source)
 
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='b',
+        in_signature='s', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
     def delete_source(self, filename, sender=None, conn=None):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        try:
-            source_file = self.sources_dir / filename
-            source_file.unlink()
-            return True
-        except:
-            return False
+        source_file = self.sources_dir / filename
+        source_file.unlink()
 
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
