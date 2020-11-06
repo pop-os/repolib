@@ -4,10 +4,10 @@ Priority: optional
 Maintainer: Ian Santopietro <isantop@gmail.com>
 Build-Depends: debhelper (>= 11),
                dh-python,
-               lsb-release,
                python3-all,
                python3-dbus,
                python3-debian,
+               python3-distro,
                python3-setuptools,
                python3-distutils,
                python3-pytest

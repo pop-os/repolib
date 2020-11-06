@@ -1,3 +1,4 @@
+dbus-python
+distro
 pytest-pylint
 python-debian
-dbus-python
