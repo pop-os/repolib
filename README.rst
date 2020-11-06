@@ -16,7 +16,7 @@ Documentation is available online at `Read The Docs <https://repolib.rtfd.io/>`_
 
 
 Basic CLI Usage
------------
+---------------
 
 RepoLib includes a CLI program for managing software repositories, 
 :code:`apt-manage`
