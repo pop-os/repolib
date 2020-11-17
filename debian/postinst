@@ -1,7 +1,0 @@
-#!/bin/bash
-
-## Provide a replacement for the add-apt-repository command 
-if [[ `dpkg -s software-properties-common | grep 'Status'` != *'installed'* ]]; then 
-    ln -s /usr/lib/repolib/add-apt-repository /usr/bin/add-apt-repository
-    ln -s /usr/lib/repolib/add-apt-repository /usr/bin/apt-add-repository
-fi
