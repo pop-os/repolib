@@ -147,7 +147,7 @@ class LegacyDebSource(source.Source):
 
         # self.comment = self.comment.strip()
         if not self.comment:
-            self.comment = '## Added/managed by repolib ##\n#'
+            self.comment = '## Added/managed by repolib ##\n#\n'
 
         self.sources = sources
         self.load_from_sources()
@@ -186,7 +186,7 @@ class LegacyDebSource(source.Source):
             if line and not line.startswith('#'):
                 line = f'#{line}'
         toprint = '\n'.join(comment)
-        toprint += f'\n## X-Repolib-Name: {self.name}\n'
+        toprint += f'## X-Repolib-Name: {self.name}\n'
 
         for suite in self.suites:
             for uri in self.uris:

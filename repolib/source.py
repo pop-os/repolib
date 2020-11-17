@@ -92,7 +92,7 @@ class Source(deb822.Deb822):
         if ident:
             self.ident = ident
 
-        self.comment = '## Added/managed by repolib ##\n#'
+        self.comment = '## Added/managed by repolib ##\n#\n'
 
     def load_from_file(self, filename=None, ident=None):
         """ Loads the data from a file path.
