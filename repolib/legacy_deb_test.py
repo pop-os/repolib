@@ -27,16 +27,24 @@ import unittest
 from . import legacy_deb
 from . import util
 
+def get_testing_data(file='plain-file.list'):
+    """ Get testing data from a file on disk, specified by file. """
+    path = util.get_sources_dir(testing=True) / file
+    with open(path, 'r') as testing_file:
+        testing_data = testing_file.readlines()
+    return testing_data
 
 class LegacyTestCase(unittest.TestCase):
 
     def setUp(self):
-        with open(util.get_sources_dir(testing=True) / 'test.list', mode='w') as test_file:
+        path = util.get_sources_dir(testing=True) / 'plain-file.list'
+        with open(path, mode='w') as test_file:
             test_file.write(
                 'deb [arch=amd64] https://example.com ubuntu main universe\n'
                 'deb-src [arch=amd64] https://example.com ubuntu main universe\n'
             )
-        with open(util.get_sources_dir(testing=True) / 'test2.list', mode='w') as test_file:
+        path = util.get_sources_dir(testing=True) / 'already-set-up.list'
+        with open(path, mode='w') as test_file:
             test_file.write(
                 '## Added/managed by repolib ##\n'
                 '#\n'
@@ -44,7 +52,8 @@ class LegacyTestCase(unittest.TestCase):
                 'deb [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
                 'deb-src [arch=armel,amd64 lang=en_US] http://example.com ubuntu main\n'
             )
-        with open(util.get_sources_dir(testing=True) / 'test3.list', mode='w') as test_file:
+        path = util.get_sources_dir(testing=True) / 'no-suites.list'
+        with open(path, mode='w') as test_file:
             test_file.write(
                 '## Added/managed by repolib ##\n'
                 '#\n'
@@ -52,16 +61,27 @@ class LegacyTestCase(unittest.TestCase):
                 'deb [trusted=yes] file:///var/cache/apt/archives ./\n'
                 'deb-src [trusted=yes] file:///var/cache/apt/archives ./\n'
             )
-        self.source = legacy_deb.LegacyDebSource(ident='test')
+        path = util.get_sources_dir(testing=True) / 'long-comments.list'
+        with open(path, mode='w') as test_file:
+            test_file.write(
+                '## Added/managed by repolib ##\n'
+                '## NOTE: This file has long comments and whitespace\n'
+                '\n'
+                '\n'
+                '## X-Repolib-Name: long comments\n'
+                'deb [trusted=yes] file:///var/cache/apt/archives ./\n'
+                'deb-src [trusted=yes] file:///var/cache/apt/archives ./\n'
+            )
+        self.source = legacy_deb.LegacyDebSource(ident='plain-file')
         self.source.load_from_file()
 
     def test_no_suites(self):
         opts = {'Trusted': 'yes'}
         types = [util.AptSourceType.BINARY, util.AptSourceType.SOURCE]
-        source = legacy_deb.LegacyDebSource(ident='test3')
+        source = legacy_deb.LegacyDebSource(ident='no-suites')
         source.load_from_file()
 
-        self.assertEqual(source.ident, 'test3')
+        self.assertEqual(source.ident, 'no-suites')
         self.assertEqual(source.name, 'test no suites')
         self.assertEqual(source.types, types)
         self.assertEqual(source.uris, ['file:///var/cache/apt/archives'])
@@ -71,7 +91,7 @@ class LegacyTestCase(unittest.TestCase):
 
     def test_load_from_file(self):
         opts = {'Architectures': 'amd64'}
-        self.assertEqual(self.source.filename, 'test.list')
+        self.assertEqual(self.source.filename, 'plain-file.list')
         self.assertEqual(len(self.source.sources), 2)
         for debsource in self.source.sources:
             self.assertEqual(len(debsource.types), 1)
@@ -105,11 +125,8 @@ class LegacyTestCase(unittest.TestCase):
             self.assertFalse(util.validate_debline(line))
 
     def test_save_to_disk(self):
-        with open(util.get_sources_dir(testing=True) / 'test2.list', mode='r') as expected_file:
-            expected_data = expected_file.readlines()
-
-        with open(util.get_sources_dir(testing=True) / 'test.list', mode='r') as source_file:
-            source_data = source_file.readlines()
+        expected_data = get_testing_data(file='already-set-up.list')
+        source_data = get_testing_data(file='plain-file.list')
         self.assertNotEqual(source_data, expected_data)
 
         self.source.uris = ['http://example.com']
@@ -118,10 +135,22 @@ class LegacyTestCase(unittest.TestCase):
             'Languages': 'en_US'
         }
         self.source.components = ['main']
-        self.source.filename = 'test3.list'
+        self.source.filename = 'no-suites.list'
         self.source.save_to_disk()
 
-        with open(util.get_sources_dir(testing=True) / 'test3.list', mode='r') as source_file:
-            source_file.seek(0)
-            source_data = source_file.readlines()
+        source_data = get_testing_data(file='no-suites.list')
+        self.assertEqual(source_data, expected_data)
+
+    def test_long_comments(self):
+        expected_data = get_testing_data(file='long-comments.list')
+        source = legacy_deb.LegacyDebSource(ident='long-comments')
+        source.load_from_file()
+        source.name = 'Name change'
+        source.save_to_disk()
+
+        source2 = legacy_deb.LegacyDebSource(ident='long-comments')
+        source2.load_from_file()
+        source2.name = 'long comments'
+        source2.save_to_disk()
+        source_data = get_testing_data(file='long-comments.list')
         self.assertEqual(source_data, expected_data)

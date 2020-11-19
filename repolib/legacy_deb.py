@@ -129,15 +129,25 @@ class LegacyDebSource(source.Source):
 
         full_path = util.get_sources_dir() / self.filename
         sources = []
+        self.comment = ''
         with open(full_path, 'r') as source_file:
             for line in source_file:
+                name_line = 'X-Repolib-Name' in line
                 if util.validate_debline(line):
                     deb_src = deb.DebLine(line)
                     deb_src.name = self.name
                     sources.append(deb_src)
-                elif "X-Repolib-Name" in line:
+                elif name_line:
                     name = ':'.join(line.split(':')[1:])
                     self.name = name.strip()
+                elif line.startswith('#') and not name_line:
+                    self.comment += f'{line}'
+                elif line == '\n':
+                    self.comment += '\n'
+
+        # self.comment = self.comment.strip()
+        if not self.comment:
+            self.comment = '## Added/managed by repolib ##\n#\n'
 
         self.sources = sources
         self.load_from_sources()
@@ -171,8 +181,12 @@ class LegacyDebSource(source.Source):
         Returns:
             A str with the output entries.
         """
-        toprint = '## Added/managed by repolib ##\n'
-        toprint += f'#\n## X-Repolib-Name: {self.name}\n'
+        comment = self.comment.split('\n')
+        for line in comment:
+            if line and not line.startswith('#'):
+                line = f'#{line}'
+        toprint = '\n'.join(comment)
+        toprint += f'## X-Repolib-Name: {self.name}\n'
 
         for suite in self.suites:
             for uri in self.uris:
