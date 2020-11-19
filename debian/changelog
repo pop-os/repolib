@@ -1,6 +1,7 @@
 repolib (1.5.1) groovy; urgency=medium
 
   * Updates to Python packaging
+  * Comments in list files are now preserved
 
  -- Ian Santopietro <ian@system76.com>  Fri, 06 Nov 2020 12:19:56 -0700
 
