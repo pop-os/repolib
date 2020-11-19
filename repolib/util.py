@@ -196,4 +196,6 @@ def validate_debline(valid):
     else:
         if valid.endswith('.flatpakrepo'):
             return False
-        return url_validator(valid)
+        if len(valid.split()) == 1:
+            return url_validator(valid)
+        return False
