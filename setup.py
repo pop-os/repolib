@@ -19,13 +19,12 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-#pylint: disable=invalid-name,subprocess-run-check
+#pylint: skip-file
 # We don't need to check these in setup
 
 import os
 import subprocess
-from distutils.cmd import Command
-from distutils.core import setup
+from setuptools import setup, find_packages, Command
 
 def get_version():
     """ Get the program version. """
@@ -40,7 +39,6 @@ with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 classifiers = [
-    'Development Status :: 3 - Alpha',
     'Environment :: Console',
     'Intended Audience :: System Administrators',
     'Intended Audience :: End Users/Desktop',
