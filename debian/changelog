@@ -1,3 +1,9 @@
+repolib (1.5.2) groovy; urgency=medium
+
+  * Added a flag to allow skipping the confirmation prompt on source removal
+
+ -- Ian Santopietro <ian@system76.com>  Thu, 10 Dec 2020 11:27:29 -0700
+
 repolib (1.5.1) groovy; urgency=medium
 
   * Updates to Python packaging
