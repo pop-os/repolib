@@ -65,7 +65,7 @@ class Remove(command.Command):
         super().__init__(log, args, parser)
         self.source = args.repository
         self.sources_dir = get_sources_dir()
-    
+
     def finalize_options(self, args):
         """ Finish setting up our options/arguments. """
         super().finalize_options(args)
@@ -110,10 +110,10 @@ class Remove(command.Command):
                 'No source %s found on system. Check the spelling.', self.source
             )
             return False
-        
+
         if self.assume_yes:
             response = 'y'
-        
+
         else:
             print(
                 f'You are about to remove the sources contained in {remove_path.name}.'
