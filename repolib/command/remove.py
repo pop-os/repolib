@@ -54,10 +54,23 @@ class Remove(command.Command):
             help='The name of the repository to remove. See LIST'
         )
 
+        parser_remove.add_argument(
+            '-y',
+            '--assume-yes',
+            action='store_true',
+            help='Remove sources without prompting for confirmation.'
+        )
+
     def __init__(self, log, args, parser):
         super().__init__(log, args, parser)
         self.source = args.repository
         self.sources_dir = get_sources_dir()
+    
+    def finalize_options(self, args):
+        """ Finish setting up our options/arguments. """
+        super().finalize_options(args)
+        self.source = args.repository
+        self.assume_yes = args.assume_yes
 
     def get_source_path(self):
         """ Tries to get the full path to the source.
@@ -97,16 +110,20 @@ class Remove(command.Command):
                 'No source %s found on system. Check the spelling.', self.source
             )
             return False
-
-        print(
-            f'You are about to remove the sources contained in {remove_path.name}.'
-            '\nAre you sure you want to do this?\n'
-        )
-        response = 'f'
-        while response.lower() not in ['y', 'n']:
-            response = input(f'Remove {remove_path.name}? (y/N) ')
-            if response == '':
-                response = 'n'
+        
+        if self.assume_yes:
+            response = 'y'
+        
+        else:
+            print(
+                f'You are about to remove the sources contained in {remove_path.name}.'
+                '\nAre you sure you want to do this?\n'
+            )
+            response = 'f'
+            while response.lower() not in ['y', 'n']:
+                response = input(f'Remove {remove_path.name}? (y/N) ')
+                if response == '':
+                    response = 'n'
 
         if response.lower() == 'y':
             if self.args.debug != 0:
