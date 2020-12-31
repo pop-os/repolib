@@ -23,9 +23,12 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
+import urllib.request, urllib.error
 
 SOURCES_DIR = '/etc/apt/sources.list.d'
+KEYS_DIR = '/etc/apt/trusted.gpg.d'
 TESTING = False
+KEYSERVER_QUERY_URL = 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x'
 
 class RepoError(Exception):
     """ Exception from this module."""
@@ -96,6 +99,25 @@ CLEAN_CHARS = {
     59: None,
 }
 
+def fetch_key(fingerprint, query_url=KEYSERVER_QUERY_URL):
+    """ Fetches a PGP Key from a keyserver.
+
+    Arguments:
+        :str fingerprint: The fingerprint of the key to fetch.
+        :str query_url: the URL to use to fetch the query.
+    
+    Returns
+        :Bytes: The data containing the Key data.
+    """
+
+    full_url = query_url + fingerprint
+    try:
+        request = urllib.request.urlopen(full_url)
+    except urllib.error.URLError:
+        request = None
+    
+    return request.read()
+
 def url_validator(url):
     """ Validate a url and tell if it's good or not.
 
@@ -150,6 +172,25 @@ def get_source_path(name, log=None):
             log.debug('Path %s exists!', full_path)
         return full_path
     return None
+
+def get_keys_dir(testing=False):
+    """ Get the path to the signing keys dir.
+
+    Arguments:
+        :bool testing: Whether we should be in testing mode or not.
+    
+    Returns:
+        pathlib.Path: The Keys dir.
+    """
+    # pyline: disable=global-statement
+    # As with get_sources_dir(), we're setting a mode here.
+    if testing:
+        global KEYS_DIR
+        KEYS_DIR = '/tmp/replib_testing/keys'
+    
+    keys_dir = Path(KEYS_DIR)
+    keys_dir.mkdir(parents=True, exist_ok=True)
+    return keys_dir
 
 def get_sources_dir(testing=False):
     """ Get the path to the sources dir.

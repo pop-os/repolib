@@ -33,11 +33,14 @@ from __future__ import print_function
 
 import json
 import subprocess
+import tempfile
 import time
 import urllib.parse
 import urllib.request
 from http.client import HTTPException
 from urllib.error import HTTPError, URLError
+
+import dbus
 
 from . import source, util
 
@@ -53,6 +56,14 @@ LAUNCHPAD_DISTRIBUTION_SERIES_API = 'https://launchpad.net/api/1.0/%s/%s'
 # Specify to use the system default SSL store; change to a different path
 # to test with custom certificates.
 LAUNCHPAD_PPA_CERT = "/etc/ssl/certs/ca-certificates.crt"
+
+GPG_KEYRING_CMD = [
+    'gpg',
+    '-q',
+    '--no-options',
+    '--no-default-keyring',
+    '--batch'
+]
 
 class PPALine(source.Source):
     """ A source specifically for Launchpad PPAs
@@ -118,13 +129,13 @@ class PPALine(source.Source):
         name = self.ppa_line.replace(':', '-')
         name = name.replace('/', '-')
 
+        self.key_file = util.get_keys_dir() / f'{self.ident}.gpg'
         return f'{name}'
 
     def save_to_disk(self, save=True):
         """
         Saves the PPA to disk, and fetches the signing key.
         """
-        self._get_ppa_key()
         if save:
             super().save_to_disk()
 
@@ -142,9 +153,14 @@ class PPALine(source.Source):
         new_source = self._copy(new_source, source_code=source_code)
         return new_source
 
-    def _get_ppa_key(self):
+    def add_ppa_key(self, debug=False, log=None):
         if self.ppa_line:
-            add_key(self.ppa_info['signing_key_fingerprint'])
+            add_key(
+                self,
+                self.ppa_info['signing_key_fingerprint'],
+                debug=debug,
+                log=log
+            )
 
 def get_info_from_lp(owner_name, ppa):
     """ Attempt to get information on a PPA from launchpad over the internet.
@@ -194,16 +210,34 @@ def _get_https_content_py3(lp_url, accept_json, retry_delays=None):
 
     raise err
 
-def add_key(fingerprint):
-    """ Add a key for a PPA into the system configuration.
+def add_key(source, fingerprint, debug=False, log=None):
+    """ Add a signing key for the source.
 
-    Arguments:
-        fingerprint (str): The fingerprint of the key to add.
+    Arguments: 
+        :Source source: The source whose key to add.
+        :str fingerprint: The fingerprint of the key to add.
     """
-    apt_key_cmd = "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys".split()
-    # apt_key_cmd.append(ppa_info['signing_key_fingerprint'])
-    apt_key_cmd.append(fingerprint)
-    subprocess.run(
-        apt_key_cmd,
-        check=False
-    )
+    cmd = GPG_KEYRING_CMD
+    if debug:
+        log.info('Would fetch key with fingerprint %s to %s', fingerprint, source.key_file)
+        return
+    key_data = util.fetch_key(fingerprint)
+    
+    if not key_data:
+        log.warning(
+            ('Could not fetch key %s from keyserver. Check your '
+            'internet connection. Re-run this command to try again'),
+            fingerprint
+        )
+        return
+    cmd += [f'--keyring={source.key_file}']
+    with tempfile.TemporaryDirectory() as tempdir:
+        cmd += ['--homedir', tempdir, '--import']
+        try:
+            subprocess.run(cmd, check=True, input=key_data)
+        except subprocess.CalledProcessError:
+            bus = dbus.SystemBus()
+            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+            cmd += [key_data.decode('UTF-8')]
+            privileged_object.add_apt_signing_key(cmd)
+            privileged_object.exit()
