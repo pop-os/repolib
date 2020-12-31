@@ -92,6 +92,7 @@ class Source(deb822.Deb822):
         if ident:
             self.ident = ident
 
+        self.key_file = util.get_keys_dir() / f'{self.ident}.gpg'
         self.comment = '## Added/managed by repolib ##\n#\n'
 
     def load_from_file(self, filename=None, ident=None):
@@ -190,6 +191,7 @@ class Source(deb822.Deb822):
             # Use the ident as a fallback as it should be good enough
             name = self.ident
 
+        self.key_file = util.get_keys_dir() / f'{self.ident}.gpg'
         return name
 
     def init_values(self):
