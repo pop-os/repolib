@@ -42,6 +42,13 @@ from urllib.error import HTTPError, URLError
 
 import dbus
 
+# Allow failing (and don't fetch from LP if we did)
+try:
+    from launchpadlib.launchpad import Launchpad
+    from lazr.restfulclient.errors import BadRequest, NotFound, Unauthorized
+except ImportError:
+    Launchpad = None
+
 from . import source, util
 
 DISTRO_CODENAME = util.DISTRO_CODENAME
@@ -64,6 +71,85 @@ GPG_KEYRING_CMD = [
     '--no-default-keyring',
     '--batch'
 ]
+
+class PPAError(Exception):
+    """ Exception from a PPA or PPALine object."""
+
+    def __init__(self, *args, code=1, **kwargs):
+        """Exception with a PPA or PPALine object
+
+        Arguments:
+            code (:obj:`int`, optional, default=1): Exception error code.
+    """
+        super().__init__(*args, **kwargs)
+        self.code = code
+
+class PPA:
+    """ An object to fetch data from PPAs. """
+
+    def __init__(self, teamname, ppaname):
+        self.teamname = teamname
+        self.ppaname = ppaname
+        self._lp = None
+        self._lpteam = None
+        self._lpppa = None
+        self._signing_key_data = None
+
+    @property
+    def lp(self):
+        if not self._lp:
+            self._lp = Launchpad.login_anonymously("%s.%s" % (self.__module__, self.__class__.__name__),
+                                  service_root='production',
+                                  version='devel')
+        return self._lp
+
+    @property
+    def lpteam(self):
+        if not self._lpteam:
+            try:
+                self._lpteam = self.lp.people(self.teamname)
+            except NotFound:
+                msg = f'User/Team "{self.teamname}" not found'
+                raise PPAError(msg)
+            except Unauthorized:
+                msg = f'Invalid user/team name "{self.teamname}"'
+                raise PPAError(msg)
+        return self._lpteam
+
+    @property
+    def lpppa(self):
+        if not self._lpppa:
+            try:
+                self._lpppa = self.lpteam.getPPAByName(name=self.ppaname)
+            except NotFound:
+                msg = f'PPA "{self.teamname}/{self.ppaname}"" not found'
+                raise PPAError(msg)
+            except BadRequest:
+                msg = f'Invalid PPA name "{self.ppaname}"'
+                raise PPAError(msg)
+        return self._lpppa
+
+    @property
+    def description(self):
+        return self.lpppa.description
+
+    @property
+    def web_link(self):
+        return self.lpppa.web_link
+
+    @property
+    def trustedparts_content(self):
+        if not self._signing_key_data:
+            key = self.lpppa.getSigningKeyData()
+            fingerprint = self.lpppa.signing_key_fingerprint
+
+            if not fingerprint:
+                print("Warning: could not get PPA signing_key_fingerprint from LP, using anyway")
+            elif 'redacted' in fingerprint:
+                print("Private PPA fingerprint redacted, using key anyway (LP: #1879781)")
+
+            self._signing_key_data = key
+        return self._signing_key_data
 
 class PPALine(source.Source):
     """ A source specifically for Launchpad PPAs
