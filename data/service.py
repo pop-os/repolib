@@ -67,12 +67,13 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        key = cmd.pop(-1)
-        key = key.encode()
-        try:
-            subprocess.run(cmd, check=True, input=key)
-        except subprocess.CalledProcessError as e:
-            raise e
+        print(cmd)
+        key_path = str(cmd.pop(-1))
+        with open(key_path, mode='wb') as keyfile:
+            try:
+                subprocess.run(cmd, check=True, stdout=keyfile)
+            except subprocess.CalledProcessError as e:
+                raise e
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
