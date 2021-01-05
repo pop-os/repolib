@@ -143,7 +143,6 @@ class Add(command.Command):
         """ Run the command."""
         # pylint: disable=too-many-branches
         # We just need all these different checks.
-
         debline = ' '.join(self.args.deb_line)
         if self.args.deb_line == '822styledeb':
             self.parser.print_usage()
@@ -152,6 +151,8 @@ class Add(command.Command):
 
         if debline.startswith('http') and len(debline.split()) == 1:
             debline = f'deb {debline} {DISTRO_CODENAME} main'
+
+        print('Fetching repository information...')
 
         new_source = LegacyDebSource()
         if debline.startswith('ppa:'):
@@ -206,12 +207,15 @@ class Add(command.Command):
 
         if self.expand:
             print(new_source.sources[0].make_source_string())
-            print(f'{add_source.ppa_info["description"]}\n')
+            try:
+                print(f'{add_source.ppa.description}\n')
+            except AttributeError:
+                pass
             print('Press [ENTER] to contine or Ctrl + C to cancel.')
             input()
 
         if not self.skip_keys:
-            add_source.add_ppa_key(debug=self.debug, log=self.log)
+            add_source.add_ppa_key(add_source, debug=self.debug, log=self.log)
             
         if self.args.debug == 0:
             new_source.save_to_disk()

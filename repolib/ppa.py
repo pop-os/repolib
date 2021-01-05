@@ -38,6 +38,7 @@ import time
 import urllib.parse
 import urllib.request
 from http.client import HTTPException
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 
 import dbus
@@ -64,7 +65,7 @@ LAUNCHPAD_DISTRIBUTION_SERIES_API = 'https://launchpad.net/api/1.0/%s/%s'
 # to test with custom certificates.
 LAUNCHPAD_PPA_CERT = "/etc/ssl/certs/ca-certificates.crt"
 
-GPG_KEYRING_CMD = [
+GPG_KEYBOX_CMD = [
     'gpg',
     '-q',
     '--no-options',
@@ -72,8 +73,18 @@ GPG_KEYRING_CMD = [
     '--batch'
 ]
 
+GPG_KEYRING_CMD = [
+    'gpg',
+    '-q',
+    '--no-options',
+    '--no-default-keyring'
+]
+
 class PPAError(Exception):
-    """ Exception from a PPA or PPALine object."""
+    """ Exception from a PPA or PPALine object.
+    
+    Portions of this class have been adapted from SoftwareProperties. For 
+    """
 
     def __init__(self, *args, code=1, **kwargs):
         """Exception with a PPA or PPALine object
@@ -94,6 +105,7 @@ class PPA:
         self._lpteam = None
         self._lpppa = None
         self._signing_key_data = None
+        self._fingerprint = None
 
     @property
     def lp(self):
@@ -134,14 +146,20 @@ class PPA:
         return self.lpppa.description
 
     @property
-    def web_link(self):
-        return self.lpppa.web_link
+    def displayname(self):
+        return self.lpppa.displayname
+    
+    @property
+    def fingerprint(self):
+        if not self._fingerprint:
+            self._fingerprint = self.lpppa.signing_key_fingerprint
+        return self._fingerprint
 
     @property
     def trustedparts_content(self):
         if not self._signing_key_data:
             key = self.lpppa.getSigningKeyData()
-            fingerprint = self.lpppa.signing_key_fingerprint
+            fingerprint = self.fingerprint
 
             if not fingerprint:
                 print("Warning: could not get PPA signing_key_fingerprint from LP, using anyway")
@@ -172,6 +190,7 @@ class PPALine(source.Source):
         self.verbose = verbose
         if not self.ppa_line.startswith('ppa:'):
             raise util.RepoError("The PPA %s is malformed!" % self.ppa_line)
+        self.ppa = None
 
         self.load_from_ppa(fetch_data=fetch_data)
 
@@ -188,6 +207,9 @@ class PPALine(source.Source):
         ppa_owner = raw_ppa[0]
         ppa_name = raw_ppa[1]
 
+        if fetch_data:
+            self.ppa = get_info_from_lp(ppa_owner, ppa_name)
+
         ppa_info = self.ppa_line.split(":")
         ppa_uri = 'http://ppa.launchpad.net/{}/ubuntu'.format(ppa_info[1])
         self.set_source_enabled(False)
@@ -201,7 +223,8 @@ class PPALine(source.Source):
             self.ppa_info = get_info_from_lp(ppa_owner, ppa_name[1])
             if self.verbose:
                 print(self.ppa_info)
-            self.name = self.ppa_info['displayname']
+            if self.ppa:
+                self.name = self.ppa.displayname
         self.enabled = util.AptSourceEnabled.TRUE
 
     #pylint: disable=arguments-differ
@@ -239,14 +262,49 @@ class PPALine(source.Source):
         new_source = self._copy(new_source, source_code=source_code)
         return new_source
 
-    def add_ppa_key(self, debug=False, log=None):
-        if self.ppa_line:
-            add_key(
-                self,
-                self.ppa_info['signing_key_fingerprint'],
-                debug=debug,
-                log=log
-            )
+    def add_ppa_key(self, source, debug=False, log=None):
+        """ Add a signing key for the source.
+
+        Arguments: 
+            :Source source: The source whose key to add.
+            :str fingerprint: The fingerprint of the key to add.
+        """
+        import_dest = Path('/tmp', source.key_file.name)
+        if debug:
+            if log:
+                log.info(
+                    'Would fetch key with fingerprint %s to %s', 
+                    self.ppa.fingerprint, 
+                    source.key_file
+                )
+            return
+        key_data = self.ppa.trustedparts_content
+        
+        if not key_data:
+            if log:
+                log.warning(
+                    ('Could not fetch key %s from keyserver. Check your '
+                    'internet connection. Re-run this command to try again'),
+                    self.ppa.fingerprint
+                )
+            return
+        with tempfile.TemporaryDirectory() as tempdir:
+
+            import_cmd = GPG_KEYBOX_CMD.copy()
+            import_cmd += [f'--keyring={import_dest}', '--homedir', tempdir, '--import']
+            export_cmd = GPG_KEYRING_CMD.copy()
+            export_cmd += [f'--keyring={import_dest}', '--export']
+
+            try:
+                with open(source.key_file, mode='wb') as key_file:
+                    subprocess.run(import_cmd, check=True, input=key_data.encode())
+                    subprocess.run(export_cmd, check=True, stdout=key_file)
+            except PermissionError:
+                subprocess.run(import_cmd, check=True, input=key_data.encode())
+                bus = dbus.SystemBus()
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                export_cmd += [str(source.key_file)]
+                privileged_object.add_apt_signing_key(export_cmd)
 
 def get_info_from_lp(owner_name, ppa):
     """ Attempt to get information on a PPA from launchpad over the internet.
@@ -258,72 +316,37 @@ def get_info_from_lp(owner_name, ppa):
     Returns:
         json: The PPA information as a JSON object.
     """
-    if owner_name[0] != '~':
-        owner_name = '~' + owner_name
-    lp_url = LAUNCHPAD_PPA_API % (owner_name, ppa)
-    data = _get_https_content_py3(lp_url, True)
-    return json.loads(data)
+    ppa = PPA(owner_name, ppa)
+    return ppa
 
-def _get_https_content_py3(lp_url, accept_json, retry_delays=None):
-    if retry_delays is None:
-        retry_delays = []
+# def add_key(source, fingerprint, debug=False, log=None):
+#     """ Add a signing key for the source.
 
-    trynum = 0
-    err = None
-    sleep_waits = iter(retry_delays)
-    headers = {"Accept": "application/json"} if accept_json else {}
-
-    while True:
-        trynum += 1
-        try:
-            request = urllib.request.Request(str(lp_url), headers=headers)
-            lp_page = urllib.request.urlopen(request)
-            return lp_page.read().decode("utf-8", "strict")
-        except (HTTPException, URLError) as errr:
-            err = util.RepoError(
-                "Error reading %s (%d tries): %s" % (lp_url, trynum, errr.reason),
-                errr)
-            # do not retry on 404. HTTPError is a subclass of URLError
-
-            # pylint: disable=no-member
-            # Yes it does, and this works fine. Not sure why things complain.
-            if isinstance(errr, HTTPError) and errr.code == 404:
-                break
-        try:
-            time.sleep(next(sleep_waits))
-        except StopIteration:
-            break
-
-    raise err
-
-def add_key(source, fingerprint, debug=False, log=None):
-    """ Add a signing key for the source.
-
-    Arguments: 
-        :Source source: The source whose key to add.
-        :str fingerprint: The fingerprint of the key to add.
-    """
-    cmd = GPG_KEYRING_CMD
-    if debug:
-        log.info('Would fetch key with fingerprint %s to %s', fingerprint, source.key_file)
-        return
-    key_data = util.fetch_key(fingerprint)
+#     Arguments: 
+#         :Source source: The source whose key to add.
+#         :str fingerprint: The fingerprint of the key to add.
+#     """
+#     cmd = GPG_KEYRING_CMD
+#     if debug:
+#         log.info('Would fetch key with fingerprint %s to %s', fingerprint, source.key_file)
+#         return
+#     key_data = self.ppa.
     
-    if not key_data:
-        log.warning(
-            ('Could not fetch key %s from keyserver. Check your '
-            'internet connection. Re-run this command to try again'),
-            fingerprint
-        )
-        return
-    cmd += [f'--keyring={source.key_file}']
-    with tempfile.TemporaryDirectory() as tempdir:
-        cmd += ['--homedir', tempdir, '--import']
-        try:
-            subprocess.run(cmd, check=True, input=key_data)
-        except subprocess.CalledProcessError:
-            bus = dbus.SystemBus()
-            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-            cmd += [key_data.decode('UTF-8')]
-            privileged_object.add_apt_signing_key(cmd)
-            privileged_object.exit()
+#     if not key_data:
+#         log.warning(
+#             ('Could not fetch key %s from keyserver. Check your '
+#             'internet connection. Re-run this command to try again'),
+#             fingerprint
+#         )
+#         return
+#     cmd += [f'--keyring={source.key_file}']
+#     with tempfile.TemporaryDirectory() as tempdir:
+#         cmd += ['--homedir', tempdir, '--import']
+#         try:
+#             subprocess.run(cmd, check=True, input=key_data)
+#         except subprocess.CalledProcessError:
+#             bus = dbus.SystemBus()
+#             privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+#             cmd += [key_data.decode('UTF-8')]
+#             privileged_object.add_apt_signing_key(cmd)
+#             privileged_object.exit()
