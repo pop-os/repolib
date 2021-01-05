@@ -26,6 +26,8 @@ from pathlib import Path
 import dbus
 
 from . import command
+from ..source import Source
+from ..legacy_deb import LegacyDebSource
 from ..util import get_sources_dir, RepoError
 
 class Remove(command.Command):
@@ -85,14 +87,18 @@ class Remove(command.Command):
         full_path = self.sources_dir / full_name
         self.log.debug('Trying to load %s', full_path)
         if full_path.exists():
-            return full_path, full_path
+            remove_source = Source(ident=self.source)
+            remove_source.load_from_file()
+            return full_path, full_path, remove_source
 
         full_name = f'{self.source}.list'
         full_path = self.sources_dir / full_name
         self.log.debug('Trying to load %s', full_path)
         if full_path.exists():
             save_path = Path(f'{full_path}.save')
-            return full_path, save_path
+            remove_source = LegacyDebSource(ident=self.source)
+            remove_source.load_from_file()
+            return full_path, save_path, remove_source
 
         raise RepoError('The path does not exist (checked .sources and .list files.')
 
@@ -104,12 +110,14 @@ class Remove(command.Command):
             return False
 
         try:
-            remove_path, remove_path_save = self.get_source_path()
+            remove_path, remove_path_save, remove_source = self.get_source_path()
         except RepoError:
             self.log.error(
                 'No source %s found on system. Check the spelling.', self.source
             )
             return False
+            
+        key_file = remove_source.key_file
 
         if self.assume_yes:
             response = 'y'
@@ -131,12 +139,16 @@ class Remove(command.Command):
                 self.log.info('Simulate: Remove %s', remove_path_save)
             else:
                 try:
+                    try:
+                        key_file.unlink()
+                    except FileNotFoundError:
+                        pass
                     remove_path.unlink()
                     remove_path_save.unlink(missing_ok=True)
                 except PermissionError:
                     bus = dbus.SystemBus()
                     privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-                    privileged_object.delete_source(remove_path.name)
+                    privileged_object.delete_source(remove_path.name, key_file.name)
                     privileged_object.exit()
 
         else:
