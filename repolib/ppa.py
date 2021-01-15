@@ -318,35 +318,3 @@ def get_info_from_lp(owner_name, ppa):
     """
     ppa = PPA(owner_name, ppa)
     return ppa
-
-# def add_key(source, fingerprint, debug=False, log=None):
-#     """ Add a signing key for the source.
-
-#     Arguments: 
-#         :Source source: The source whose key to add.
-#         :str fingerprint: The fingerprint of the key to add.
-#     """
-#     cmd = GPG_KEYRING_CMD
-#     if debug:
-#         log.info('Would fetch key with fingerprint %s to %s', fingerprint, source.key_file)
-#         return
-#     key_data = self.ppa.
-    
-#     if not key_data:
-#         log.warning(
-#             ('Could not fetch key %s from keyserver. Check your '
-#             'internet connection. Re-run this command to try again'),
-#             fingerprint
-#         )
-#         return
-#     cmd += [f'--keyring={source.key_file}']
-#     with tempfile.TemporaryDirectory() as tempdir:
-#         cmd += ['--homedir', tempdir, '--import']
-#         try:
-#             subprocess.run(cmd, check=True, input=key_data)
-#         except subprocess.CalledProcessError:
-#             bus = dbus.SystemBus()
-#             privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-#             cmd += [key_data.decode('UTF-8')]
-#             privileged_object.add_apt_signing_key(cmd)
-#             privileged_object.exit()
