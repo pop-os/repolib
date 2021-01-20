@@ -21,12 +21,11 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 Module for adding repos to the system in CLI applications.
 """
-import tempfile
 
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
-from ..util import DISTRO_CODENAME, CLEAN_CHARS, fetch_key
+from ..util import DISTRO_CODENAME, CLEAN_CHARS
 
 from . import command
 
@@ -98,12 +97,6 @@ class Add(command.Command):
             help='Skip adding signing keys (not recommended!)'
         )
 
-    # pylint: disable=too-few-public-methods
-    # Thinking of ways to add more, but otherwise this is just simple.
-
-    def __init__(self, log, args, parser):
-        super().__init__(log, args, parser)
-    
     def finalize_options(self, args):
         """ Finish setting up options/arguments."""
         super().finalize_options(args)
@@ -139,6 +132,8 @@ class Add(command.Command):
             self.log.debug('Got Ident: %s', self.ident)
             source.ident = self.ident.lower()
 
+# pylint: disable=too-many-statements, attribute-defined-outside-init
+# Not a lot of reusable code here. Unfortunately it just needs to do a lot.
     def run(self):
         """ Run the command."""
         # pylint: disable=too-many-branches
@@ -216,7 +211,7 @@ class Add(command.Command):
 
         if not self.skip_keys:
             add_source.add_ppa_key(add_source, debug=self.debug, log=self.log)
-            
+
         if self.args.debug == 0:
             new_source.save_to_disk()
             return True
