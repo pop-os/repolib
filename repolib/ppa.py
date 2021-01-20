@@ -112,6 +112,7 @@ class PPA:
             )
         return self._lap
 
+    # pylint: disable=raise-missing-from
     @property
     def lpteam(self):
         """ The Launchpad object for the PPA's owner."""
