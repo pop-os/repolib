@@ -26,8 +26,6 @@ This is a library for parsing deb lines into deb822-format data.
 
 import unittest
 
-from urllib.error import URLError
-
 from . import ppa
 from . import util
 

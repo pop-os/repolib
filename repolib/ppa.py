@@ -31,15 +31,9 @@ USA
 
 from __future__ import print_function
 
-import json
 import subprocess
 import tempfile
-import time
-import urllib.parse
-import urllib.request
-from http.client import HTTPException
 from pathlib import Path
-from urllib.error import HTTPError, URLError
 
 import dbus
 
@@ -82,8 +76,8 @@ GPG_KEYRING_CMD = [
 
 class PPAError(Exception):
     """ Exception from a PPA or PPALine object.
-    
-    Portions of this class have been adapted from SoftwareProperties. For 
+
+    Portions of this class have been adapted from SoftwareProperties. For
     """
 
     def __init__(self, *args, code=1, **kwargs):
@@ -101,25 +95,29 @@ class PPA:
     def __init__(self, teamname, ppaname):
         self.teamname = teamname
         self.ppaname = ppaname
-        self._lp = None
+        self._lap = None
         self._lpteam = None
         self._lpppa = None
         self._signing_key_data = None
         self._fingerprint = None
 
     @property
-    def lp(self):
-        if not self._lp:
-            self._lp = Launchpad.login_anonymously("%s.%s" % (self.__module__, self.__class__.__name__),
-                                  service_root='production',
-                                  version='devel')
-        return self._lp
+    def lap(self):
+        """ The Launchpad Object."""
+        if not self._lap:
+            self._lap = Launchpad.login_anonymously(
+                f'{self.__module__}.{self.__class__.__name__}',
+                service_root='production',
+                version='devel'
+            )
+        return self._lap
 
     @property
     def lpteam(self):
+        """ The Launchpad object for the PPA's owner."""
         if not self._lpteam:
             try:
-                self._lpteam = self.lp.people(self.teamname)
+                self._lpteam = self.lap.people(self.teamname)
             except NotFound:
                 msg = f'User/Team "{self.teamname}" not found'
                 raise PPAError(msg)
@@ -130,6 +128,7 @@ class PPA:
 
     @property
     def lpppa(self):
+        """ The Launchpad object for the PPA."""
         if not self._lpppa:
             try:
                 self._lpppa = self.lpteam.getPPAByName(name=self.ppaname)
@@ -143,20 +142,24 @@ class PPA:
 
     @property
     def description(self):
+        """str: The description of the PPA."""
         return self.lpppa.description
 
     @property
     def displayname(self):
+        """ str: the fancy name of the PPA."""
         return self.lpppa.displayname
-    
+
     @property
     def fingerprint(self):
+        """ str: the fingerprint of the signing key."""
         if not self._fingerprint:
             self._fingerprint = self.lpppa.signing_key_fingerprint
         return self._fingerprint
 
     @property
     def trustedparts_content(self):
+        """ str: The contents of the key file."""
         if not self._signing_key_data:
             key = self.lpppa.getSigningKeyData()
             fingerprint = self.fingerprint
@@ -262,29 +265,29 @@ class PPALine(source.Source):
         new_source = self._copy(new_source, source_code=source_code)
         return new_source
 
-    def add_ppa_key(self, source, debug=False, log=None):
+    def add_ppa_key(self, repo, debug=False, log=None):
         """ Add a signing key for the source.
 
-        Arguments: 
-            :Source source: The source whose key to add.
+        Arguments:
+            :Source repo: The source whose key to add.
             :str fingerprint: The fingerprint of the key to add.
         """
-        import_dest = Path('/tmp', source.key_file.name)
+        import_dest = Path('/tmp', repo.key_file.name)
         if debug:
             if log:
                 log.info(
-                    'Would fetch key with fingerprint %s to %s', 
-                    self.ppa.fingerprint, 
-                    source.key_file
+                    'Would fetch key with fingerprint %s to %s',
+                    self.ppa.fingerprint,
+                    repo.key_file
                 )
             return
         key_data = self.ppa.trustedparts_content
-        
+
         if not key_data:
             if log:
                 log.warning(
                     ('Could not fetch key %s from keyserver. Check your '
-                    'internet connection. Re-run this command to try again'),
+                     'internet connection. Re-run this command to try again'),
                     self.ppa.fingerprint
                 )
             return
@@ -296,14 +299,14 @@ class PPALine(source.Source):
             export_cmd += [f'--keyring={import_dest}', '--export']
 
             try:
-                with open(source.key_file, mode='wb') as key_file:
+                with open(repo.key_file, mode='wb') as key_file:
                     subprocess.run(import_cmd, check=True, input=key_data.encode())
                     subprocess.run(export_cmd, check=True, stdout=key_file)
             except PermissionError:
                 subprocess.run(import_cmd, check=True, input=key_data.encode())
                 bus = dbus.SystemBus()
                 privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-                export_cmd += [str(source.key_file)]
+                export_cmd += [str(repo.key_file)]
                 privileged_object.add_apt_signing_key(export_cmd)
 
 def get_info_from_lp(owner_name, ppa):

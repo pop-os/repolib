@@ -116,7 +116,7 @@ class Remove(command.Command):
                 'No source %s found on system. Check the spelling.', self.source
             )
             return False
-            
+
         key_file = remove_source.key_file
 
         if self.assume_yes:
