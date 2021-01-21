@@ -29,6 +29,8 @@ from ..util import DISTRO_CODENAME, CLEAN_CHARS
 
 from . import command
 
+KEYSERVER = 'keyserver.ubuntu.com'
+
 class Add(command.Command):
     """ Add subcommand.
 
@@ -88,17 +90,16 @@ class Add(command.Command):
             default=['x-repolib-default-id'],
             help='The identifier/filename to use for the new repo'
         )
+        options.add_argument(
+            '-k',
+            '--skip-keys',
+            action='store_true',
+            help='Skip adding signing keys (not recommended!)'
+        )
 
-    # pylint: disable=too-few-public-methods
-    # Thinking of ways to add more, but otherwise this is just simple.
-
-    def __init__(self, log, args, parser):
-        super().__init__(log, args, parser)
-
-        self.verbose = False
-        if self.args.debug > 1:
-            self.verbose = True
-
+    def finalize_options(self, args):
+        """ Finish setting up options/arguments."""
+        super().finalize_options(args)
         self.expand = args.expand
         self.source_code = args.source_code
         self.disable = args.disable
@@ -112,6 +113,8 @@ class Add(command.Command):
             ident = args.identifier
         self.name = ' '.join(name)
         self.ident = '-'.join(ident).translate(CLEAN_CHARS)
+
+        self.skip_keys = args.skip_keys
 
     def set_names(self, source):
         """Set up names for the source.
@@ -129,11 +132,12 @@ class Add(command.Command):
             self.log.debug('Got Ident: %s', self.ident)
             source.ident = self.ident.lower()
 
+# pylint: disable=too-many-statements, attribute-defined-outside-init
+# Not a lot of reusable code here. Unfortunately it just needs to do a lot.
     def run(self):
         """ Run the command."""
         # pylint: disable=too-many-branches
         # We just need all these different checks.
-
         debline = ' '.join(self.args.deb_line)
         if self.args.deb_line == '822styledeb':
             self.parser.print_usage()
@@ -143,12 +147,15 @@ class Add(command.Command):
         if debline.startswith('http') and len(debline.split()) == 1:
             debline = f'deb {debline} {DISTRO_CODENAME} main'
 
+        print('Fetching repository information...')
+
         new_source = LegacyDebSource()
         if debline.startswith('ppa:'):
             add_source = PPALine(debline, verbose=self.verbose)
 
         elif debline.startswith('deb'):
             self.expand = False
+            self.skip_keys = True
             add_source = DebLine(debline)
 
         else:
@@ -195,9 +202,15 @@ class Add(command.Command):
 
         if self.expand:
             print(new_source.sources[0].make_source_string())
-            print(f'{add_source.ppa_info["description"]}\n')
+            try:
+                print(f'{add_source.ppa.description}\n')
+            except AttributeError:
+                pass
             print('Press [ENTER] to contine or Ctrl + C to cancel.')
             input()
+
+        if not self.skip_keys:
+            add_source.add_ppa_key(add_source, debug=self.debug, log=self.log)
 
         if self.args.debug == 0:
             new_source.save_to_disk()

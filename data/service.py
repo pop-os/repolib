@@ -19,6 +19,8 @@
 '''
 #pylint: skip-file
 
+import subprocess
+
 import gi
 from gi.repository import GObject, GLib
 
@@ -55,6 +57,24 @@ class Repo(dbus.service.Object):
         
         self.source = None
         self.sources_dir = Path('/etc/apt/sources.list.d')
+        self.keys_dir = Path('/etc/apt/trusted.gpg.d')
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='as', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def add_apt_signing_key(self, cmd, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        print(cmd)
+        key_path = str(cmd.pop(-1))
+        with open(key_path, mode='wb') as keyfile:
+            try:
+                subprocess.run(cmd, check=True, stdout=keyfile)
+            except subprocess.CalledProcessError as e:
+                raise e
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
@@ -71,14 +91,19 @@ class Repo(dbus.service.Object):
 
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
-        in_signature='s', out_signature='',
+        in_signature='ss', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
-    def delete_source(self, filename, sender=None, conn=None):
+    def delete_source(self, filename, key_filename, sender=None, conn=None):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
+        key_file = self.keys_dir /key_filename
         source_file = self.sources_dir / filename
+        try:
+            key_file.unlink()
+        except FileNotFoundError:
+            pass
         source_file.unlink()
 
     @dbus.service.method(

@@ -161,19 +161,11 @@ class Modify(command.Command):
             '--add-option',
             metavar='OPTION=VALUE[,OPTION=VALUE]',
             help=SUPPRESS
-            # help=(
-            #     'Add the specified option(s) and value(s) to the repository. '
-            #     'Multiple option-value pairs should be separated with commas.'
-            # )
         )
         parser.add_argument(
             '--remove-option',
             metavar='OPTION=VALUE[,OPTION=VALUE]',
             help=SUPPRESS
-            # help=(
-            #     'Remove the specified option(s) and value(s) from the repository. '
-            #     'Multiple option-value pairs should be separated with commas.'
-            # )
         )
 
     def __init__(self, log, args, parser):
