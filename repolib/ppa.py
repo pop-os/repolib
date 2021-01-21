@@ -112,19 +112,18 @@ class PPA:
             )
         return self._lap
 
-    # pylint: disable=raise-missing-from
     @property
     def lpteam(self):
         """ The Launchpad object for the PPA's owner."""
         if not self._lpteam:
             try:
                 self._lpteam = self.lap.people(self.teamname)
-            except NotFound:
+            except NotFound as err:
                 msg = f'User/Team "{self.teamname}" not found'
-                raise PPAError(msg)
-            except Unauthorized:
+                raise PPAError(msg) from err
+            except Unauthorized as err:
                 msg = f'Invalid user/team name "{self.teamname}"'
-                raise PPAError(msg)
+                raise PPAError(msg) from err
         return self._lpteam
 
     @property
@@ -133,12 +132,12 @@ class PPA:
         if not self._lpppa:
             try:
                 self._lpppa = self.lpteam.getPPAByName(name=self.ppaname)
-            except NotFound:
+            except NotFound as err:
                 msg = f'PPA "{self.teamname}/{self.ppaname}"" not found'
-                raise PPAError(msg)
-            except BadRequest:
+                raise PPAError(msg) from err
+            except BadRequest as err:
                 msg = f'Invalid PPA name "{self.ppaname}"'
-                raise PPAError(msg)
+                raise PPAError(msg) from err
         return self._lpppa
 
     @property
