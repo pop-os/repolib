@@ -26,8 +26,6 @@ This is a library for parsing deb lines into deb822-format data.
 
 import unittest
 
-from urllib.error import URLError
-
 from . import ppa
 from . import util
 
@@ -58,24 +56,3 @@ class PPATestCase(unittest.TestCase):
 
     def test_options(self):
         self.assertFalse(self.source.options)
-
-    def test_internet_features(self):
-        try:
-            self.source.load_from_ppa()
-            self.assertEqual(self.source.name, 'Pop!_OS PPA')
-            self.assertNotEqual(self.source.ppa_info, {})
-        except util.RepoError as err:
-            # pylint: disable=no-else-raise, no-member
-            # This is a valid time to else raise since we're catching
-            # a different type of error.
-            if isinstance(err.args[-1], URLError):
-                if "Name or service not known" in str(err.args[-1].reason):
-                    raise unittest.SkipTest(
-                        'Can\'t test internet features without network.'
-                    )
-                elif "Connection refused" in str(err.args[-1].reason):
-                    raise unittest.SkipTest(
-                        'Couldn\'t fetch details from network.'
-                    )
-            else:
-                raise err
