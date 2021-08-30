@@ -23,7 +23,7 @@ directory. In this directory are one or more files describing one or more
 sources each. For :ref:`deb822-format` sources, each file needs to have the .sources 
 extension. The filenames may only contain letters, digits, underscore, hyphen, 
 and period characters. Files with other characters in their filenames will cause 
-APT to rint a notice that it has ignore that file (unless the file matches a 
+APT to print a notice that it has ignore that file (unless the file matches a 
 pattern in the ``Dir::Ignore-Files-Silently`` configuration list, which will 
 force APT to silently ignore the file.
 
