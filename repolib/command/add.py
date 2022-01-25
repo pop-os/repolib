@@ -22,6 +22,10 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 Module for adding repos to the system in CLI applications.
 """
 
+import subprocess
+from urllib.request import urlopen
+
+from .. import gpg, util
 from ..deb import DebLine
 from ..legacy_deb import LegacyDebSource
 from ..ppa import PPALine
@@ -30,6 +34,7 @@ from ..util import DISTRO_CODENAME, CLEAN_CHARS
 from . import command
 
 KEYSERVER = 'keyserver.ubuntu.com'
+POP_KEY_URL = 'https://raw.githubusercontent.com/pop-os/pop/master/scripts/.iso.asc'
 
 class Add(command.Command):
     """ Add subcommand.
@@ -150,12 +155,21 @@ class Add(command.Command):
         print('Fetching repository information...')
 
         new_source = LegacyDebSource()
+        is_popdev = False
         if debline.startswith('ppa:'):
             add_source = PPALine(debline, verbose=self.verbose)
 
+        elif debline.startswith('popdev:'):
+            with open('/etc/os-release') as f:
+                if 'Pop!_OS' not in f.read():
+                    raise util.RepoError('`popdev` sources should on be used on Pop!_OS')
+            name = debline.split(':', 1)[1]
+            is_popdev = True
+            add_source = DebLine(f'deb http://apt.pop-os.org/staging/{name} {DISTRO_CODENAME} main')
+            self.ident = f'popdev-{name}'
+            self.name = f'Pop Development Branch {name}'
+
         elif debline.startswith('deb'):
-            self.expand = False
-            self.skip_keys = True
             add_source = DebLine(debline)
 
         else:
@@ -200,7 +214,7 @@ class Add(command.Command):
             self.log.info('Filename to save: %s', new_source.filename)
             print(f'{new_source.make_deblines()}')
 
-        if self.expand:
+        if self.expand and isinstance(add_source, PPALine):
             print(new_source.sources[0].make_source_string())
             try:
                 print(f'{add_source.ppa.description}\n')
@@ -209,8 +223,15 @@ class Add(command.Command):
             print('Press [ENTER] to contine or Ctrl + C to cancel.')
             input()
 
-        if not self.skip_keys:
+        if not self.skip_keys and isinstance(add_source, PPALine):
             add_source.add_ppa_key(add_source, debug=self.debug, log=self.log)
+
+        elif not self.skip_keys and is_popdev:
+            key_file = util.get_keys_dir() / 'pop-iso.gpg'
+            if not key_file.exists():
+                with urlopen(POP_KEY_URL) as f:
+                    key_data = f.read().decode('utf-8')
+                gpg.add_key(key_file, key_data)
 
         if self.args.debug == 0:
             new_source.save_to_disk()

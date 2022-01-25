@@ -31,12 +31,6 @@ USA
 
 from __future__ import print_function
 
-import subprocess
-import tempfile
-from pathlib import Path
-
-import dbus
-
 # Allow failing (and don't fetch from LP if we did)
 try:
     from launchpadlib.launchpad import Launchpad
@@ -44,7 +38,7 @@ try:
 except ImportError:
     Launchpad = None
 
-from . import source, util
+from . import source, gpg, util
 
 DISTRO_CODENAME = util.DISTRO_CODENAME
 
@@ -272,7 +266,6 @@ class PPALine(source.Source):
             :Source repo: The source whose key to add.
             :str fingerprint: The fingerprint of the key to add.
         """
-        import_dest = Path('/tmp', repo.key_file.name)
         if debug:
             if log:
                 log.info(
@@ -291,23 +284,8 @@ class PPALine(source.Source):
                     self.ppa.fingerprint
                 )
             return
-        with tempfile.TemporaryDirectory() as tempdir:
 
-            import_cmd = GPG_KEYBOX_CMD.copy()
-            import_cmd += [f'--keyring={import_dest}', '--homedir', tempdir, '--import']
-            export_cmd = GPG_KEYRING_CMD.copy()
-            export_cmd += [f'--keyring={import_dest}', '--export']
-
-            try:
-                with open(repo.key_file, mode='wb') as key_file:
-                    subprocess.run(import_cmd, check=True, input=key_data.encode())
-                    subprocess.run(export_cmd, check=True, stdout=key_file)
-            except PermissionError:
-                subprocess.run(import_cmd, check=True, input=key_data.encode())
-                bus = dbus.SystemBus()
-                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-                export_cmd += [str(repo.key_file)]
-                privileged_object.add_apt_signing_key(export_cmd)
+        gpg.add_key(repo.key_file, key_data)
 
 def get_info_from_lp(owner_name, ppa):
     """ Attempt to get information on a PPA from launchpad over the internet.
