@@ -144,25 +144,14 @@ class DebLine(source.Source):
         """
         Set the options.
         """
-        # Split the option string into a list of chars, so that we can replace
-        # the first and last characters ([ and ]) with spaces.
-        ops = list(options)
-        ops[0] = " "
-        ops[-1] = " "
-        options = "".join(ops).strip()
-
-        for replacement in self.options_d:
-            options = options.replace(replacement, self.options_d[replacement])
-
-        options = options.replace('=', ',')
-        options_list = options.split()
+        # Drop the first and last characters ([ and ])
+        options = options[1:-1]
 
         options_output = {}
+        for option in options.split():
+            key, value = option.split('=', maxsplit=1)
+            key = self.options_d[key]
+            value = value.replace(',', ' ')
+            options_output[key] = value
 
-        for i in options_list:
-            option = i.split(',')
-            values_list = []
-            for value in option[1:]:
-                values_list.append(value)
-            options_output[option[0]] = ' '.join(values_list)
         return options_output
