@@ -1,7 +1,26 @@
 #!/bin/bash
 
 ## Provide a replacement for the add-apt-repository command 
-if [[ `dpkg -s software-properties-common | grep 'Status'` != *'installed'* ]]; then 
-    ln -s /usr/lib/repolib/add-apt-repository /usr/bin/add-apt-repository
-    ln -s /usr/lib/repolib/add-apt-repository /usr/bin/apt-add-repository
+if [[ -e /usr/bin/add-apt-repository ]]; then
+    if [[ `dpkg -s software-properties-common | grep 'Status'` = *'installed'* ]]; then
+        echo 'add-apt-repository is being provided by software-properties, not linking'
+    elif [[ `readlink -f /usr/bin/add-apt-repository` != '/usr/lib/repolib/add-apt-repository' ]]; then
+        echo 'Something other than software-properties or repolib is providing add-apt-repository, not linking'
+    elif [[ `readlink -f /usr/bin/add-apt-repository` = '/usr/lib/repolib/add-apt-repository' ]]; then
+        echo 'add-apt-repository is already provided by repolib'
+    else
+        ln -s /usr/lib/repolib/add-apt-repository /usr/bin/add-apt-repository
+    fi
+fi
+
+if [[ -e /usr/bin/apt-add-repository ]]; then
+    if [[ `dpkg -s software-properties-common | grep 'Status'` = *'installed'* ]]; then
+        echo 'apt-add-repository is being provided by software-properties, not linking'
+    elif [[ `readlink -f /usr/bin/apt-add-repository` != '/usr/lib/repolib/add-apt-repository' ]]; then
+        echo 'Something other than software-properties or repolib is providing apt-add-repository, not linking'
+    elif [[ `readlink -f /usr/bin/apt-add-repository` = '/usr/lib/repolib/add-apt-repository' ]]; then
+        echo 'apt-add-repository is already provided by repolib'
+    else
+        ln -s /usr/lib/repolib/add-apt-repository /usr/bin/apt-add-repository
+    fi
 fi
