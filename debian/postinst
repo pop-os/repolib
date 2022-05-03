@@ -8,9 +8,9 @@ if [[ -e /usr/bin/add-apt-repository ]]; then
         echo 'Something other than software-properties or repolib is providing add-apt-repository, not linking'
     elif [[ `readlink -f /usr/bin/add-apt-repository` = '/usr/lib/repolib/add-apt-repository' ]]; then
         echo 'add-apt-repository is already provided by repolib'
-    else
-        ln -s /usr/lib/repolib/add-apt-repository /usr/bin/add-apt-repository
     fi
+else
+    ln -s /usr/lib/repolib/add-apt-repository /usr/bin/add-apt-repository
 fi
 
 if [[ -e /usr/bin/apt-add-repository ]]; then
@@ -20,7 +20,7 @@ if [[ -e /usr/bin/apt-add-repository ]]; then
         echo 'Something other than software-properties or repolib is providing apt-add-repository, not linking'
     elif [[ `readlink -f /usr/bin/apt-add-repository` = '/usr/lib/repolib/add-apt-repository' ]]; then
         echo 'apt-add-repository is already provided by repolib'
-    else
-        ln -s /usr/lib/repolib/add-apt-repository /usr/bin/apt-add-repository
     fi
+else
+    ln -s /usr/lib/repolib/add-apt-repository /usr/bin/apt-add-repository
 fi
