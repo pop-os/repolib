@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ -e /usr/bin/add-apt-repository ]]; then
+    if [[ `dpkg -s software-properties-common | grep 'Status'` = *'installed'* ]]; then
+        echo 'add-apt-repository is being provided by software-properties, not unlinking'
+    elif [[ `readlink -f /usr/bin/add-apt-repository` = '/usr/lib/repolib/add-apt-repository' ]]; then
+        unlink /usr/bin/add-apt-repository
+    else
+        echo 'Something other than software-properties or repolib is providing add-apt-repository, not unlinking'
+    fi
+fi
+
+if [[ -e /usr/bin/apt-add-repository ]]; then
+    if [[ `dpkg -s software-properties-common | grep 'Status'` = *'installed'* ]]; then
+        echo 'apt-add-repository is being provided by software-properties, not unlinking'
+    elif [[ `readlink -f /usr/bin/apt-add-repository` = '/usr/lib/repolib/add-apt-repository' ]]; then
+        unlink /usr/bin/apt-add-repository
+    else
+        echo 'Something other than software-properties or repolib is providing apt-add-repository, not unlinking'
+    fi
+fi
