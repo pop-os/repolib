@@ -239,3 +239,29 @@ sudo apt-manage source -d ppa-system76-proposed
 apt-manage list ppa-system76-proposed
 ```
 Verify that the `Types:` is now just `deb`.
+
+### Installation/upgrading (packaging tests)
+
+_This section is to test the installation behavior of the Debian package,
+and doesn't need to be run for changes to repolib itself._
+
+**Confirm add-apt-repository is installed when software-properties-common is not installed:**
+
+- [ ] Make sure `software-properties-common` is not installed.
+- [ ] Remove `python3-repolib` with `sudo dpkg -r --force-all python3-repolib`.
+- [ ] Ensure `/usr/bin/add-apt-repository` doesn't exist (if it does, remove it.)
+- [ ] Install `python3-repolib` (can be done with `sudo apt install -f`).
+- [ ] Ensure `/usr/bin/add-apt-repository` exists and is a link to `/usr/lib/repolib/add-apt-repository`.
+
+**Confirm add-apt-repository is not installed when software-properties-common is installed:**
+
+- [ ] Remove `python3-repolib` with `sudo dpkg -r --force-all python3-repolib`.
+- [ ] Ensure `/usr/bin/add-apt-repository` doesn't exist (if it does, remove it.)
+- [ ] Install `software-properties-common`, confirm `/usr/bin/add-apt-repository` now exists and is not a link.
+    - Can be done with `apt download software-properties-common python3-software-properties`
+      followed by `dpkg -i` on the downloaded files.
+- [ ] Install `python3-repolib` again, confirm `/usr/bin/add-apt-repository` still isn't a link.
+
+**Confirm add-apt-repository is installed when software-properties-common is removed:**
+
+- [ ] Remove `software-properties-common` and confirm that `/usr/bin/add-apt-repository` still exists and is now a link.
