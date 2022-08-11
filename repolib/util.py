@@ -111,6 +111,19 @@ options_outmap = {
     'Valid-Until-Max': 'valid-until-max'
 }
 
+true_values = [
+    True,
+    'True',
+    'true',
+    'Yes',
+    'yes',
+    'YES',
+    'y',
+    'Y',
+    AptSourceEnabled.TRUE,
+    1
+]
+
 options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 

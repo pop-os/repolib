@@ -66,7 +66,7 @@ class Source(deb822.Deb822):
         self.id = ''
         self.name = ''
         self.enabled = True
-        self.types = []
+        self.types = [util.SourceType.BINARY]
         self.uris = []
         self.suites = []
         self.components = []
@@ -75,14 +75,23 @@ class Source(deb822.Deb822):
         self.options = {}
         self.file = None
         self.key = None
+
     
-    def set_enabled(self, enabled:bool) -> None:
-        """Sets this source to be enabled or disabled
-        
-        Arguments:
-            enabled(bool): `True` to enable the source, `False` to disable it.
-        """
+    @property
+    def sourcecode_enabled(self) -> bool:
+        """`True` if this source also provides source code, otherwise `False`"""
+        if util.SourceType.SOURCECODE in self.types:
+            return True
+        return False
     
+    @sourcecode_enabled.setter
+    def sourcecode_enabled(self, enabled) -> None:
+        """Accept a variety of input values"""
+        self.types = [util.SourceType.BINARY]
+        if enabled in util.true_values:
+            self.types.append(util.SourceType.SOURCECODE)
+
+
     def generate_default_id() -> str:
         """Generates a suitable ID for the source
         
