@@ -22,8 +22,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from debian import deb822
 
-from repolib.file import SourceFileError
-
 from .parsedeb import ParseDeb
 from .key import SourceKey
 from . import util
@@ -44,7 +42,7 @@ class Source(deb822.Deb822):
     """A DEB822 object representing a single software source.
     
     Attributes:
-        id(str): The unique id for this source
+        ident(str): The unique id for this source
         name(str): The user-readable name for this source
         enabled(bool): Whether or not the source is enabled
         types([SourceType]): A list of repository types for this source
@@ -66,7 +64,7 @@ class Source(deb822.Deb822):
     
     def reset_values(self) -> None:
         """Reset the default values for all attributes"""
-        self.id = ''
+        self.ident = ''
         self.name = ''
         self.enabled = True
         self.types = [util.SourceType.BINARY]
@@ -134,7 +132,7 @@ class Source(deb822.Deb822):
             self.types.append(util.SourceType.SOURCECODE)
 
 
-    def generate_default_id() -> str:
+    def generate_default_ident() -> str:
         """Generates a suitable ID for the source
         
         Returns: str
@@ -180,3 +178,176 @@ class Source(deb822.Deb822):
         Returns: str
             The source output formatted as Deb822
         """
+
+
+    ## Properties are stored/retrieved from the underlying Deb822 dict
+    @property
+    def has_required_parts(self) -> bool:
+        """(RO) True if all required attributes are set, otherwise false."""
+        required_parts = ['uris', 'suites', 'ident']
+
+        for attr in required_parts:
+            if len(getattr(self, attr)) < 1:
+                return False
+        
+        return True
+
+
+    @property
+    def ident(self) -> str:
+        """The ident for this source within the file"""
+        try:
+            return self['X-Repolib-ID']
+        except KeyError:
+            return ''
+
+    @ident.setter
+    def ident(self, ident: str) -> None:
+        ident = ident.translate(util.CLEAN_CHARS)
+        self['X-Repolib-ID'] = ident
+
+
+    @property
+    def name(self) -> str: 
+        """The human-friendly name for this source"""
+        try:
+            if not self['X-Repolib-Name']:
+                self['X-Repolib-Name'] = self.make_default_name()
+            return self['X-Repolib-Name']
+        except KeyError:
+            return ''
+    
+    @name.setter
+    def name(self, name: str) -> None:
+        self['X-Repolib-Name'] = name
+    
+
+    @property
+    def enabled(self) -> bool:
+        """Whether or not the source is enabled/active"""
+        try:
+            enabled = self['Enabled']
+        except KeyError:
+            return False
+        
+        if enabled and self.has_required_parts:
+            return True
+        return False
+    
+    @enabled.setter
+    def enabled(self, enabled) -> None:
+        """For convenience, accept a wide varietry of input value types"""
+        self['Enabled'] = False
+        if enabled in util.true_values:
+            self['Enabled'] = True
+    
+
+    @property
+    def types(self) -> list:
+        """The list of source types for this source"""
+        _types:list = []
+        try:
+            for sourcetype in self['types']:
+                _types.append(util.SourceType(sourcetype))
+        except KeyError:
+            pass
+        return _types
+    
+    @types.setter
+    def types(self, types: list) -> None:
+        """Turn this list into a string of values for storage"""
+        self['Types'] = ''
+        for sourcetype in types:
+            self['Types'] += f'{sourcetype.value} '
+        self['Types'] = self['Types'].strip()
+    
+
+    @property
+    def uris(self) -> list:
+        """The list of URIs for this source"""
+        try:
+            return self['URIs'].split()
+        except KeyError:
+            return []
+    
+    @uris.setter
+    def uris(self, uris: list) -> None:
+        self['URIs'] = ' '.join(uris).strip()
+    
+
+    @property
+    def suites(self) -> list:
+        """The list of URIs for this source"""
+        try:
+            return self['URIs'].split()
+        except KeyError:
+            return []
+    
+    @suites.setter
+    def suites(self, suites: list) -> None:
+        self['Suites'] = ' '.join(suites).strip()
+
+
+    @property
+    def components(self) -> list:
+        """The list of URIs for this source"""
+        try:
+            return self['URIs'].split()
+        except KeyError:
+            return []
+    
+    @components.setter
+    def components(self, components: list) -> None:
+        self['Components'] = ' '.join(components).strip()
+    
+
+    @property
+    def signed_by(self) -> Path:
+        """The signing key for this source
+        
+        We want to set the underlying data for this path as well if present. 
+        This will ensure the data on disk stays synced with changes to the key.
+        """
+        if self.key:
+            self['Signed-By'] = self.key.path
+            return self.key.path
+        else:
+            return None
+    
+    @signed_by.setter
+    def signed_by(self, keypath:str) -> None:
+        """If we get a valid key path, set a key too."""
+        if keypath:
+            key = SourceKey(path=keypath)
+            if key.path.exists():
+                self.key = key
+                self['Signed-By'] = str(self.key.path)
+                return
+
+
+    @property
+    def options(self) -> dict:
+        """The options for this source"""
+        return self._options
+    
+    @options.setter
+    def options(self, options:dict) -> None:
+        if 'Signed-By' in options:
+            self.signed_by = options['Signed-By']
+            if self.signed_by:
+                options.pop('Signed-By')
+        self._options = options
+
+
+    def _oneline_options(self) -> str:
+        """Turn the current options into a oneline-style string
+        
+        Returns: str
+            The one-line-format options string
+        """
+        options_str = ''
+        if self.signed_by:
+            options_str += f'{util.options_outmap["Signed-By"]}={self.signed_by} '
+        for key in self.options:
+            options_str += f'{util.options_outmap[key]}={self.options[key].replace(" ", ",")} '
+        return options_str
