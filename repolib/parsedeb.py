@@ -223,7 +223,7 @@ class ParseDeb:
             values = values.split(',')
             value:str = ' '.join(values)
             try:
-                key:str = self.util.options_inmap[pre_key]
+                key:str = util.options_inmap[pre_key]
             except KeyError:
                 raise DebParseError(
                     f'Could not parse line {self.curr_line}: option {key} is '
@@ -292,7 +292,7 @@ class ParseDeb:
         # Determine the type of the repo
         repo_type:str = parts.pop(0)
         if repo_type in ['deb', 'deb-src']:
-            line_parsed['repo_type'] = repo_type
+            line_parsed['repo_type'] = util.SourceType(repo_type)
         else:
             raise DebParseError(f'The line "{self.curr_line}" is of invalid type.')
 

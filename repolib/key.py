@@ -24,7 +24,7 @@ from pathlib import Path
 
 from . import util
 
-KEYS_DIR = Path(KEYS_DIR)
+KEYS_DIR = Path(util.KEYS_DIR)
 
 class KeyError(util.RepoError):
     """ Exceptions related to apt key files."""
