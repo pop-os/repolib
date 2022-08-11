@@ -58,7 +58,23 @@ class Source(deb822.Deb822):
     def __init__(self, *args, file=None, line:str = None, **kwargs) -> None:
         """Initialize this source object"""
         super().__init__(*args, **kwargs)
+        self.reset_values()
         self.file = file
+    
+    def reset_values(self) -> None:
+        """Reset the default values for all attributes"""
+        self.id = ''
+        self.name = ''
+        self.enabled = True
+        self.types = []
+        self.uris = []
+        self.suites = []
+        self.components = []
+        self.comments = ''
+        self.signed_by = None
+        self.options = {}
+        self.file = None
+        self.key = None
     
     def set_enabled(self, enabled:bool) -> None:
         """Sets this source to be enabled or disabled
