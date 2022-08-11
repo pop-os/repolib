@@ -21,6 +21,7 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from debian import deb822
+from pathlib import Path
 
 from .parsedeb import ParseDeb
 from .key import SourceKey
@@ -237,9 +238,9 @@ class Source(deb822.Deb822):
     @enabled.setter
     def enabled(self, enabled) -> None:
         """For convenience, accept a wide varietry of input value types"""
-        self['Enabled'] = False
+        self['Enabled'] = 'no'
         if enabled in util.true_values:
-            self['Enabled'] = True
+            self['Enabled'] = 'yes'
     
 
     @property
@@ -247,7 +248,7 @@ class Source(deb822.Deb822):
         """The list of source types for this source"""
         _types:list = []
         try:
-            for sourcetype in self['types']:
+            for sourcetype in self['types'].split():
                 _types.append(util.SourceType(sourcetype))
         except KeyError:
             pass

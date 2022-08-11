@@ -300,3 +300,21 @@ def validate_debline(valid):
         if len(valid.split()) == 1:
             return url_validator(valid)
         return False
+
+def strip_hashes(line:str) -> str:
+    """ Strips the leading #'s from the given line.
+    
+    Arguments:
+        line (str): The line to strip.
+    
+    Returns:
+        (str): The input line without any leading/trailing hashes or 
+            leading/trailing whitespace.
+    """
+    while True:
+        line = line.strip('#')
+        line = line.strip()
+        if not line.startswith('#'):
+            break
+    
+    return line
