@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019-2022, Ian Santopietro
+Copyright (c) 2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -19,4 +19,27 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-__version__ = "2.0.0"
+
+from pathlib import Path
+
+from . import util
+
+KEYS_DIR = Path(KEYS_DIR)
+
+class KeyError(util.RepoError):
+    """ Exceptions related to apt key files."""
+
+    def __init__(self, *args, code=1, **kwargs):
+        """Exceptions related to apt key files.
+
+        Arguments:
+            code (:obj:`int`, optional, default=1): Exception error code.
+    """
+        super().__init__(*args, **kwargs)
+        self.code = code
+
+class SourceKey:
+    """A signing key for an apt source."""
+
+    def __init__(self) -> None:
+        self.path = None
