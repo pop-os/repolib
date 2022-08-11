@@ -20,6 +20,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import re
+
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
@@ -48,6 +50,16 @@ try:
 except ImportError:
     DISTRO_CODENAME = 'linux'
 
+class SourceFormat(Enum):
+    """Enum of SourceFile Formats"""
+    DEFAULT = "sources"
+    LEGACY = "list"
+
+class SourceType(Enum):
+    """Enum of repository types"""
+    BINARY = 'deb'
+    SOURCECODE = 'deb-src'
+
 class AptSourceType(Enum):
     """ Helper Enum to simplify saving data. """
     BINARY = "deb"
@@ -66,6 +78,41 @@ class AptSourceEnabled(Enum):
             return True
 
         return False
+
+options_inmap = {
+    'arch': 'Architectures',
+    'lang': 'Languages',
+    'target': 'Targets',
+    'pdiffs': 'PDiffs',
+    'by-hash': 'By-Hash',
+    'allow-insecure': 'Allow-Insecure',
+    'allow-weak': 'Allow-Weak',
+    'allow-downgrade-to-insecure': 'Allow-Downgrade-To-Insecure',
+    'trusted': 'Trusted',
+    'signed-by': 'Signed-By',
+    'check-valid-until': 'Check-Valid-Until',
+    'valid-until-min': 'Valid-Until-Min',
+    'valid-until-max': 'Valid-Until-Max'
+}
+
+options_outmap = {
+    'Architectures': 'arch',
+    'Languages': 'lang',
+    'Targets': 'target',
+    'PDiffs': 'pdiffs',
+    'By-Hash': 'by-hash',
+    'Allow-Insecure': 'allow-insecure',
+    'Allow-Weak': 'allow-weak',
+    'Allow-Downgrade-To-Insecure': 'allow-downgrade-to-insecure',
+    'Trusted': 'trusted',
+    'Signed-By': 'signed-by',
+    'Check-Valid-Until': 'check-valid-until',
+    'Valid-Until-Min': 'valid-until-min',
+    'Valid-Until-Max': 'valid-until-max'
+}
+
+options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
+uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
 CLEAN_CHARS = {
     33: None,
