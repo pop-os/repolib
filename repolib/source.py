@@ -22,6 +22,9 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from debian import deb822
 
+from repolib.file import SourceFileError
+
+from .parsedeb import ParseDeb
 from .key import SourceKey
 from . import util
 
@@ -76,6 +79,45 @@ class Source(deb822.Deb822):
         self.file = None
         self.key = None
 
+    def load_from_data(self, data:list) -> None:
+        """Loads source information from the provided data
+
+        Should correctly load either a lecagy Deb line (optionally with 
+        preceeding comment) or a DEB822 source.
+        
+        Arguments:
+            data(list): the data to load into the source.
+        """
+        self.reset_values()
+        
+        # Process comments
+        if data[0].strip().startswith('#'):
+            self.comments = util.strip_hashes(data.pop(0))
+        
+        if util.validate_debline(data[0]): # Legacy Source
+            if len(data) > 1:
+                raise SourceError(
+                    f'The source is a legacy source but contains {len(data)} entries. '
+                    'It may only contain one entry.'
+                )
+            deb_parser = ParseDeb()
+            parsed_debline = deb_parser.parse_line(data[0])
+            self.enabled = parsed_debline['enabled']
+            self.ident = parsed_debline['ident']
+            self.name = parsed_debline['name']
+            self.comment = parsed_debline['comment']
+            self.types = [parsed_debline['repo_type']]
+            self.uris = [parsed_debline['uri']]
+            self.suites = [parsed_debline['suite']]
+            self.components = parsed_debline['components']
+            self.options = parsed_debline['options'].copy()
+            if 'signed-by' in self.options:
+                self.signed_by = self.options['signed-by']
+            return
+
+        # DEB822 Source
+        super().__init__(sequence=data)
+        return
     
     @property
     def sourcecode_enabled(self) -> bool:
