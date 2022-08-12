@@ -102,9 +102,7 @@ class Source(deb822.Deb822):
             deb_parser = ParseDeb()
             parsed_debline = deb_parser.parse_line(data[0])
             self.enabled = parsed_debline['enabled']
-            self.ident = parsed_debline['ident']
-            self.name = parsed_debline['name']
-            self.comment = parsed_debline['comment']
+            self.comment = parsed_debline['comments']
             self.types = [parsed_debline['repo_type']]
             self.uris = [parsed_debline['uri']]
             self.suites = [parsed_debline['suite']]
@@ -112,6 +110,8 @@ class Source(deb822.Deb822):
             self.options = parsed_debline['options'].copy()
             if 'signed-by' in self.options:
                 self.signed_by = self.options['signed-by']
+            self.ident = parsed_debline['ident']
+            self.name = parsed_debline['name']
             return
 
         # DEB822 Source
@@ -133,12 +133,29 @@ class Source(deb822.Deb822):
             self.types.append(util.SourceType.SOURCECODE)
 
 
-    def generate_default_ident() -> str:
+    def generate_default_ident(self, prefix='') -> str:
         """Generates a suitable ID for the source
         
         Returns: str
             A sane default-id
         """
+        ident = ''
+        if len(self.uris) > 0:
+            uri = self.uris[0].replace('/', ' ')
+            uri_list = uri.split()
+            ident = '{}{}'.format(
+                prefix,
+                '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+            )
+        return ident
+    
+    def generate_default_name(self) -> str:
+        """Generate a default name based on the ident
+        
+        Returns: str
+            A name based on the ident
+        """
+        return self.ident
 
 
     def set_key(key:SourceKey) -> None:
@@ -149,7 +166,7 @@ class Source(deb822.Deb822):
         """
 
 
-    def load_key() -> SourceKey:
+    def load_key(self) -> SourceKey:
         """Finds and loads the signing key from the system
         
         Returns: SourceKey
@@ -157,20 +174,59 @@ class Source(deb822.Deb822):
         """
 
 
-    def add_key() -> None:
+    def add_key(self) -> None:
         """Adds the source signing key to the system"""
 
 
-    def remove_key() -> None:
+    def remove_key(self) -> None:
         """Removes the source signing key from the system."""
 
 
-    def output_legacy() -> str:
+    def output_legacy(self) -> str:
         """Outputs a legacy representation of this source
         
+        Note: this is expected to fail if there is more than one type, URI, or
+        Suite; the one-line format does not support having multiple of these
+        properties.
+
         Returns: str
             The source output formatted as Legacy
         """
+        line = ''
+
+        if self.comments:
+            line += f'# {self.comments}\n'
+
+        for attr in ['types', 'uris', 'suites']:
+            if len(getattr(self, attr)) > 1:
+                msg = f'The source has too many {attr}.'
+                msg += f'Legacy-format sources support one {attr[:-1]} only.'
+                raise SourceError(msg)
+        
+        if not self.enabled:
+            line += '# '
+        
+        line += self.types[0].value
+        line += ' '
+        
+        if self.options:
+            line += '['
+            line += self._oneline_options()
+            line = line.strip()
+            line += '] '
+        
+        line += f'{self.uris[0]} '
+        line += f'{self.suites[0]} '
+
+        for component in self.components:
+            line += f'{component} '
+        
+        line += f' ## X-Repolib-Name: {self.name}'
+        line += f' # X-Repolib-Ident: {self.ident}'
+        if self.comment:
+            line += f' # {self.comment}'
+
+        return line
 
 
     def output_822() -> str:
@@ -204,6 +260,8 @@ class Source(deb822.Deb822):
 
     @ident.setter
     def ident(self, ident: str) -> None:
+        if not ident:
+            ident = self.generate_default_ident()
         ident = ident.translate(util.CLEAN_CHARS)
         self['X-Repolib-ID'] = ident
 
@@ -213,7 +271,7 @@ class Source(deb822.Deb822):
         """The human-friendly name for this source"""
         try:
             if not self['X-Repolib-Name']:
-                self['X-Repolib-Name'] = self.make_default_name()
+                self['X-Repolib-Name'] = self.generate_default_name()
             return self['X-Repolib-Name']
         except KeyError:
             return ''
@@ -280,7 +338,7 @@ class Source(deb822.Deb822):
     def suites(self) -> list:
         """The list of URIs for this source"""
         try:
-            return self['URIs'].split()
+            return self['Suites'].split()
         except KeyError:
             return []
     
@@ -293,7 +351,7 @@ class Source(deb822.Deb822):
     def components(self) -> list:
         """The list of URIs for this source"""
         try:
-            return self['URIs'].split()
+            return self['Components'].split()
         except KeyError:
             return []
     
