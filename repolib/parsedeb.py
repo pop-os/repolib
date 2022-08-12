@@ -259,7 +259,7 @@ class ParseDeb:
         line_parsed['enabled'] = True
         line_parsed['name'] = ''
         line_parsed['ident'] = ''
-        line_parsed['comment'] = ''
+        line_parsed['comments'] = ''
         line_parsed['repo_type'] = ''
         line_parsed['uri'] = ''
         line_parsed['suite'] = ''
