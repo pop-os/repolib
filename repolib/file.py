@@ -64,6 +64,7 @@ class SourceFile:
             self.name = name
             self.set_path()
             self.load_from_disk()
+
     
     def set_path(self) -> None:
         """Attempt to detect the correct path for this File.
@@ -85,8 +86,11 @@ class SourceFile:
         
         self.path = default_path
         return
+    
+    def load_from_disk() -> None:
+        """Loads the sources from the file on disk"""
 
-    def output_legacy() -> str:
+    def output_legacy(self) -> str:
         """Outputs a legacy representation of this source file
         
         Returns: str
@@ -94,7 +98,7 @@ class SourceFile:
         """
 
 
-    def output_822() -> str:
+    def output_822(self) -> str:
         """Outputs a DEB822 representation of this source file
         
         Returns: str
@@ -102,7 +106,7 @@ class SourceFile:
         """
 
 
-    def output_ui() -> str:
+    def output_ui(self) -> str:
         """Outputs a UI-friendly representation of this source file
         
         Returns: str
@@ -110,7 +114,7 @@ class SourceFile:
         """
 
 
-    def output() -> str:
+    def output(self) -> str:
         """Outputs the default format representation of this source file
         
         Returns: str
@@ -118,9 +122,9 @@ class SourceFile:
         """
 
 
-    def load() -> None:
+    def load(self) -> None:
         """Loads the sources from the file"""
 
 
-    def save() -> None:
+    def save(self) -> None:
         """Saves the source file to disk using the current format"""
