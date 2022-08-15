@@ -20,7 +20,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from curses import raw
 from pathlib import Path
 
 from .source import Source, SourceError
@@ -125,7 +124,7 @@ class SourceFile:
                     valid_legacy = util.validate_debline(line.strip())
                     if not valid_legacy and not name_line:
                         # Found a standard comment
-                        self.contents.append(util.strip_hashes(line).strip())
+                        self.contents.append(line.strip())
                     
                     elif valid_legacy:
                         if self.format != util.SourceFormat.LEGACY:
@@ -211,41 +210,36 @@ class SourceFile:
             self.contents.append('')
 
 
-    def output_legacy(self) -> str:
-        """Outputs a legacy representation of this source file
-        
-        Returns: str
-            The Legacy-format representation of this source file
-        """
-
-
-    def output_822(self) -> str:
-        """Outputs a DEB822 representation of this source file
-        
-        Returns: str
-            The DEB822-format representation of this source file
-        """
-
-
-    def output_ui(self) -> str:
-        """Outputs a UI-friendly representation of this source file
-        
-        Returns: str
-            This source formatted for screen output
-        """
-
-
-    def output(self) -> str:
-        """Outputs the default format representation of this source file
-        
-        Returns: str
-            This source formatted according to its set format
-        """
-
-
     def load(self) -> None:
         """Loads the sources from the file"""
 
 
     def save(self) -> None:
         """Saves the source file to disk using the current format"""
+
+    @property 
+    def legacy(self) -> str:
+        """Outputs the file in the output_legacy format"""
+        legacy_output:str = ''
+        for item in self.contents:
+            try:
+                legacy_output += item.legacy
+            except AttributeError:
+                legacy_output += item
+            legacy_output += '\n'
+        return legacy_output
+
+    @property 
+    def deb822(self) -> str:
+        """Outputs the file in the output_822 format"""
+
+
+    @property 
+    def ui(self) -> str:
+        """Outputs the file in the output_ui format"""
+
+
+    @property 
+    def output(self) -> str:
+        """Outputs the file in the output format"""
+
