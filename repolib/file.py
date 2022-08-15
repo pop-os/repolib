@@ -64,7 +64,7 @@ class SourceFile:
         if name:
             self.name = name
             self.reset_path()
-            self.load_from_disk()
+            self.load()
     
     def __str__(self):
         return self.output
@@ -253,7 +253,7 @@ class SourceFile:
                 deb822_output += item.deb822
             except AttributeError:
                 deb822_output += item
-            deb822_output += '\n'
+                deb822_output += '\n'
         return deb822_output
 
 
@@ -280,8 +280,9 @@ class SourceFile:
                     default_output += item.deb822
                 elif self.format == util.SourceFormat.LEGACY:
                     default_output += item.legacy
+                    default_output += '\n'
             except AttributeError:
                 default_output += item
-            default_output += '\n'
+                default_output += '\n'
         return default_output
 
