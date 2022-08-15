@@ -65,6 +65,12 @@ class SourceFile:
             self.name = name
             self.set_path()
             self.load_from_disk()
+    
+    def __str__(self):
+        return self.output
+    
+    def __repr__(self):
+        return f'SourceFile(name={self.name})'
 
     
     def set_path(self) -> None:
@@ -232,14 +238,41 @@ class SourceFile:
     @property 
     def deb822(self) -> str:
         """Outputs the file in the output_822 format"""
+        deb822_output:str = ''
+        for item in self.contents:
+            try:
+                deb822_output += item.deb822
+            except AttributeError:
+                deb822_output += item
+            deb822_output += '\n'
+        return deb822_output
 
 
     @property 
     def ui(self) -> str:
         """Outputs the file in the output_ui format"""
+        ui_output:str = ''
+        for item in self.contents:
+            try:
+                ui_output += item.ui
+            except AttributeError:
+                pass # Skip file comments in UI mode
+            ui_output += '\n'
+        return ui_output
 
 
     @property 
     def output(self) -> str:
         """Outputs the file in the output format"""
+        default_output:str = ''
+        for item in self.contents:
+            try:
+                if self.format == util.SourceFormat.DEFAULT:
+                    default_output += item.deb822
+                elif self.format == util.SourceFormat.LEGACY:
+                    default_output += item.legacy
+            except AttributeError:
+                default_output += item
+            default_output += '\n'
+        return default_output
 
