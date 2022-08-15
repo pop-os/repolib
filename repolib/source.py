@@ -330,13 +330,13 @@ class Source(deb822.Deb822):
     def enabled(self) -> bool:
         """Whether or not the source is enabled/active"""
         try:
-            enabled = self['Enabled']
+            enabled = self['Enabled'] in util.true_values
         except KeyError:
-            return False
+            return util.AptSourceEnabled.FALSE
         
         if enabled and self.has_required_parts:
-            return True
-        return False
+            return util.AptSourceEnabled.TRUE
+        return util.AptSourceEnabled.FALSE
     
     @enabled.setter
     def enabled(self, enabled) -> None:
@@ -722,7 +722,7 @@ class Source(deb822.Deb822):
                 msg += f'Legacy-format sources support one {attr[:-1]} only.'
                 raise SourceError(msg)
         
-        if not self.enabled:
+        if not self.enabled.get_bool():
             legacy += '# '
         
         legacy += self.types[0].value
