@@ -129,10 +129,6 @@ class Source(deb822.Deb822):
         """
         self.reset_values()
         
-        # Process comments
-        if data[0].strip().startswith('#'):
-            self.comments.append(util.strip_hashes(data.pop(0)))
-        
         if util.validate_debline(data[0]): # Legacy Source
             if len(data) > 1:
                 raise SourceError(
@@ -154,8 +150,6 @@ class Source(deb822.Deb822):
                 self.comments.append(comment)
             if self.comments == ['']:
                 self.comments = []
-            if 'signed-by' in self.options:
-                self.signed_by = self.options['signed-by']
             
             if not self.ident:
                 self.ident = self.generate_default_ident()
@@ -195,7 +189,7 @@ class Source(deb822.Deb822):
             uri_list = uri.split()
             ident = '{}{}'.format(
                 prefix,
-                ''.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+                '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
             )
         ident += f'-{self.types[0].ident()}'
         try:
