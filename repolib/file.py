@@ -60,6 +60,7 @@ class SourceFile:
         self.path:Path = None
         self.format:util.SourceFormat = util.SourceFormat.DEFAULT
         self.contents:list = []
+        self.sources:list = []
 
         if name:
             self.name = name
@@ -92,7 +93,7 @@ class SourceFile:
     
     def load_from_disk(self) -> None:
         """Loads the sources from the file on disk"""
-        self.items = []
+        self.contents = []
 
         if not self.name:
             raise SourceFileError('You must provide a filename to load.')
@@ -109,21 +110,22 @@ class SourceFile:
         source_name:str = ''
         commented:bool = False
 
+
         # Main file parsing loop
         for line in srcfile_data:
             comment_found:str = ''
+            name_line:bool = 'X-Repolib-Name' in line
             
             if not parsing_deb822:
                 commented = line.startswith('#')
 
                 # Find commented out lines
                 if commented:
-                    name_line:bool = 'X-Repolib-name' in line
                     # Exclude disabled legacy deblines
                     valid_legacy = util.validate_debline(line.strip())
                     if not valid_legacy and not name_line:
                         # Found a standard comment
-                        self.items.append(util.strip_hashes(line).strip())
+                        self.contents.append(util.strip_hashes(line).strip())
                     
                     elif valid_legacy:
                         if self.format != util.SourceFormat.LEGACY:
@@ -133,14 +135,15 @@ class SourceFile:
                                 'allowed. Please fix the file manually.'
                             )
                         new_source = Source()
-                        new_source.load_from_data(line)
+                        new_source.load_from_data([line])
                         if source_name:
                             new_source.name = source_name
-                        self.items.append(new_source)
+                        self.contents.append(new_source)
+                        self.sources.append(new_source)
                     
                     elif name_line:
-                        name = ':'.join(line.split(':')[1:])
-                        name = name.strip()
+                        source_name = ':'.join(line.split(':')[1:])
+                        source_name = source_name.strip()
                 
                 # Active legacy line
                 elif not commented:
@@ -152,18 +155,15 @@ class SourceFile:
                                 'allowed. Please fix the file manually.'
                             )
                         new_source = Source()
-                        new_source.load_from_data(line)
+                        new_source.load_from_data([line])
                         if source_name:
                             new_source.name = source_name
-                        self.items.append(new_source)
-                    # else:
-                    #     raise SourceError(
-                    #         f'The source line "{line}" in {self.path} is invalid'
-                    #     )
+                        self.contents.append(new_source)
+                        self.sources.append(new_source)
                 
                 # Empty lines are treated as comments
                 if line.strip() == '':
-                    self.items.append('')
+                    self.contents.append('')
                 
                 # Find 822 sources
                 # Valid sources can begin with any key:
@@ -189,10 +189,11 @@ class SourceFile:
                     new_source.file = self
                     if source_name:
                         new_source.name = source_name
-                    self.items.append(new_source)
+                    self.contents.append(new_source)
+                    self.sources.append(new_source)
                     raw822 = []
                     item += 1
-                    self.items.append('')
+                    self.contents.append('')
                 else:
                     raw822.append(line.strip())
         
@@ -203,10 +204,11 @@ class SourceFile:
             new_source.file = self
             if source_name:
                 new_source.name = source_name
-            self.items.append(new_source)
+            self.contents.append(new_source)
+            self.sources.append(new_source)
             raw822 = []
             item += 1
-            self.items.append('')
+            self.contents.append('')
 
 
     def output_legacy(self) -> str:
