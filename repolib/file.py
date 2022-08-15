@@ -20,9 +20,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from curses import raw
 from pathlib import Path
 
-from .source import Source
+from .source import Source, SourceError
 from . import util
 
 SOURCES_DIR = Path(util.SOURCES_DIR)
@@ -78,17 +79,135 @@ class SourceFile:
 
         if default_path.exists():
             self.path = default_path
+            self.format = util.SourceFormat.DEFAULT
             return
 
         if legacy_path.exists():
             self.path = legacy_path
+            self.format = util.SourceFormat.LEGACY
             return 
         
         self.path = default_path
         return
     
-    def load_from_disk() -> None:
+    def load_from_disk(self) -> None:
         """Loads the sources from the file on disk"""
+        self.items = []
+
+        if not self.name:
+            raise SourceFileError('You must provide a filename to load.')
+        
+        if not self.path.exists():
+            raise SourceFileError(f'The file {self.path} does not exist.')
+        
+        with open(self.path, 'r') as source_file:
+            srcfile_data = source_file.readlines()
+        
+        item:int = 0
+        raw822:list = []
+        parsing_deb822:bool = False
+        source_name:str = ''
+        commented:bool = False
+
+        # Main file parsing loop
+        for line in srcfile_data:
+            comment_found:str = ''
+            
+            if not parsing_deb822:
+                commented = line.startswith('#')
+
+                # Find commented out lines
+                if commented:
+                    name_line:bool = 'X-Repolib-name' in line
+                    # Exclude disabled legacy deblines
+                    valid_legacy = util.validate_debline(line.strip())
+                    if not valid_legacy and not name_line:
+                        # Found a standard comment
+                        self.items.append(util.strip_hashes(line).strip())
+                    
+                    elif valid_legacy:
+                        if self.format != util.SourceFormat.LEGACY:
+                            raise SourceFileError(
+                                f'File {self.ident} is an updated file, but '
+                                'contains legacy-format sources. This is not '
+                                'allowed. Please fix the file manually.'
+                            )
+                        new_source = Source()
+                        new_source.load_from_data(line)
+                        if source_name:
+                            new_source.name = source_name
+                        self.items.append(new_source)
+                    
+                    elif name_line:
+                        name = ':'.join(line.split(':')[1:])
+                        name = name.strip()
+                
+                # Active legacy line
+                elif not commented:
+                    if util.validate_debline(line.strip()):
+                        if self.format != util.SourceFormat.LEGACY:
+                            raise SourceFileError(
+                                f'File {self.ident} is an updated file, but '
+                                'contains legacy-format sources. This is not '
+                                'allowed. Please fix the file manually.'
+                            )
+                        new_source = Source()
+                        new_source.load_from_data(line)
+                        if source_name:
+                            new_source.name = source_name
+                        self.items.append(new_source)
+                    # else:
+                    #     raise SourceError(
+                    #         f'The source line "{line}" in {self.path} is invalid'
+                    #     )
+                
+                # Empty lines are treated as comments
+                if line.strip() == '':
+                    self.items.append('')
+                
+                # Find 822 sources
+                # Valid sources can begin with any key:
+                for key in util.valid_keys:
+                    if line.startswith(key):
+                        if self.format == util.SourceFormat.LEGACY:
+                            raise SourceFileError(
+                                f'File {self.ident} is a DEB822-format file, but '
+                                'contains legacy sources. This is not allowed. '
+                                'Please fix the file manually.'
+                            )
+                        parsing_deb822 = True
+                        raw822.append(line.strip())
+
+                item += 1
+            
+            elif parsing_deb822:
+                # Deb822 sources are terminated with an empty line
+                if line.strip() == '':
+                    parsing_deb822 = False
+                    new_source = Source()
+                    new_source.load_from_data(raw822)
+                    new_source.file = self
+                    if source_name:
+                        new_source.name = source_name
+                    self.items.append(new_source)
+                    raw822 = []
+                    item += 1
+                    self.items.append('')
+                else:
+                    raw822.append(line.strip())
+        
+        if raw822:
+            parsing_deb822 = False
+            new_source = Source()
+            new_source.load_from_data(raw822)
+            new_source.file = self
+            if source_name:
+                new_source.name = source_name
+            self.items.append(new_source)
+            raw822 = []
+            item += 1
+            self.items.append('')
+
 
     def output_legacy(self) -> str:
         """Outputs a legacy representation of this source file
