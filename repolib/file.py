@@ -22,6 +22,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from pathlib import Path
 
+import dbus
+
 from .source import Source, SourceError
 from . import util
 
@@ -218,6 +220,28 @@ class SourceFile:
 
     def save(self) -> None:
         """Saves the source file to disk using the current format"""
+
+        if not self.name or not self.format:
+            raise SourceFileError('There was not a complete filename to save')
+        
+        if len(self.contents) > 0:
+            
+            try:
+                with open(self.path, mode='w') as output_file:
+                    output_file.write(self.output)
+            
+            except PermissionError:
+                bus = dbus.SystemBus()
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.output_file_to_disk(self.path.name, self.output)
+        else:
+            try:
+                self.path.unlink()
+            except PermissionError:
+                bus = dbus.SystemBus()
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.delete_source_file(self.path.name)
+
     
     ## Attribute properties
     @property
