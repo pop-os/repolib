@@ -22,3 +22,34 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 from . import __version__
 
 VERSION = __version__.__version__
+
+from .file import SourceFile, SourceFileError
+from .source import Source, SourceError
+from . import util
+
+SOURCES_DIR = util.SOURCES_DIR
+KEYS_DIR = util.KEYS_DIR
+TESTING = util.TESTING
+KEYSERVER_QUERY_URL = util.KEYSERVER_QUERY_URL
+DISTRO_CODENAME = util.DISTRO_CODENAME
+PRETTY_PRINT = util.PRETTY_PRINT
+CLEAN_CHARS = util.CLEAN_CHARS
+
+RepoError = util.RepoError
+SourceFormat = util.SourceFormat
+SourceType = util.SourceType
+AptSourceEnabled = util.AptSourceEnabled
+
+url_validator = util.url_validator
+fetch_key = util.fetch_key
+prettyprint_enable = util.prettyprint_enable
+get_source_path = util.get_source_path
+get_keys_dir = util.get_keys_dir
+get_sources_dir = util.get_sources_dir
+validate_debline = util.validate_debline
+strip_hashes = util.strip_hashes
+
+valid_keys = util.valid_keys
+options_inmap = util.options_inmap
+options_outmap = util.options_outmap
+true_values = util.true_values
