@@ -63,7 +63,7 @@ class SourceFile:
 
         if name:
             self.name = name
-            self.set_path()
+            self.reset_path()
             self.load_from_disk()
     
     def __str__(self):
@@ -73,7 +73,7 @@ class SourceFile:
         return f'SourceFile(name={self.name})'
 
     
-    def set_path(self) -> None:
+    def reset_path(self) -> None:
         """Attempt to detect the correct path for this File.
         
         We default to DEB822 .sources format files, but if that file doesn't
@@ -95,8 +95,8 @@ class SourceFile:
         
         self.path = default_path
         return
-    
-    def load_from_disk(self) -> None:
+
+    def load(self) -> None:
         """Loads the sources from the file on disk"""
         self.contents = []
 
@@ -216,13 +216,22 @@ class SourceFile:
             self.contents.append('')
 
 
-    def load(self) -> None:
-        """Loads the sources from the file"""
-
-
     def save(self) -> None:
         """Saves the source file to disk using the current format"""
+    
+    ## Attribute properties
+    @property
+    def format(self) -> util.SourceFormat:
+        """The format of the file on disk"""
+        return self._format
+    
+    @format.setter
+    def format(self, format:util.SourceFormat) -> None:
+        """The path needs to be updated when the format changes"""
+        self._format = format
+        self.path = SOURCES_DIR / f'{self.name}.{self._format.value}'
 
+    ## Output properties
     @property 
     def legacy(self) -> str:
         """Outputs the file in the output_legacy format"""
