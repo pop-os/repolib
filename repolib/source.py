@@ -23,7 +23,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 from debian import deb822
 from pathlib import Path
 
-from numpy import isin
 
 from .parsedeb import ParseDeb
 from .key import SourceKey
@@ -146,6 +145,7 @@ class Source(deb822.Deb822):
             self.components = parsed_debline['components']
             for key in parsed_debline['options']:
                 self[key] = parsed_debline['options'][key]
+            self._update_legacy_options()
             for comment in parsed_debline['comments']:
                 self.comments.append(comment)
             if self.comments == ['']:
@@ -687,6 +687,7 @@ class Source(deb822.Deb822):
     @property
     def deb822(self) -> str:
         """The DEB822 representation of this source"""
+        self._update_legacy_options()
         # comments get handled separately because they're a list, and list
         # properties don't support .append()
         if self.comments:
@@ -700,6 +701,7 @@ class Source(deb822.Deb822):
     @property
     def ui(self) -> str:
         """The UI-friendly representation of this source"""
+        self._update_legacy_options()
         _ui_list:list = self.deb822.split('\n')
         if _ui_list[0].startswith('X-Repolib-ID'):
             _ui_list[0] = f'{self.ident}:'
@@ -711,6 +713,7 @@ class Source(deb822.Deb822):
     @property
     def legacy(self) -> str:
         """The legacy/one-line format representation of this source"""
+        self._update_legacy_options()
         legacy = ''
 
         for attr in ['types', 'uris', 'suites']:
