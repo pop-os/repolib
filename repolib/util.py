@@ -60,6 +60,14 @@ class SourceType(Enum):
     BINARY = 'deb'
     SOURCECODE = 'deb-src'
 
+    def ident(self) -> str:
+        """Used for getting a version of the format for idents"""
+        ident = f'{self.value}'
+        ident = ident.replace('deb-src', 'source')
+        ident = ident.replace('deb', 'binary')
+        return ident
+        
+
 class AptSourceType(Enum):
     """ Helper Enum to simplify saving data. """
     BINARY = "deb"
@@ -124,6 +132,14 @@ true_values = [
     1
 ]
 
+keys_map = {
+    'X-Repolib-Name: ': 'Name: ',
+    'X-Repolib-ID: ': 'Ident: ',
+    'X-Repolib-Comments: ': 'Comments: ',
+}
+
+PRETTY_PRINT = '\n    '
+
 options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
@@ -158,6 +174,20 @@ CLEAN_CHARS = {
     58: None,
     59: None,
 }
+
+def prettyprint_enable(enabled: bool = True) -> None:
+    """Easy helper to enable/disable pretty-printing for object reprs.
+    
+    Can also be used as an easy way to reset to defaults.
+
+    Arguments:
+        enabled(bool): Whether or not Pretty Printing should be enabled
+    """
+    global PRETTY_PRINT
+    if enabled:
+        PRETTY_PRINT = '\n    '
+    else:
+        PRETTY_PRINT = ''
 
 def fetch_key(fingerprint, query_url=KEYSERVER_QUERY_URL):
     """ Fetches a PGP Key from a keyserver.

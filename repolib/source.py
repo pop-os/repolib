@@ -23,6 +23,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 from debian import deb822
 from pathlib import Path
 
+from numpy import isin
+
 from .parsedeb import ParseDeb
 from .key import SourceKey
 from . import util
@@ -63,6 +65,31 @@ class Source(deb822.Deb822):
         self.reset_values()
         self.file = file
     
+    def __repr__(self):
+        """type: () -> str"""
+        # Append comments to the item
+        # if self.options:
+
+        if self.comments:
+            self['Comments'] = '# '
+            self['Comments'] += ' # '.join(self.comments)
+
+        rep:str = '{%s}' % ', '.join(['%r: %r' % (k, v) for k, v in self.items()])
+
+        rep:str = '{'
+        for key in self:
+            rep += f"{util.PRETTY_PRINT}'{key}': '{self[key]}', "
+
+        rep = rep[:-2]
+        rep += f"{util.PRETTY_PRINT.replace(' ', '')}"
+        rep += '}'
+
+        if self.comments:
+            self.pop('Comments')
+
+        return rep
+
+    
     def reset_values(self) -> None:
         """Reset the default values for all attributes"""
         self.ident = ''
@@ -72,9 +99,22 @@ class Source(deb822.Deb822):
         self.uris = []
         self.suites = []
         self.components = []
-        self.comments = ''
+        self.comments = []
         self.signed_by = None
-        self.options = {}
+        self.architectures = ''
+        self.languages = ''
+        self.targets = ''
+        self.pdiffs = ''
+        self.by_hash = ''
+        self.allow_insecure = ''
+        self.allow_weak = ''
+        self.allow_downgrade_to_insecure = ''
+        self.trusted = ''
+        self.signed_by = ''
+        self.check_valid_until = ''
+        self.valid_until_min = ''
+        self.valid_until_max = ''
+        self._update_legacy_options()
         self.file = None
         self.key = None
 
@@ -91,7 +131,7 @@ class Source(deb822.Deb822):
         
         # Process comments
         if data[0].strip().startswith('#'):
-            self.comments = util.strip_hashes(data.pop(0))
+            self.comments.append(util.strip_hashes(data.pop(0)))
         
         if util.validate_debline(data[0]): # Legacy Source
             if len(data) > 1:
@@ -101,17 +141,27 @@ class Source(deb822.Deb822):
                 )
             deb_parser = ParseDeb()
             parsed_debline = deb_parser.parse_line(data[0])
+            self.ident = parsed_debline['ident']
+            self.name = parsed_debline['name']
             self.enabled = parsed_debline['enabled']
-            self.comment = parsed_debline['comments']
             self.types = [parsed_debline['repo_type']]
             self.uris = [parsed_debline['uri']]
             self.suites = [parsed_debline['suite']]
             self.components = parsed_debline['components']
-            self.options = parsed_debline['options'].copy()
+            for key in parsed_debline['options']:
+                self[key] = parsed_debline['options'][key]
+            for comment in parsed_debline['comments']:
+                self.comments.append(comment)
+            if self.comments == ['']:
+                self.comments = []
             if 'signed-by' in self.options:
                 self.signed_by = self.options['signed-by']
-            self.ident = parsed_debline['ident']
-            self.name = parsed_debline['name']
+            
+            if not self.ident:
+                self.ident = self.generate_default_ident()
+            if not self.name:
+                self.name = self.generate_default_name()
+
             return
 
         # DEB822 Source
@@ -147,6 +197,12 @@ class Source(deb822.Deb822):
                 prefix,
                 '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
             )
+        ident += f'-{self.types[0].ident()}'
+        try:
+            if not self['X-Repolib-ID']:
+                self['X-Repolib-ID'] = ident
+        except KeyError:
+            self['X-Repolib-ID'] = ident
         return ident
     
     def generate_default_name(self) -> str:
@@ -155,7 +211,11 @@ class Source(deb822.Deb822):
         Returns: str
             A name based on the ident
         """
-        return self.ident
+        name:str = self.ident
+        if not self['X-Repolib-Name']:
+            self['X-Repolib-Name'] = name
+        
+        return name
 
 
     def set_key(key:SourceKey) -> None:
@@ -192,49 +252,35 @@ class Source(deb822.Deb822):
         Returns: str
             The source output formatted as Legacy
         """
-        line = ''
+        return self.legacy
 
-        if self.comments:
-            line += f'# {self.comments}\n'
-
-        for attr in ['types', 'uris', 'suites']:
-            if len(getattr(self, attr)) > 1:
-                msg = f'The source has too many {attr}.'
-                msg += f'Legacy-format sources support one {attr[:-1]} only.'
-                raise SourceError(msg)
-        
-        if not self.enabled:
-            line += '# '
-        
-        line += self.types[0].value
-        line += ' '
-        
-        if self.options:
-            line += '['
-            line += self._oneline_options()
-            line = line.strip()
-            line += '] '
-        
-        line += f'{self.uris[0]} '
-        line += f'{self.suites[0]} '
-
-        for component in self.components:
-            line += f'{component} '
-        
-        line += f' ## X-Repolib-Name: {self.name}'
-        line += f' # X-Repolib-Ident: {self.ident}'
-        if self.comment:
-            line += f' # {self.comment}'
-
-        return line
-
-
-    def output_822() -> str:
+    def output_822(self) -> str:
         """Outputs a DEB822 representation of this source
         
         Returns: str
             The source output formatted as Deb822
         """
+        return self.deb822
+    
+    def output_ui(self) -> str:
+        """Outputs a string representation of this source for use in UIs
+        
+        Returns: str
+            The source output string
+        """
+        return self.ui
+    
+    def prop_append(self, prop:list, item:str) -> None:
+        """Appends an item to a list property of this source.
+        NOTE: List properties are `types`, `uris`, `suites`, and `components`.
+
+        Arguments:
+            prop(list): The property on which to append the item.
+            item(str): The item to append to the propery
+        """
+        _list = prop
+        _list.append(item)
+        prop = _list
 
 
     ## Properties are stored/retrieved from the underlying Deb822 dict
@@ -254,14 +300,17 @@ class Source(deb822.Deb822):
     def ident(self) -> str:
         """The ident for this source within the file"""
         try:
-            return self['X-Repolib-ID']
+            _ident = self['X-Repolib-ID']
         except KeyError:
-            return ''
+            _ident = ''
+
+        if not _ident:
+            self.generate_default_ident()
+        return self['X-Repolib-ID']
+            
 
     @ident.setter
     def ident(self, ident: str) -> None:
-        if not ident:
-            ident = self.generate_default_ident()
         ident = ident.translate(util.CLEAN_CHARS)
         self['X-Repolib-ID'] = ident
 
@@ -270,11 +319,13 @@ class Source(deb822.Deb822):
     def name(self) -> str: 
         """The human-friendly name for this source"""
         try:
-            if not self['X-Repolib-Name']:
-                self['X-Repolib-Name'] = self.generate_default_name()
-            return self['X-Repolib-Name']
+            _name = self['X-Repolib-Name']
         except KeyError:
-            return ''
+            _name = ''
+
+        if not _name:
+            self.generate_default_name()
+        return self['X-Repolib-Name']
     
     @name.setter
     def name(self, name: str) -> None:
@@ -358,30 +409,6 @@ class Source(deb822.Deb822):
     @components.setter
     def components(self, components: list) -> None:
         self['Components'] = ' '.join(components).strip()
-    
-
-    @property
-    def signed_by(self) -> Path:
-        """The signing key for this source
-        
-        We want to set the underlying data for this path as well if present. 
-        This will ensure the data on disk stays synced with changes to the key.
-        """
-        if self.key:
-            self['Signed-By'] = self.key.path
-            return self.key.path
-        else:
-            return None
-    
-    @signed_by.setter
-    def signed_by(self, keypath:str) -> None:
-        """If we get a valid key path, set a key too."""
-        if keypath:
-            key = SourceKey(path=keypath)
-            if key.path.exists():
-                self.key = key
-                self['Signed-By'] = str(self.key.path)
-                return
 
 
     @property
@@ -396,17 +423,362 @@ class Source(deb822.Deb822):
             if self.signed_by:
                 options.pop('Signed-By')
         self._options = options
+    
+
+    ## Option properties
+
+    @property
+    def architectures (self) -> str:
+        """architectures option"""
+        try:
+            return self['Architectures']
+        except KeyError:
+            return ''
+    
+    @architectures.setter
+    def architectures(self, data) -> None:
+        try:
+            self.pop('Architectures')
+        except KeyError:
+            pass
+
+        if data:
+            self['Architectures'] = data
+        self._update_legacy_options()
 
 
-    def _oneline_options(self) -> str:
+    @property
+    def languages (self) -> str:
+        """languages option"""
+        try:
+            return self['Languages']
+        except KeyError:
+            return ''
+    
+    @languages.setter
+    def languages(self, data) -> None:
+        try:
+            self.pop('Languages')
+        except KeyError:
+            pass
+
+        if data:
+            self['Languages'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def targets (self) -> str:
+        """targets option"""
+        try:
+            return self['Targets']
+        except KeyError:
+            return ''
+    
+    @targets.setter
+    def targets(self, data) -> None:
+        try:
+            self.pop('Targets')
+        except KeyError:
+            pass
+
+        if data:
+            self['Targets'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def pdiffs (self) -> str:
+        """pdiffs option"""
+        try:
+            return self['Pdiffs']
+        except KeyError:
+            return ''
+    
+    @pdiffs.setter
+    def pdiffs(self, data) -> None:
+        try:
+            self.pop('Pdiffs')
+        except KeyError:
+            pass
+
+        if data:
+            self['Pdiffs'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def by_hash (self) -> str:
+        """by_hash option"""
+        try:
+            return self['By-Hash']
+        except KeyError:
+            return ''
+    
+    @by_hash.setter
+    def by_hash(self, data) -> None:
+        try:
+            self.pop('By-Hash')
+        except KeyError:
+            pass
+
+        if data:
+            self['By-Hash'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def allow_insecure (self) -> str:
+        """allow_insecure option"""
+        try:
+            return self['Allow-Insecure']
+        except KeyError:
+            return ''
+    
+    @allow_insecure.setter
+    def allow_insecure(self, data) -> None:
+        try:
+            self.pop('Allow-Insecure')
+        except KeyError:
+            pass
+
+        if data:
+            self['Allow-Insecure'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def allow_weak (self) -> str:
+        """allow_weak option"""
+        try:
+            return self['Allow-Weak']
+        except KeyError:
+            return ''
+    
+    @allow_weak.setter
+    def allow_weak(self, data) -> None:
+        try:
+            self.pop('Allow-Weak')
+        except KeyError:
+            pass
+
+        if data:
+            self['Allow-Weak'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def allow_downgrade_to_insecure (self) -> str:
+        """allow_downgrade_to_insecure option"""
+        try:
+            return self['Allow-Downgrade-To-Insecure']
+        except KeyError:
+            return ''
+    
+    @allow_downgrade_to_insecure.setter
+    def allow_downgrade_to_insecure(self, data) -> None:
+        try:
+            self.pop('Allow-Downgrade-To-Insecure')
+        except KeyError:
+            pass
+
+        if data:
+            self['Allow-Downgrade-To-Insecure'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def trusted (self) -> str:
+        """trusted option"""
+        try:
+            return self['Trusted']
+        except KeyError:
+            return ''
+    
+    @trusted.setter
+    def trusted(self, data) -> None:
+        try:
+            self.pop('Trusted')
+        except KeyError:
+            pass
+
+        if data:
+            self['Trusted'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def signed_by (self) -> str:
+        """signed_by option"""
+        try:
+            return self['Signed-By']
+        except KeyError:
+            return ''
+    
+    @signed_by.setter
+    def signed_by(self, data) -> None:
+        try:
+            self.pop('Signed-By')
+        except KeyError:
+            pass
+
+        if data:
+            self['Signed-By'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def check_valid_until (self) -> str:
+        """check_valid_until option"""
+        try:
+            return self['Check-Valid-Until']
+        except KeyError:
+            return ''
+    
+    @check_valid_until.setter
+    def check_valid_until(self, data) -> None:
+        try:
+            self.pop('Check-Valid-Until')
+        except KeyError:
+            pass
+
+        if data:
+            self['Check-Valid-Until'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def valid_until_min (self) -> str:
+        """valid_until_min option"""
+        try:
+            return self['Valid-Until-Min']
+        except KeyError:
+            return ''
+    
+    @valid_until_min.setter
+    def valid_until_min(self, data) -> None:
+        try:
+            self.pop('Valid-Until-Min')
+        except KeyError:
+            pass
+
+        if data:
+            self['Valid-Until-Min'] = data
+        self._update_legacy_options()
+
+
+    @property
+    def valid_until_max (self) -> str:
+        """valid_until_max option"""
+        try:
+            return self['Valid-Until-Max']
+        except KeyError:
+            return ''
+    
+    @valid_until_max.setter
+    def valid_until_max(self, data) -> None:
+        try:
+            self.pop('Valid-Until-Max')
+        except KeyError:
+            pass
+
+        if data:
+            self['Valid-Until-Max'] = data
+        self._update_legacy_options()
+
+
+
+
+    ## Output Properties
+    @property
+    def deb822(self) -> str:
+        """The DEB822 representation of this source"""
+        # comments get handled separately because they're a list, and list
+        # properties don't support .append()
+        if self.comments:
+            self['X-Repolib-Comments'] = '# '
+            self['X-Repolib-Comments'] += ' # '.join(self.comments)
+        _deb822:str = self.dump()
+        if self.comments:
+            self.pop('X-Repolib-Comments')
+        return _deb822
+    
+    @property
+    def ui(self) -> str:
+        """The UI-friendly representation of this source"""
+        _ui_list:list = self.deb822.split('\n')
+        if _ui_list[0].startswith('X-Repolib-ID'):
+            _ui_list[0] = f'{self.ident}:'
+        _ui:str = '\n'.join(_ui_list)
+        for key in util.keys_map:
+            _ui = _ui.replace(key, util.keys_map[key])
+        return _ui
+    
+    @property
+    def legacy(self) -> str:
+        """The legacy/one-line format representation of this source"""
+        legacy = ''
+
+        for attr in ['types', 'uris', 'suites']:
+            if len(getattr(self, attr)) > 1:
+                msg = f'The source has too many {attr}.'
+                msg += f'Legacy-format sources support one {attr[:-1]} only.'
+                raise SourceError(msg)
+        
+        if not self.enabled:
+            legacy += '# '
+        
+        legacy += self.types[0].value
+        legacy += ' '
+        
+        options_string = self._legacy_options()
+        if options_string:
+            legacy += '['
+            legacy += options_string
+            legacy = legacy.strip()
+            legacy += '] '
+        
+        legacy += f'{self.uris[0]} '
+        legacy += f'{self.suites[0]} '
+
+        for component in self.components:
+            legacy += f'{component} '
+        
+        legacy += f' ## X-Repolib-Name: {self.name}'
+        legacy += f' # X-Repolib-ID: {self.ident}'
+        if self.comments:
+            for comment in self.comments:
+                legacy += f' # {comment}'
+
+        return legacy
+
+
+    def _legacy_options(self) -> str:
         """Turn the current options into a oneline-style string
         
         Returns: str
             The one-line-format options string
         """
         options_str = ''
-        if self.signed_by:
-            options_str += f'{util.options_outmap["Signed-By"]}={self.signed_by} '
         for key in self.options:
-            options_str += f'{util.options_outmap[key]}={self.options[key].replace(" ", ",")} '
+            if self.options[key] != '':
+                options_str += f'{key}={self.options[key].replace(" ", ",")} '
         return options_str
+
+    def _update_legacy_options(self) -> None:
+        """Updates the current set of legacy options"""
+        self.options = {
+            'arch': self.architectures,
+            'lang': self.languages,
+            'target': self.targets,
+            'pdiffs': self.pdiffs,
+            'by-hash': self.by_hash,
+            'allow-insecure': self.allow_insecure,
+            'allow-weak': self.allow_weak,
+            'allow-downgrade-to-insecure': self.allow_downgrade_to_insecure,
+            'trusted': self.trusted,
+            'signed-by': self.signed_by,
+            'check-valid-until': self.check_valid_until,
+            'valid-until-min': self.valid_until_min,
+            'valid-until-max': self.valid_until_max,
+        }

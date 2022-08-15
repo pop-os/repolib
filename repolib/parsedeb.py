@@ -104,7 +104,7 @@ def decode_brackets(word:str) -> str:
     word = word.replace('%5D', ']')
     return word
 
-def parse_name_ident(comment:str) -> tuple:
+def parse_name_ident(tail:str) -> tuple:
     """ Find a Repolib name within the given comment string.
 
     The name should be headed with "X-Repolib-Name:" and is not space terminated.
@@ -115,29 +115,28 @@ def parse_name_ident(comment:str) -> tuple:
     field ends with a subsequent space.
 
     Arguments:
-        comment (str): The comment to search within.
+        tail (str): The comment to search within.
     
-    Returns:
-        (name, ident, comment):
-            name (str): The detected name, or None
-            ident (str): The detected ident, or None
-            comment (str): The string with the name removed
+    Returns: tuple(name, ident, comment):
+        name (str): The detected name, or None
+        ident (str): The detected ident, or None
+        comment (str): The string with the name and ident removed
     """
-    comment = util.strip_hashes(comment)
+    tail = util.strip_hashes(tail)
 
     # Used for sanity checking later
-    has_name = 'X-Repolib-Name:' in comment
-    has_ident = 'X-Repolib-Ident' in comment
+    has_name = 'X-Repolib-Name' in tail
+    has_ident = 'X-Repolib-Ident' in tail
 
-    parts: list = comment.split()
+    parts: list = tail.split()
     name_found = False
     ident_found = False
     name:str = ''
     ident:str = ''
     comment:str = ''
     for item in parts:
-        item_is_name = item.strip('#').startswith('X-Repolib-Name:')
-        item_is_ident = item.strip('#').startswith('X-Repolib-Ident:')
+        item_is_name = item.strip('#').strip().startswith('X-Repolib-Name')
+        item_is_ident = item.strip('#').strip().startswith('X-Repolib-Ident')
         
         if '#' in item and not item_is_name and not item_is_ident:
             name_found = False
@@ -201,7 +200,7 @@ class ParseDeb:
         self.last_line: str = ''
         self.last_line_valid: bool = False
         self.curr_line: str = ''
-        self.curr_line_valid: str = False
+        self.curr_line_valid: bool = False
     
     def parse_options(self, options:str) -> dict:
         """ Parses a string of options into a dictionary that repolib can use.
@@ -259,7 +258,7 @@ class ParseDeb:
         line_parsed['enabled'] = True
         line_parsed['name'] = ''
         line_parsed['ident'] = ''
-        line_parsed['comments'] = ''
+        line_parsed['comments'] = []
         line_parsed['repo_type'] = ''
         line_parsed['uri'] = ''
         line_parsed['suite'] = ''
@@ -273,15 +272,16 @@ class ParseDeb:
             if not parts[0] in ('deb', 'deb-src'):
                 raise DebParseError(f'Current line "{self.curr_line}" is invalid')
         
-        comments = line.find('#')
-        if comments > 0:
-            raw_comments:list = line[comments + 1:]
+        comments_index = line.find('#')
+        if comments_index > 0:
+            raw_comments:list = line[comments_index + 1:].strip()
             (
                 line_parsed['name'],
                 line_parsed['ident'],
-                line_parsed['comment']
+                comments
             ) = parse_name_ident(raw_comments)
-            line = line[:comments]
+            line_parsed['comments'].append(comments)
+            line = line[:comments_index]
         
         parts = debsplit(line)
         if len(parts) < 3: # We need at least a type, a URL, and a component
