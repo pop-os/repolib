@@ -195,7 +195,7 @@ class Source(deb822.Deb822):
             uri_list = uri.split()
             ident = '{}{}'.format(
                 prefix,
-                '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
+                ''.join(uri_list[1:]).translate(util.CLEAN_CHARS)
             )
         ident += f'-{self.types[0].ident()}'
         try:
