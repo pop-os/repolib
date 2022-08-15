@@ -87,6 +87,31 @@ class AptSourceEnabled(Enum):
 
         return False
 
+valid_keys = [
+    'X-Repolib-Name:',
+    'X-Repolib-Ident:',
+    'X-Repolib-Default-Mirror:',
+    'X-Repolib-Comment',
+    'Enabled:',
+    'Types:',
+    'URIs:',
+    'Suites:',
+    'Components:',
+    'Architectures:',
+    'Languages:',
+    'Targets:',
+    'PDiffs:',
+    'By-Hash:',
+    'Allow-Insecure:',
+    'Allow-Weak:',
+    'Allow-Downgrade-To-Insecure:',
+    'Trusted:',
+    'Signed-By:',
+    'Check-Valid-Until:',
+    'Valid-Until-Min:',
+    'Valid-Until-Max:',
+]
+
 options_inmap = {
     'arch': 'Architectures',
     'lang': 'Languages',
