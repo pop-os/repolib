@@ -19,6 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
 
 from pathlib import Path
 
@@ -57,6 +58,7 @@ class SourceFile:
         Arguments:
             name(str): The filename within the sources directory to load
         """
+        self.log = logging.getLogger(__name__)
         self.name:str = ''
         self.path:Path = None
         self.format:util.SourceFormat = util.SourceFormat.DEFAULT
@@ -64,9 +66,11 @@ class SourceFile:
         self.sources:list = []
 
         if name:
+            self.log.debug(f'Name {name} provided, attempting load')
             self.name = name
             self.reset_path()
             self.load()
+        
     
     def __str__(self):
         return self.output
@@ -83,8 +87,10 @@ class SourceFile:
         Returns: Source
             The located source
         """
+        self.log.debug(f'Looking up ident {ident} in {self.name}')
         for source in self.sources:
             if source.ident == ident:
+                self.log.debug(f'{ident} found')
                 return source
         raise SourceFileError(
             f'The file {self.path} does not contain the source {ident}'
@@ -96,6 +102,7 @@ class SourceFile:
         We default to DEB822 .sources format files, but if that file doesn't
         exist, fallback to legacy .list format. If this also doesn't exist, we
         swap back to DEB822 format, as this is likely a new file."""
+        self.log.debug('Resetting path')
 
         default_path = SOURCES_DIR / f'{self.name}.sources'
         legacy_path = SOURCES_DIR / f'{self.name}.list'
@@ -111,6 +118,7 @@ class SourceFile:
             return 
         
         self.path = default_path
+        self.log.debug(f'Path reset to {self.path}')
         return
 
     def find_unique_ident(self, source1:Source, source2:Source) -> bool:
@@ -141,11 +149,15 @@ class SourceFile:
         ident_src1:str = source1.ident
         ident_src2:str = source2.ident
 
+        self.log.debug(f'Idents {ident_src1} and {ident_src2} conflict')
+
         if self.format == util.SourceFormat.DEFAULT:
+            self.log.debug('File is DEB822, combining sources')
             util.combine_sources(source1, source2)
             ident_src2 = ''
         
         else:
+            self.log.debug('Legacy File')
             excl_keys = [
                 'X-Repolib-Name',
                 'X-Repolib-ID',
@@ -154,21 +166,21 @@ class SourceFile:
                 'Types'
             ]
             if len(source1.types) == 1 and len(source2.types) == 1:
+                self.log.debug('Sources each have once source')
                 if util.compare_sources(source1, source2, excl_keys):
+                    self.log.debug('Source are identical, setting as twin source.')
                     util.combine_sources(source1, source2)
-                    if source1.types == [util.SourceType.BINARY]:
-                        self.sources.remove(source2)
-                        self.items.remove(source2)
-                        source2.twin_source = True
-                        source1.sourcecode_enabled = source2.enabled
-                    elif source2.types == [util.SourceType.BINARY]:
-                        self.sources.remove(source1)
-                        self.items.remove(source1)
-                        source2.twin_source = True
-                        source2.sourcecode_enabled = source1.enabled
+                    self.log.debug(f'Sources types: source1:{source1.types} source2:{source2.types}')
+                    self.log.debug('Removing source2')
+                    source1.types = [
+                        util.SourceType.BINARY, util.SourceType.SOURCECODE
+                    ]
+                    source1.twin_source = True
+                    source1.sourcecode_enabled = source2.enabled
                     ident_src2 = ''
             diffs = util.find_differences_sources(source1, source2, excl_keys)
             if diffs:
+                self.log.debug('Sources differ')
                 for key in diffs:
                     raw_diffs:tuple = diffs[key]
                     diff1_list = raw_diffs[0].strip().split()
@@ -184,17 +196,20 @@ class SourceFile:
                     if ident_src1 != ident_src2:
                         break
         if ident_src2 and ident_src1 != ident_src2:
+            self.log.debug('Conflicts resolved by modifying sources')
             source1.ident = ident_src1
             source2.ident = ident_src2
             return True
         
         elif ident_src2 and ident_src1 == ident_src2:
+            self.log.debug('Conflicts resolved by numbering')
             for source in self.sources:
                 src_index = self.sources.index(source)
                 source.ident = f'{self.name}-{src_index}'
                 return True
         
         elif not ident_src2:
+            self.log.debug('Conflicts resolved by merging sources')
             return False
         
         return True
@@ -203,6 +218,7 @@ class SourceFile:
 
     def load(self) -> None:
         """Loads the sources from the file on disk"""
+        self.log.debug(f'Loading source file {self.path}')
         self.contents = []
 
         if not self.name:
@@ -250,14 +266,16 @@ class SourceFile:
                             new_source.name = source_name
                         if not new_source.ident:
                             new_source.ident = self.name
+                        to_add:bool = True
                         if new_source.ident in idents:
                             old_source = idents[new_source.ident]
                             idents.pop(old_source.ident)
-                            self.find_unique_ident(old_source, new_source)
+                            to_add = self.find_unique_ident(old_source, new_source)
                             idents[old_source.ident] = old_source
                         idents[new_source.ident] = new_source
-                        self.contents.append(new_source)
-                        self.sources.append(new_source)
+                        if to_add:
+                            self.contents.append(new_source)
+                            self.sources.append(new_source)
                     
                     elif name_line:
                         source_name = ':'.join(line.split(':')[1:])
@@ -278,14 +296,16 @@ class SourceFile:
                             new_source.name = source_name
                         if not new_source.ident:
                             new_source.ident = self.name
+                        to_add:bool = True
                         if new_source.ident in idents:
                             old_source = idents[new_source.ident]
                             idents.pop(old_source.ident)
-                            self.find_unique_ident(old_source, new_source)
+                            to_add = self.find_unique_ident(old_source, new_source)
                             idents[old_source.ident] = old_source
                         idents[new_source.ident] = new_source
-                        self.contents.append(new_source)
-                        self.sources.append(new_source)
+                        if to_add:
+                            self.contents.append(new_source)
+                            self.sources.append(new_source)
                 
                 # Empty lines are treated as comments
                 if line.strip() == '':
@@ -351,9 +371,11 @@ class SourceFile:
             raw822 = []
             item += 1
             self.contents.append('')
+        self.log.debug('File loaded')
 
     def save(self) -> None:
         """Saves the source file to disk using the current format"""
+        self.log.debug(f'Saving source file to {self.path}')
 
         if not self.name or not self.format:
             raise SourceFileError('There was not a complete filename to save')
@@ -375,6 +397,7 @@ class SourceFile:
                 bus = dbus.SystemBus()
                 privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
                 privileged_object.delete_source_file(self.path.name)
+        self.log.debug('File saved')
 
     
     ## Attribute properties

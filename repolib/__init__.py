@@ -19,6 +19,12 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
+
+import logging
+import logging.handlers as handlers
+
+
+
 from . import __version__
 
 VERSION = __version__.__version__
@@ -27,6 +33,8 @@ from .file import SourceFile, SourceFileError
 from .source import Source, SourceError
 from . import util
 
+LOG_FILE_PATH = '/var/log/repolib.log'
+LOG_LEVEL = logging.DEBUG
 SOURCES_DIR = util.SOURCES_DIR
 KEYS_DIR = util.KEYS_DIR
 TESTING = util.TESTING
@@ -34,6 +42,42 @@ KEYSERVER_QUERY_URL = util.KEYSERVER_QUERY_URL
 DISTRO_CODENAME = util.DISTRO_CODENAME
 PRETTY_PRINT = util.PRETTY_PRINT
 CLEAN_CHARS = util.CLEAN_CHARS
+
+try:
+    from systemd.journal import JournalHandler
+    systemd_support = True
+except ImportError:
+    systemd_support = False
+
+## Setup logging
+stream_fmt = logging.Formatter(
+     '%(name)-21s: %(levelname)-8s %(message)s'
+)
+file_fmt = logging.Formatter(
+    '%(asctime)s - %(name)-21s: %(levelname)-8s %(message)s'
+)
+log = logging.getLogger(__name__)
+
+console_log = logging.StreamHandler()
+console_log.setFormatter(stream_fmt)
+console_log.setLevel(LOG_LEVEL)
+
+# file_log = handlers.RotatingFileHandler(
+#     LOG_FILE_PATH, maxBytes=(1048576*5), backupCount=5
+# )
+# file_log.setFormatter(file_fmt)
+# file_log.setLevel(LOG_LEVEL)
+
+log.addHandler(console_log)
+# log.addHandler(file_log)
+
+if systemd_support:
+    journald_log = JournalHandler()
+    journald_log.setLevel(LOG_LEVEL)
+    journald_log.setFormatter(stream_fmt)
+    log.addHandler(journald_log)
+
+log.setLevel(logging.DEBUG)
 
 RepoError = util.RepoError
 SourceFormat = util.SourceFormat
