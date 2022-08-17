@@ -272,7 +272,7 @@ def combine_sources(source1, source2) -> None:
         if key in source2:
             source1[key] += f' {source2[key]}'
     for key in source2:
-        if key in ('X-Repolib-Name', 'X-Repolib-ID'):
+        if key in ('X-Repolib-Name', 'X-Repolib-ID', 'Enabled', 'Types'):
             continue
         if key in source1:
             source1[key] += f' {source2[key]}'
