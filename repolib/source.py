@@ -23,6 +23,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 from debian import deb822
 from pathlib import Path
 
+from numpy import source
+
 
 from .parsedeb import ParseDeb
 from .key import SourceKey
@@ -64,6 +66,7 @@ class Source(deb822.Deb822):
         self.reset_values()
         self.file = file
         self.twin_source = False
+        self.twin_enabled = False
     
     def __repr__(self):
         """type: () -> str"""
@@ -680,8 +683,6 @@ class Source(deb822.Deb822):
         self._update_legacy_options()
 
 
-
-
     ## Output Properties
     @property
     def deb822(self) -> str:
@@ -732,7 +733,10 @@ class Source(deb822.Deb822):
                 msg += f'Legacy-format sources support one {attr[:-1]} only.'
                 raise SourceError(msg)
         
-        if not self.enabled.get_bool():
+        if not self.enabled.get_bool()and not sourcecode:
+            legacy += '# '
+        
+        if sourcecode and not self.sourcecode_enabled:
             legacy += '# '
         
         if sourcecode:
