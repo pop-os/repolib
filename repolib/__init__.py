@@ -48,6 +48,8 @@ get_keys_dir = util.get_keys_dir
 get_sources_dir = util.get_sources_dir
 validate_debline = util.validate_debline
 strip_hashes = util.strip_hashes
+compare_sources = util.compare_sources
+combine_sources = util.combine_sources
 
 valid_keys = util.valid_keys
 options_inmap = util.options_inmap

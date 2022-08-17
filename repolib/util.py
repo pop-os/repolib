@@ -66,12 +66,6 @@ class SourceType(Enum):
         ident = ident.replace('deb-src', 'source')
         ident = ident.replace('deb', 'binary')
         return ident
-        
-
-class AptSourceType(Enum):
-    """ Helper Enum to simplify saving data. """
-    BINARY = "deb"
-    SOURCE = "deb-src"
 
 class AptSourceEnabled(Enum):
     """ Helper Enum to translate between bool data and the Deb822 format. """
@@ -199,6 +193,106 @@ CLEAN_CHARS = {
     58: None,
     59: None,
 }
+
+def compare_sources(source1, source2, excl_keys:list) -> bool:
+    """Compare two sources based on arbitrary criteria.
+    
+    This looks at a given list of keys, and if the given keys between the two
+    given sources are identical, returns True.
+
+    Arguments:
+        source1, source2(Source): The two sources to compare
+        excl_keys([str]): Any keys to exclude from the comparison
+    
+    Returns: bool
+        `True` if the sources are identical, otherwise `False`.
+    """
+    for key in source1:
+        if key in excl_keys:
+            continue
+        if key in source2:
+            if source1[key] != source2[key]:
+                return False
+            else:
+                continue
+        else:
+            return False
+    for key in source2:
+        if key in excl_keys:
+            continue
+        if key in source1:
+            if source1[key] != source2[key]:
+                return False
+            else:
+                continue
+        else:
+            return False
+    return True
+
+def find_differences_sources(source1, source2, excl_keys:list) -> dict:
+    """Find key-value pairs which differ between two sources.
+    
+    Arguments:
+        source1, source2(Source): The two sources to compare
+        excl_keys([str]): Any keys to exclude from the comparison
+    
+    Returns: dict{'key': ('source1[key]','source2[key]')}
+        The dictionary of different keys, with the key values from each source.
+    """
+    differing_keys:dict = {}
+
+    for key in source1:
+        if key in excl_keys:
+            continue
+        if key in source2:
+            if source1[key] == source2[key]:
+                continue
+            differing_keys[key] = (source1[key], source2[key])
+        differing_keys[key] = (source1[key], '')
+    for key in source2:
+        if key in excl_keys:
+            continue
+        if key in source1:
+            if source1[key] == source2[key]:
+                continue
+        differing_keys[key] = ('', source2[key])
+    
+    return differing_keys
+
+def combine_sources(source1, source2) -> None:
+    """Combine the data in two sources into one.
+    
+    Arguments:
+        source1(Source): The source to be merged into
+        source2(Source): The source to merge from
+    """
+    for key in source1:
+        if key in ('X-Repolib-Name', 'X-Repolib-ID', 'Enabled', 'Types'):
+            continue
+        if key in source2:
+            source1[key] += f' {source2[key]}'
+    for key in source2:
+        if key in ('X-Repolib-Name', 'X-Repolib-ID'):
+            continue
+        if key in source1:
+            source1[key] += f' {source2[key]}'
+    
+    # Need to deduplicate the list
+    for key in source1:
+        vals = source1[key].strip().split()
+        newvals = []
+        for val in vals:
+            if val not in newvals:
+                newvals.append(val)
+        source1[key] = ' '.join(newvals)
+    for key in source2:
+        vals = source2[key].strip().split()
+        newvals = []
+        for val in vals:
+            if val not in newvals:
+                newvals.append(val)
+        source2[key] = ' '.join(newvals)
+
 
 def prettyprint_enable(enabled: bool = True) -> None:
     """Easy helper to enable/disable pretty-printing for object reprs.
