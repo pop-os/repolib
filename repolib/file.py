@@ -159,10 +159,12 @@ class SourceFile:
                     if source1.types == [util.SourceType.BINARY]:
                         self.sources.remove(source2)
                         self.items.remove(source2)
+                        source2.twin_source = True
                         source1.sourcecode_enabled = source2.enabled
                     elif source2.types == [util.SourceType.BINARY]:
                         self.sources.remove(source1)
                         self.items.remove(source1)
+                        source2.twin_source = True
                         source2.sourcecode_enabled = source1.enabled
                     ident_src2 = ''
             diffs = util.find_differences_sources(source1, source2, excl_keys)

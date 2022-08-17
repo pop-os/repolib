@@ -63,6 +63,7 @@ class Source(deb822.Deb822):
         super().__init__(*args, **kwargs)
         self.reset_values()
         self.file = file
+        self.twin_source = False
     
     def __repr__(self):
         """type: () -> str"""
@@ -714,6 +715,17 @@ class Source(deb822.Deb822):
         self._update_legacy_options()
         legacy = ''
 
+        legacy += self._generate_legacy_output()
+        if self.twin_source:
+            legacy += '\n'
+            legacy += self._generate_legacy_output(sourcecode=True)
+
+        return legacy
+
+    def _generate_legacy_output(self, sourcecode:bool = False) -> str:
+        """Generate a string of the current source in legacy format"""
+        legacy = ''
+
         for attr in ['types', 'uris', 'suites']:
             if len(getattr(self, attr)) > 1:
                 msg = f'The source has too many {attr}.'
@@ -723,8 +735,11 @@ class Source(deb822.Deb822):
         if not self.enabled.get_bool():
             legacy += '# '
         
-        legacy += self.types[0].value
-        legacy += ' '
+        if sourcecode:
+            legacy =+ 'deb-src '
+        else:
+            legacy += self.types[0].value
+            legacy += ' '
         
         options_string = self._legacy_options()
         if options_string:
@@ -746,7 +761,6 @@ class Source(deb822.Deb822):
                 legacy += f' # {comment}'
 
         return legacy
-
 
     def _legacy_options(self) -> str:
         """Turn the current options into a oneline-style string
