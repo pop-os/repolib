@@ -151,8 +151,6 @@ class Source(deb822.Deb822):
             if self.comments == ['']:
                 self.comments = []
             
-            if not self.ident:
-                self.ident = self.generate_default_ident()
             if not self.name:
                 self.name = self.generate_default_name()
 
@@ -294,13 +292,9 @@ class Source(deb822.Deb822):
     def ident(self) -> str:
         """The ident for this source within the file"""
         try:
-            _ident = self['X-Repolib-ID']
+            return self['X-Repolib-ID']
         except KeyError:
-            _ident = ''
-
-        if not _ident:
-            self.generate_default_ident()
-        return self['X-Repolib-ID']
+            return ''
             
 
     @ident.setter
@@ -361,7 +355,11 @@ class Source(deb822.Deb822):
     def types(self, types: list) -> None:
         """Turn this list into a string of values for storage"""
         self['Types'] = ''
+        _types:list = []
         for sourcetype in types:
+            if sourcetype not in _types:
+                _types.append(sourcetype)
+        for sourcetype in _types:
             self['Types'] += f'{sourcetype.value} '
         self['Types'] = self['Types'].strip()
     

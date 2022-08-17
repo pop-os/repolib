@@ -73,7 +73,22 @@ class SourceFile:
     
     def __repr__(self):
         return f'SourceFile(name={self.name})'
-
+    
+    def get_source_by_ident(self, ident: str) -> Source:
+        """Find a source within this file by its ident
+        
+        Arguments:
+            ident(str): The ident to search for
+        
+        Returns: Source
+            The located source
+        """
+        for source in self.sources:
+            if source.ident == ident:
+                return source
+        raise SourceFileError(
+            f'The file {self.path} does not contain the source {ident}'
+        )
     
     def reset_path(self) -> None:
         """Attempt to detect the correct path for this File.
@@ -98,6 +113,92 @@ class SourceFile:
         self.path = default_path
         return
 
+    def find_unique_ident(self, source1:Source, source2:Source) -> bool:
+        """Takes two sources with identical idents, and finds a new, unique
+        idents for them.
+
+        The rules for this are mildly complicated, and vary depending on the
+        situation:
+
+          * (DEB822) If the sources are identical other than some portion of 
+            data, then the two will be combined into a single source.
+          * (legacy) If the two sources are identical other than source type 
+            (common with legacy-format PPAs with source code) then the second 
+            source will be dropped until export.
+          * (legacy) If the sources differ by URIs, Components, or Suites, then 
+            the differing data will be appended to the sources' idents.
+          * (Either) If no other rules can be determined, then the sources will 
+            have a number appended to them
+        
+        Arguments:
+            source1(Source): The original source with the ident
+            source2(Source): The new colliding source with the ident
+        
+        Returns: bool
+            `True` if the two sources were successfully deduped, `False` if the
+            second source should be discarded.
+        """
+        ident_src1:str = source1.ident
+        ident_src2:str = source2.ident
+
+        if self.format == util.SourceFormat.DEFAULT:
+            util.combine_sources(source1, source2)
+            ident_src2 = ''
+        
+        else:
+            excl_keys = [
+                'X-Repolib-Name',
+                'X-Repolib-ID',
+                'X-Repolib-Comment',
+                'Enabled',
+                'Types'
+            ]
+            if len(source1.types) == 1 and len(source2.types) == 1:
+                if util.compare_sources(source1, source2, excl_keys):
+                    util.combine_sources(source1, source2)
+                    if source1.types == [util.SourceType.BINARY]:
+                        self.sources.remove(source2)
+                        self.items.remove(source2)
+                        source1.sourcecode_enabled = source2.enabled
+                    elif source2.types == [util.SourceType.BINARY]:
+                        self.sources.remove(source1)
+                        self.items.remove(source1)
+                        source2.sourcecode_enabled = source1.enabled
+                    ident_src2 = ''
+            diffs = util.find_differences_sources(source1, source2, excl_keys)
+            if diffs:
+                for key in diffs:
+                    raw_diffs:tuple = diffs[key]
+                    diff1_list = raw_diffs[0].strip().split()
+                    diff2_list = raw_diffs[1].strip().split()
+                    for i in diff1_list:
+                        if i not in diff2_list:
+                            ident_src1 += f'-{i}'
+                            break
+                    for i in diff2_list:
+                        if i not in diff1_list:
+                            ident_src2 += f'-{i}'
+                            break
+                    if ident_src1 != ident_src2:
+                        break
+        if ident_src2 and ident_src1 != ident_src2:
+            source1.ident = ident_src1
+            source2.ident = ident_src2
+            return True
+        
+        elif ident_src2 and ident_src1 == ident_src2:
+            for source in self.sources:
+                src_index = self.sources.index(source)
+                source.ident = f'{self.name}-{src_index}'
+                return True
+        
+        elif not ident_src2:
+            return False
+        
+        return True
+
+            
+
     def load(self) -> None:
         """Loads the sources from the file on disk"""
         self.contents = []
@@ -116,7 +217,7 @@ class SourceFile:
         parsing_deb822:bool = False
         source_name:str = ''
         commented:bool = False
-
+        idents:dict = {}
 
         # Main file parsing loop
         for line in srcfile_data:
@@ -145,6 +246,14 @@ class SourceFile:
                         new_source.load_from_data([line])
                         if source_name:
                             new_source.name = source_name
+                        if not new_source.ident:
+                            new_source.ident = self.name
+                        if new_source.ident in idents:
+                            old_source = idents[new_source.ident]
+                            idents.pop(old_source.ident)
+                            self.find_unique_ident(old_source, new_source)
+                            idents[old_source.ident] = old_source
+                        idents[new_source.ident] = new_source
                         self.contents.append(new_source)
                         self.sources.append(new_source)
                     
@@ -165,6 +274,14 @@ class SourceFile:
                         new_source.load_from_data([line])
                         if source_name:
                             new_source.name = source_name
+                        if not new_source.ident:
+                            new_source.ident = self.name
+                        if new_source.ident in idents:
+                            old_source = idents[new_source.ident]
+                            idents.pop(old_source.ident)
+                            self.find_unique_ident(old_source, new_source)
+                            idents[old_source.ident] = old_source
+                        idents[new_source.ident] = new_source
                         self.contents.append(new_source)
                         self.sources.append(new_source)
                 
@@ -196,6 +313,14 @@ class SourceFile:
                     new_source.file = self
                     if source_name:
                         new_source.name = source_name
+                    if not new_source.ident:
+                            new_source.ident = self.name
+                    if new_source.ident in idents:
+                        old_source = idents[new_source.ident]
+                        idents.pop(old_source.ident)
+                        self.find_unique_ident(old_source, new_source)
+                        idents[old_source.ident] = old_source
+                    idents[new_source.ident] = new_source
                     self.contents.append(new_source)
                     self.sources.append(new_source)
                     raw822 = []
@@ -211,12 +336,19 @@ class SourceFile:
             new_source.file = self
             if source_name:
                 new_source.name = source_name
+            if not new_source.ident:
+                new_source.ident = self.name
+            if new_source.ident in idents:
+                old_source = idents[new_source.ident]
+                idents.pop(old_source.ident)
+                self.find_unique_ident(old_source, new_source)
+                idents[old_source.ident] = old_source
+            idents[new_source.ident] = new_source
             self.contents.append(new_source)
             self.sources.append(new_source)
             raw822 = []
             item += 1
             self.contents.append('')
-
 
     def save(self) -> None:
         """Saves the source file to disk using the current format"""
