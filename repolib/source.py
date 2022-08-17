@@ -736,7 +736,7 @@ class Source(deb822.Deb822):
             legacy += '# '
         
         if sourcecode:
-            legacy =+ 'deb-src '
+            legacy += 'deb-src '
         else:
             legacy += self.types[0].value
             legacy += ' '
