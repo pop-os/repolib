@@ -109,19 +109,22 @@ class SourceFile:
         legacy_path = SOURCES_DIR / f'{self.name}.list'
 
         if default_path.exists():
+            self.log.debug('File appears to be a .sources file')
             self.path = default_path
             self.alt_path = legacy_path
             self.format = util.SourceFormat.DEFAULT
-            return
 
-        if legacy_path.exists():
+        elif legacy_path.exists():
+            self.log.debug('File appears to be a legacy file')
             self.path = legacy_path
             self.alt_path = default_path
             self.format = util.SourceFormat.LEGACY
-            return 
         
-        self.path = default_path
-        self.alt_path = legacy_path
+        else:
+            self.log.debug('File does not exist, setting .sources as default')
+            self.path = default_path
+            self.alt_path = legacy_path
+
         self.log.debug(f'Path reset to {self.path}')
         return
 
@@ -242,21 +245,26 @@ class SourceFile:
 
         # Main file parsing loop
         for line in srcfile_data:
+            self.log.debug(f'Parsing line "{line}"')
             comment_found:str = ''
             name_line:bool = 'X-Repolib-Name' in line
             
             if not parsing_deb822:
+                self.log.debug('Not currently parsing a DEB822 source')
                 commented = line.startswith('#')
 
                 # Find commented out lines
                 if commented:
+                    self.log.debug('Line is commented')
                     # Exclude disabled legacy deblines
                     valid_legacy = util.validate_debline(line.strip())
                     if not valid_legacy and not name_line:
                         # Found a standard comment
+                        self.log.debug('Line is standard comment')
                         self.contents.append(line.strip())
                     
                     elif valid_legacy:
+                        self.log.debug('Line is a disabled legacy line')
                         if self.format != util.SourceFormat.LEGACY:
                             raise SourceFileError(
                                 f'File {self.ident} is an updated file, but '
@@ -266,11 +274,13 @@ class SourceFile:
                         new_source = Source()
                         new_source.load_from_data([line])
                         if source_name:
+                            self.log.debug(f'Found source name: {source_name}')
                             new_source.name = source_name
                         if not new_source.ident:
                             new_source.ident = self.name
                         to_add:bool = True
                         if new_source.ident in idents:
+                            self.log.debug(f'Ident {new_source.ident} exists, deduping')
                             old_source = idents[new_source.ident]
                             idents.pop(old_source.ident)
                             to_add = self.find_unique_ident(old_source, new_source)
@@ -283,9 +293,11 @@ class SourceFile:
                     elif name_line:
                         source_name = ':'.join(line.split(':')[1:])
                         source_name = source_name.strip()
+                        self.log.debug(f'Found a file-wide name: {source_name}')
                 
                 # Active legacy line
                 elif not commented:
+                    self.log.debug('Line is an active legacy line')
                     if util.validate_debline(line.strip()):
                         if self.format != util.SourceFormat.LEGACY:
                             raise SourceFileError(
@@ -296,11 +308,13 @@ class SourceFile:
                         new_source = Source()
                         new_source.load_from_data([line])
                         if source_name:
+                            self.log.debug(f'Found source name: {source_name}')
                             new_source.name = source_name
                         if not new_source.ident:
                             new_source.ident = self.name
                         to_add:bool = True
                         if new_source.ident in idents:
+                            self.log.debug(f'Ident {new_source.ident} exists, deduping')
                             old_source = idents[new_source.ident]
                             idents.pop(old_source.ident)
                             to_add = self.find_unique_ident(old_source, new_source)
@@ -312,12 +326,14 @@ class SourceFile:
                 
                 # Empty lines are treated as comments
                 if line.strip() == '':
+                    self.log.debug('Line is empty')
                     self.contents.append('')
                 
                 # Find 822 sources
                 # Valid sources can begin with any key:
                 for key in util.valid_keys:
                     if line.startswith(key):
+                        self.log.debug(f'Found a DEB822 source line: {key}')
                         if self.format == util.SourceFormat.LEGACY:
                             raise SourceFileError(
                                 f'File {self.ident} is a DEB822-format file, but '
@@ -332,11 +348,13 @@ class SourceFile:
             elif parsing_deb822:
                 # Deb822 sources are terminated with an empty line
                 if line.strip() == '':
+                    self.log.debug('Reached the end of DEB822 source')
                     parsing_deb822 = False
                     new_source = Source()
                     new_source.load_from_data(raw822)
                     new_source.file = self
                     if source_name:
+                        self.log.debug(f'Source name: {source_name}')
                         new_source.name = source_name
                     if not new_source.ident:
                             new_source.ident = self.name
@@ -352,9 +370,11 @@ class SourceFile:
                     item += 1
                     self.contents.append('')
                 else:
+                    self.log.debug('Continuing to parse DEB822 source')
                     raw822.append(line.strip())
         
         if raw822:
+            self.log.debug('End of file, ending DEB822 source')
             parsing_deb822 = False
             new_source = Source()
             new_source.load_from_data(raw822)
