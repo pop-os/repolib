@@ -28,7 +28,7 @@ from urllib.parse import urlparse
 from urllib import request, error
 
 SOURCES_DIR = '/etc/apt/sources.list.d'
-KEYS_DIR = '/etc/apt/trusted.gpg.d'
+KEYS_DIR = '/usr/share/keyrings/'
 TESTING = False
 KEYSERVER_QUERY_URL = 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x'
 
