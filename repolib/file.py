@@ -61,6 +61,7 @@ class SourceFile:
         self.log = logging.getLogger(__name__)
         self.name:str = ''
         self.path:Path = None
+        self.alt_path:Path = None
         self.format:util.SourceFormat = util.SourceFormat.DEFAULT
         self.contents:list = []
         self.sources:list = []
@@ -109,15 +110,18 @@ class SourceFile:
 
         if default_path.exists():
             self.path = default_path
+            self.alt_path = legacy_path
             self.format = util.SourceFormat.DEFAULT
             return
 
         if legacy_path.exists():
             self.path = legacy_path
+            self.alt_path = default_path
             self.format = util.SourceFormat.LEGACY
             return 
         
         self.path = default_path
+        self.alt_path = legacy_path
         self.log.debug(f'Path reset to {self.path}')
         return
 
@@ -215,7 +219,6 @@ class SourceFile:
         return True
 
             
-
     def load(self) -> None:
         """Loads the sources from the file on disk"""
         self.log.debug(f'Loading source file {self.path}')
@@ -377,6 +380,8 @@ class SourceFile:
         """Saves the source file to disk using the current format"""
         self.log.debug(f'Saving source file to {self.path}')
 
+        save_path = SOURCES_DIR / f'{self.name}.save'
+
         if not self.name or not self.format:
             raise SourceFileError('There was not a complete filename to save')
         
@@ -385,6 +390,8 @@ class SourceFile:
             try:
                 with open(self.path, mode='w') as output_file:
                     output_file.write(self.output)
+                if self.alt_path.exists():
+                    self.alt_path.rename(save_path)
             
             except PermissionError:
                 bus = dbus.SystemBus()
@@ -392,7 +399,9 @@ class SourceFile:
                 privileged_object.output_file_to_disk(self.path.name, self.output)
         else:
             try:
-                self.path.unlink()
+                self.path.unlink(missing_ok=True)
+                self.alt_path.unlink(missing_ok=True)
+                save_path.unlink(missing_ok=True)
             except PermissionError:
                 bus = dbus.SystemBus()
                 privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')

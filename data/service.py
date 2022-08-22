@@ -88,6 +88,20 @@ class Repo(dbus.service.Object):
         full_path = self.sources_dir / filename
         with open(full_path, mode='w') as output_file:
             output_file.write(source)
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='ss', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def backup_alt_file(self, alt_file, save_file, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        alt_path = self.sources_dir / alt_file
+        save_path = self.sources_dir / save_file
+        if alt_path.exists():
+            alt_path.rename(save_path)
 
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
