@@ -194,6 +194,10 @@ CLEAN_CHARS = {
     59: None,
 }
 
+sources:dict = {}
+files:dict = {}
+keys:dict = {}
+
 def compare_sources(source1, source2, excl_keys:list) -> bool:
     """Compare two sources based on arbitrary criteria.
     

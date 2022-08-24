@@ -94,6 +94,9 @@ validate_debline = util.validate_debline
 strip_hashes = util.strip_hashes
 compare_sources = util.compare_sources
 combine_sources = util.combine_sources
+sources = util.sources
+files = util.files
+keys = util.keys
 
 valid_keys = util.valid_keys
 options_inmap = util.options_inmap
