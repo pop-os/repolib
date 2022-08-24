@@ -394,6 +394,14 @@ class SourceFile:
             raw822 = []
             item += 1
             self.contents.append('')
+        
+        if self.path not in util.sources:
+            util.sources[str(self.path)]
+        else:
+            self.log.warning(
+                f'Source File {self.path} already added to system. Not adding '
+                'duplicate.'
+            )
         self.log.debug('File loaded')
 
     def save(self) -> None:

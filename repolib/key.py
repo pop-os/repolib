@@ -20,13 +20,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from build import re
 import gnupg
 
 from pathlib import Path
 from urllib import request
-
-from tomlkit import key
 
 from . import util
 
