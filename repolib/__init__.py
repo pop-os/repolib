@@ -31,6 +31,7 @@ VERSION = __version__.__version__
 
 from .file import SourceFile, SourceFileError
 from .source import Source, SourceError
+from .key import SourceKey, KeyError
 from . import util
 
 LOG_FILE_PATH = '/var/log/repolib.log'
