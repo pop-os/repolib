@@ -20,11 +20,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from cmath import log
+from codecs import ignore_errors
+import logging
+
 from debian import deb822
 from pathlib import Path
-
-from numpy import source
-
 
 from .parsedeb import ParseDeb
 from .key import SourceKey
@@ -60,8 +61,9 @@ class Source(deb822.Deb822):
         key(SourceKey): The key which signs this source
     """
 
-    def __init__(self, *args, file=None, line:str = None, **kwargs) -> None:
+    def __init__(self, *args, file=None, **kwargs) -> None:
         """Initialize this source object"""
+        self.log = logging.getLogger(__name__)
         super().__init__(*args, **kwargs)
         self.reset_values()
         self.file = file
@@ -92,9 +94,12 @@ class Source(deb822.Deb822):
 
         return rep
 
+    def add_key(self) -> None:
+        """Adds a key from disk"""
     
     def reset_values(self) -> None:
         """Reset the default values for all attributes"""
+        self.log.info('Resetting source info')
         self.ident = ''
         self.name = ''
         self.enabled = True
@@ -130,9 +135,11 @@ class Source(deb822.Deb822):
         Arguments:
             data(list): the data to load into the source.
         """
+        self.log.info('Loading source from data')
         self.reset_values()
         
         if util.validate_debline(data[0]): # Legacy Source
+            self.log.debug('"%s" appears to be a debline', data[0])
             if len(data) > 1:
                 raise SourceError(
                     f'The source is a legacy source but contains {len(data)} entries. '
@@ -158,10 +165,15 @@ class Source(deb822.Deb822):
             if not self.name:
                 self.name = self.generate_default_name()
 
+            if self.signed_by:
+                self.load_key()
             return
 
         # DEB822 Source
+        self.log.debug('Loading DEB822 data: %s', data)
         super().__init__(sequence=data)
+        if self.signed_by:
+            self.load_key()
         return
     
     @property
@@ -222,12 +234,27 @@ class Source(deb822.Deb822):
         """
 
 
-    def load_key(self) -> SourceKey:
+    def load_key(self, ginore_errors:bool = True) -> None:
         """Finds and loads the signing key from the system
         
-        Returns: SourceKey
-            The SourceKey loaded from the system, or None
+        Arguments:
+            ignore_errors(bool): If `False`, throw a SourceError exception if
+                the key can't be found/doesn't exist (Default: `True`)
         """
+        self.log.info('Finding key for source %s', self.ident)
+        if not self.signed_by:
+            if ignore_errors:
+                self.log.warning('No key configured for source %s', self.ident)
+            else:
+                raise SourceError('No key configured for source {self.ident}')
+        
+        if self.signed_by not in util.keys:
+            new_key = SourceKey()
+            new_key.reset_path(path=self.signed_by)
+            self.key = new_key
+            util.keys[str(new_key.path)] = new_key
+        else:
+            self.key = util.keys[self.signed_by]
 
 
     def add_key(self) -> None:

@@ -194,7 +194,7 @@ CLEAN_CHARS = {
     59: None,
 }
 
-sources:dict = {}
+sources:list = []
 files:dict = {}
 keys:dict = {}
 
