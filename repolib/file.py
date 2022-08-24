@@ -395,8 +395,8 @@ class SourceFile:
             item += 1
             self.contents.append('')
         
-        if self.path not in util.sources:
-            util.sources[str(self.path)]
+        if str(self.path) not in util.files:
+            util.files[str(self.path)] = self
         else:
             self.log.warning(
                 f'Source File {self.path} already added to system. Not adding '

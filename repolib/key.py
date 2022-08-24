@@ -55,24 +55,28 @@ class SourceKey:
             self.set_path(name=name)
             self.setup_gpg()
     
-    def reset_path(self, name: str = '', suffix: str = 'archive-keyring') -> None:
+    def reset_path(self, name: str = '', path:str = '', suffix: str = 'archive-keyring') -> None:
         """Set the path for this key
         
         Arguments:
             suffix(str): The suffix to append to the end of the name to get the
                 file name (default: 'archive-keyring')
-            name (str): The name of the source
+            name(str): The name of the source
+            path(str): The entire path to the key
         """
-        if not name:
+        if not name and not path:
             raise KeyError('A name is required to set the path for this key')
         
-        file_name = f'{name}-{suffix}.gpg'
-        self.path = KEYS_DIR / file_name
+        if name:
+            file_name = f'{name}-{suffix}.gpg'
+            self.path = KEYS_DIR / file_name
+        elif path:
+            self.path = Path(path)
         self.setup_gpg()
     
     def setup_gpg(self) -> None:
         """Set up the GPG object for this key."""
-        self.gpg = gnupg.GPG(keyring=self.path)
+        self.gpg = gnupg.GPG(keyring=str(self.path))
 
     def load_key_data(self, **kwargs) -> None:
         """Loads the key data from disk into the object for processing.
