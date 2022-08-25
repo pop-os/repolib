@@ -19,6 +19,7 @@
 '''
 #pylint: skip-file
 
+import shutil
 import subprocess
 
 import gi
@@ -75,6 +76,17 @@ class Repo(dbus.service.Object):
                 subprocess.run(cmd, check=True, stdout=keyfile)
             except subprocess.CalledProcessError as e:
                 raise e
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='ss', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def install_signing_key(self, src, dest, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        shutil.copy2(src, dest)
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",

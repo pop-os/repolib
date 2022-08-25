@@ -29,6 +29,7 @@ from .source import Source, SourceError
 from . import util
 
 SOURCES_DIR = Path(util.SOURCES_DIR)
+FILE_COMMENT = "## Added/managed by repolib ##"
 
 class SourceFileError(util.RepoError):
     """ Exception from a source file."""
@@ -66,11 +67,27 @@ class SourceFile:
         self.contents:list = []
         self.sources:list = []
 
+        self.contents.append(FILE_COMMENT)
+        self.contents.append('#')
+
         if name:
             self.log.debug(f'Name {name} provided, attempting load')
             self.name = name
             self.reset_path()
-            self.load()
+
+            if self.path.exists():
+                self.contents = []
+                self.load()
+    
+    def add_source(self, source:Source) -> None:
+        """Adds a source to the file
+        
+        Arguments:
+            source(Source): The source to add
+        """
+        if source not in self.sources:
+            self.contents.append(source)
+            self.sources.append(source)
         
     
     def __str__(self):
@@ -409,6 +426,10 @@ class SourceFile:
         self.log.debug(f'Saving source file to {self.path}')
 
         save_path = SOURCES_DIR / f'{self.name}.save'
+
+        for source in self.sources:
+            if source.key:
+                source.key.save_gpg()
 
         if not self.name or not self.format:
             raise SourceFileError('There was not a complete filename to save')

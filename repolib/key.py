@@ -20,14 +20,17 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import gnupg
+import shutil
+import dbus
 
+import gnupg
 from pathlib import Path
 from urllib import request
 
 from . import util
 
 KEYS_DIR = Path(util.KEYS_DIR)
+TEMP_DIR = Path(util._KEYS_TEMPDIR.name)
 SKS_KEYSERVER = 'https://keyserver.ubuntu.com/'
 SKS_KEYLOOKUP_PATH = 'pks/lookup?op=get&options=mr&exact=on&search=0x'
 
@@ -47,12 +50,13 @@ class SourceKey:
     """A signing key for an apt source."""
 
     def __init__(self, name:str = '') -> None:
+        self.tmp_path = None
         self.path = None
         self.gpg = None
         self.data = None
         
         if name:
-            self.set_path(name=name)
+            self.reset_path(name=name)
             self.setup_gpg()
     
     def reset_path(self, name: str = '', path:str = '', suffix: str = 'archive-keyring') -> None:
@@ -69,15 +73,32 @@ class SourceKey:
         
         if name:
             file_name = f'{name}-{suffix}.gpg'
+            self.tmp_path = TEMP_DIR / file_name
             self.path = KEYS_DIR / file_name
         elif path:
+            self.tmp_path = Path(path)
             self.path = Path(path)
         self.setup_gpg()
-        self.load_key_data()
     
     def setup_gpg(self) -> None:
         """Set up the GPG object for this key."""
-        self.gpg = gnupg.GPG(keyring=str(self.path))
+        try:
+            shutil.copy2(self.path, self.tmp_path)
+        except FileNotFoundError:
+            pass
+        self.gpg = gnupg.GPG(keyring=str(self.tmp_path))
+    
+    def save_gpg(self) -> None:
+        """Imports the key into the GPG object."""
+        try:
+            shutil.copy2(self.tmp_path, self.path)
+        except PermissionError:
+            bus = dbus.SystemBus()
+            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+            privileged_object.install_signing_key(
+                str(self.tmp_path),
+                str(self.path)
+            )
 
     def load_key_data(self, **kwargs) -> None:
         """Loads the key data from disk into the object for processing.
@@ -99,8 +120,8 @@ class SourceKey:
         """
         self.setup_gpg()
         
-        if self.path.exists():
-            with open(self.path, mode='rb') as keyfile:
+        if self.tmp_path.exists():
+            with open(self.tmp_path, mode='rb') as keyfile:
                 self.data = keyfile.read()
             return
         
@@ -111,8 +132,8 @@ class SourceKey:
         
         if 'ascii' in kwargs:
             self.gpg.import_keys(kwargs['ascii'])
-            if self.path.exists():
-                with open(self.path, mode='rb') as keyfile:
+            if self.tmp_path.exists():
+                with open(self.tmp_path, mode='rb') as keyfile:
                     self.data = keyfile.read()
             return
         
@@ -120,7 +141,7 @@ class SourceKey:
             req = request.Request(kwargs['url'])
             with request.urlopen(req) as response:
                 self.data = response.read().decode('UTF-8')
-                self.gpg.import_keys(response.read().decode('UTF-8'))
+                self.gpg.import_keys(self.data)
             return
         
         if 'fingerprint' in kwargs:
@@ -138,7 +159,7 @@ class SourceKey:
             return
         
         raise TypeError(
-            f'load_key_data() got an unexpected keyword argument "{kwargs.keys}',
+            f'load_key_data() got an unexpected keyword argument "{kwargs.keys()}',
             ' Expected keyword arguments are: [raw, ascii, url, fingerprint]'
         )
         

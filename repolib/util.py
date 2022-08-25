@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019-2020, Ian Santopietro
+Copyright (c) 2019-2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -20,7 +20,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import atexit
 import re
+import tempfile
 
 from enum import Enum
 from pathlib import Path
@@ -159,6 +161,8 @@ keys_map = {
 
 PRETTY_PRINT = '\n    '
 
+_KEYS_TEMPDIR = tempfile.TemporaryDirectory()
+
 options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
 
@@ -196,6 +200,12 @@ CLEAN_CHARS = {
 
 files:dict = {}
 keys:dict = {}
+
+def _cleanup_temsps() -> None:
+    """Clean up our tempdir"""
+    _KEYS_TEMPDIR.cleanup()
+
+atexit.register(_cleanup_temsps)
 
 def sources():
     """Generator for all source items on the system"""

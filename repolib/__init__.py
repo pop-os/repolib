@@ -23,14 +23,13 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 import logging
 import logging.handlers as handlers
 
-
-
 from . import __version__
 
 VERSION = __version__.__version__
 
 from .file import SourceFile, SourceFileError
 from .source import Source, SourceError
+from .ppa import PPASource
 from .key import SourceKey, KeyError
 from . import util
 
