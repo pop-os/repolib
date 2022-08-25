@@ -197,6 +197,12 @@ CLEAN_CHARS = {
 files:dict = {}
 keys:dict = {}
 
+def sources():
+    """Generator for all source items on the system"""
+    for f in files:
+        for s in f.sources:
+            yield s
+
 def compare_sources(source1, source2, excl_keys:list) -> bool:
     """Compare two sources based on arbitrary criteria.
     
