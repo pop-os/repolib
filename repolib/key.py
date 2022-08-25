@@ -73,6 +73,7 @@ class SourceKey:
         elif path:
             self.path = Path(path)
         self.setup_gpg()
+        self.load_key_data()
     
     def setup_gpg(self) -> None:
         """Set up the GPG object for this key."""
@@ -92,26 +93,33 @@ class SourceKey:
             fingerprint(str): A key fingerprint to download from `keyserver`
                 keyserver(str): A keyserver to download from.
                 keypath(str): The path on the keyserver from which to download.
+        
+        NOTE: The keyserver and keypath args only affect the operation of the 
+            `fingerprint` keyword.
         """
         self.setup_gpg()
         
         if self.path.exists():
-            with open(self.path, mode='r') as keyfile:
-                self.data = keyfile.readlines()
+            with open(self.path, mode='rb') as keyfile:
+                self.data = keyfile.read()
             return
         
         if 'raw' in kwargs:
-            self.gpg.import_keys(kwargs['raw'])
             self.data = kwargs['raw']
+            self.gpg.import_keys(self.data)
             return
         
         if 'ascii' in kwargs:
             self.gpg.import_keys(kwargs['ascii'])
+            if self.path.exists():
+                with open(self.path, mode='rb') as keyfile:
+                    self.data = keyfile.read()
             return
         
         if 'url' in kwargs:
             req = request.Request(kwargs['url'])
             with request.urlopen(req) as response:
+                self.data = response.read().decode('UTF-8')
                 self.gpg.import_keys(response.read().decode('UTF-8'))
             return
         
@@ -125,7 +133,8 @@ class SourceKey:
             key_url = kwargs['keyserver'] + kwargs['keypath'] + kwargs['fingerprint']
             req = request.Request(key_url)
             with request.urlopen(req) as response:
-                self.gpg.import_keys(response.read().decode('UTF-8'))
+                self.data = response.read().decode('UTF-8')
+                self.gpg.import_keys(self.data)
             return
         
         raise TypeError(
