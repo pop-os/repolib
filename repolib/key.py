@@ -34,7 +34,7 @@ TEMP_DIR = Path(util._KEYS_TEMPDIR.name)
 SKS_KEYSERVER = 'https://keyserver.ubuntu.com/'
 SKS_KEYLOOKUP_PATH = 'pks/lookup?op=get&options=mr&exact=on&search=0x'
 
-class KeyError(util.RepoError):
+class KeyFileError(util.RepoError):
     """ Exceptions related to apt key files."""
 
     def __init__(self, *args, code=1, **kwargs):
@@ -69,7 +69,7 @@ class SourceKey:
             path(str): The entire path to the key
         """
         if not name and not path:
-            raise KeyError('A name is required to set the path for this key')
+            raise KeyFileError('A name is required to set the path for this key')
         
         if name:
             file_name = f'{name}-{suffix}.gpg'
