@@ -139,7 +139,6 @@ class Source(deb822.Deb822):
         self.reset_values()
         
         if util.validate_debline(data[0]): # Legacy Source
-            self.log.debug('"%s" appears to be a debline', data[0])
             if len(data) > 1:
                 raise SourceError(
                     f'The source is a legacy source but contains {len(data)} entries. '
@@ -170,7 +169,6 @@ class Source(deb822.Deb822):
             return
 
         # DEB822 Source
-        self.log.debug('Loading DEB822 data: %s', data)
         super().__init__(sequence=data)
         if self.signed_by:
             self.load_key()

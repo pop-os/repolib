@@ -29,8 +29,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib import request, error
 
-from .file import SourceFile
-
 SOURCES_DIR = '/etc/apt/sources.list.d'
 KEYS_DIR = '/usr/share/keyrings/'
 TESTING = False
@@ -439,30 +437,6 @@ def get_sources_dir(testing=False):
     sources_dir = Path(SOURCES_DIR)
     sources_dir.mkdir(parents=True, exist_ok=True)
     return sources_dir
-
-
-def load_all_sources() -> None:
-    """Loads all of the sources present on the system."""
-    sources_files = Path(SOURCES_DIR).glob('.sources')
-    legacy_file = Path(SOURCES_DIR).glob('.list')
-
-    for file in sources_files:
-        sourcefile = SourceFile(name=file.stem)
-        try:
-            sourcefile.load()
-            files[file.name] = sourcefile
-        except Exception as err:
-            errors[file.name] = err
-    
-    for file in legacy_files:
-        sourcefile = SourceFile(name=file.stem)
-        try:
-            sourcefile.load()
-            files[file.name] = sourcefile
-        except Exception as err:
-            errors[file.name] = err
-
-
 
 # pylint: disable=inconsistent-return-statements
 # This is a better way to check these

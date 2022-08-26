@@ -20,9 +20,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from cmath import log
+import logging
 import shutil
-import dbus
 
+import dbus
 import gnupg
 from pathlib import Path
 from urllib import request
@@ -50,6 +52,7 @@ class SourceKey:
     """A signing key for an apt source."""
 
     def __init__(self, name:str = '') -> None:
+        self.log = logging.getLogger(__name__)
         self.tmp_path = None
         self.path = None
         self.gpg = None
@@ -68,6 +71,7 @@ class SourceKey:
             name(str): The name of the source
             path(str): The entire path to the key
         """
+        self.log.info('Setting path')
         if not name and not path:
             raise KeyFileError('A name is required to set the path for this key')
         
@@ -76,12 +80,14 @@ class SourceKey:
             self.tmp_path = TEMP_DIR / file_name
             self.path = KEYS_DIR / file_name
         elif path:
-            self.tmp_path = Path(path)
             self.path = Path(path)
+            self.tmp_path = TEMP_DIR / self.path.name
         self.setup_gpg()
     
     def setup_gpg(self) -> None:
         """Set up the GPG object for this key."""
+        self.log.info('Setting up GPG')
+        self.log.debug('Copying %s to %s', self.path, self.tmp_path)
         try:
             shutil.copy2(self.path, self.tmp_path)
         except FileNotFoundError:
