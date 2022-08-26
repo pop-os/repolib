@@ -95,7 +95,7 @@ validate_debline = util.validate_debline
 strip_hashes = util.strip_hashes
 compare_sources = util.compare_sources
 combine_sources = util.combine_sources
-sources = util.sources
+load_all_sources = util.load_all_sources
 files = util.files
 keys = util.keys
 
