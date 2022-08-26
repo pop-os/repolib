@@ -30,7 +30,8 @@ VERSION = __version__.__version__
 from .file import SourceFile, SourceFileError
 from .source import Source, SourceError
 from .ppa import PPASource
-from .key import SourceKey, KeyError
+from .popdev import PopdevSource
+from .key import SourceKey, KeyFileError
 from . import util
 
 LOG_FILE_PATH = '/var/log/repolib.log'
