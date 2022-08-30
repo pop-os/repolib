@@ -184,7 +184,7 @@ setup(
     long_description=long_description,
     tests_require=['pytest'],
     license='LGPLv3',
-    packages=['repolib', 'repolib/command'],
+    packages=['repolib', 'repolib/command', 'repolib/shortcuts'],
     cmdclass={'release': Release, 'test': Test},
     scripts=['bin/apt-manage'],
     data_files=[

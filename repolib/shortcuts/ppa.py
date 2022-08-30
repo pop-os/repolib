@@ -21,8 +21,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from sys import prefix
-from repolib.command.add import DEFAULT_FORMAT
 
 from repolib.key import SourceKey
 
@@ -36,10 +34,10 @@ try:
 except ImportError:
     Launchpad = None
 
-PPA_BASE = 'http://ppa.launchpad.net/'
-PPA_DIST = 'ubuntu'
-PPA_FORMAT = util.SourceFormat.LEGACY
-PPA_COMPS = 'main'
+BASE_FORMAT = util.SourceFormat.LEGACY
+BASE_URL = 'http://ppa.launchpad.net'
+BASE_DIST = 'ubuntu'
+BASE_COMPS = 'main'
 
 DEFAULT_FORMAT = util.SourceFormat.DEFAULT
 
@@ -56,6 +54,8 @@ class PPASource(Source):
         shortcut (str): The ppa: shortcut to process
         fetch_data (bool): Whether to try and fetch metadata from Launchpad.
     """
+
+    default_format = BASE_FORMAT
 
     @staticmethod
     def validator(shortcut:str) -> None:
@@ -121,9 +121,9 @@ class PPASource(Source):
         ppa_name = self.info_parts[1]
 
         self.ident = f'{prefix}-{ppa_owner}-{ppa_name}'
-        if f'{self.ident}.{PPA_FORMAT.value}' not in util.files:
+        if f'{self.ident}.{BASE_FORMAT.value}' not in util.files:
             new_file = SourceFile(name=self.ident)
-            new_file.format = PPA_FORMAT
+            new_file.format = BASE_FORMAT
             self.file = new_file
             util.files[str(self.file.path)] = self.file
         else:
@@ -132,9 +132,9 @@ class PPASource(Source):
         self.file.add_source(self)
         
         self.name = self.ident
-        self.uris = [f'{PPA_BASE}/{ppa_owner}/{ppa_name}/{PPA_DIST}']
+        self.uris = [f'{BASE_URL}/{ppa_owner}/{ppa_name}/{BASE_DIST}']
         self.suites = [util.DISTRO_CODENAME]
-        self.components = [PPA_COMPS]
+        self.components = [BASE_COMPS]
 
         if meta or key:
             self.ppa = get_info_from_lp(ppa_owner, ppa_name)

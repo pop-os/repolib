@@ -29,6 +29,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib import request, error
 
+import dbus
+
 SOURCES_DIR = '/etc/apt/sources.list.d'
 KEYS_DIR = '/usr/share/keyrings/'
 TESTING = False
@@ -213,6 +215,11 @@ def sources():
     for f in files:
         for s in f.sources:
             yield s
+
+def dbus_quit():
+    bus = dbus.SystemBus()
+    privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+    privileged_object.exit()
 
 def compare_sources(source1, source2, excl_keys:list) -> bool:
     """Compare two sources based on arbitrary criteria.
