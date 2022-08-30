@@ -100,10 +100,6 @@ class SourceFile:
         Arguments:
             ident(str): The ident of the source to remove
         """
-        if ident not in self.sources:
-            raise SourceFileError(
-                f'The source {ident} was not found in {self.path}'
-            )
         source = self.get_source_by_ident(ident)
         self.contents.remove(source)
         self.sources.remove(source)
