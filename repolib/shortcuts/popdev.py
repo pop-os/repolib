@@ -22,17 +22,20 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 from sys import prefix
+from repolib.command.add import DEFAULT_FORMAT
 
 from repolib.key import SourceKey
 
-from .source import Source, SourceError
-from .file import SourceFile
-from . import util
+from ..source import Source, SourceError
+from ..file import SourceFile
+from .. import util
 
 BASE_URL = 'http://apt.pop-os.org/staging/'
 BASE_FORMAT = util.SourceFormat.DEFAULT
 BASE_COMPS = 'main'
 BASE_KEYURL = 'https://raw.githubusercontent.com/pop-os/pop/master/scripts/.iso.asc'
+
+DEFAULT_FORMAT = util.SourceFormat.DEFAULT
 
 prefix = 'popdev'
 delineator = ':'
@@ -73,6 +76,14 @@ class PopdevSource(Source):
         self.twin_source = True
         if line:
             self.load_from_shortcut(self.line)
+    
+    def get_description(self) -> str:
+        self.__func__.__doc__ = super().__doc__
+        return f'Pop Development Staging branch'
+
+    
+    def load_from_data(self, data: list) -> None:
+        self.load_from_shortcut(shortcut=data[0])
 
     def load_from_shortcut(self, shortcut:str='', meta:bool=True, key:bool=True) -> None:
         """Translates the shortcut line into a full repo.

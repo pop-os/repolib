@@ -27,9 +27,15 @@ import logging
 from debian import deb822
 from pathlib import Path
 
+from tomlkit import string
+
+from repolib.command.add import DEFAULT_FORMAT
+
 from .parsedeb import ParseDeb
 from .key import SourceKey
 from . import util
+
+DEFAULT_FORMAT = util.SourceFormat.LEGACY
 
 class SourceError(util.RepoError):
     """ Exception from a source object."""
@@ -93,6 +99,15 @@ class Source(deb822.Deb822):
             self.pop('Comments')
 
         return rep
+    
+    def get_description(self) -> str:
+        """Get a UI-compatible description for a source. 
+        
+        Returns: (str)
+            The formatted description.
+        """
+        return self.name
+
 
     def add_key(self) -> None:
         """Adds a key from disk"""
