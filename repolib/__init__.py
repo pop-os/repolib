@@ -38,7 +38,7 @@ from . import util
 from . import system
 
 LOG_FILE_PATH = '/var/log/repolib.log'
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.WARNING
 SOURCES_DIR = util.SOURCES_DIR
 KEYS_DIR = util.KEYS_DIR
 TESTING = util.TESTING
@@ -75,13 +75,40 @@ console_log.setLevel(LOG_LEVEL)
 log.addHandler(console_log)
 # log.addHandler(file_log)
 
+log_level_map:dict = {
+    0: logging.WARNING,
+    1: logging.INFO,
+    2: logging.DEBUG
+}
+
 if systemd_support:
     journald_log = JournalHandler()
-    journald_log.setLevel(LOG_LEVEL)
+    journald_log.setLevel(logging.INFO)
     journald_log.setFormatter(stream_fmt)
     log.addHandler(journald_log)
 
 log.setLevel(logging.DEBUG)
+
+def set_logging_level(level:int) -> None:
+    """Set the logging level for this current repolib
+
+    Accepts an integer between 0 and 2, with 0 being the default loglevel of
+    logging.WARNING, 1 being logging.INFO, and 2 being logging.DEBUG.
+
+    Values greater than 2 are clamped to 2. Values less than 0 are clamped to 0.
+
+    Note: This only affects console output. Log file output remains 
+    at logging.INFO
+    
+    Arguments:
+        level(int): A logging level from 0-2
+    """
+    if level > 2:
+        level = 2
+    if level < 0:
+        level = 0
+    LOG_LEVEL = log_level_map[level]
+    console_log.setLevel(LOG_LEVEL)
 
 RepoError = util.RepoError
 SourceFormat = util.SourceFormat

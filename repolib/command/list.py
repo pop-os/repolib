@@ -204,7 +204,7 @@ class List(Command):
         
         else:
             try:
-                output = system.sources[self.source]
+                output = system.sources[self.repo]
                 print(f'Details for source {output.ident}:\n{output.ui}')
                 return True
             except KeyError:

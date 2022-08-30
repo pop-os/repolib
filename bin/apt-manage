@@ -62,6 +62,7 @@ def main(options=None):
     log.addHandler(handler)
     log.setLevel(verbosity[args.debug])
     log.debug('Logging set up!')
+    repolib.set_logging_level(args.debug)
 
     if not args.action:
         args = parser.parse_args(sys.argv[1:] + ['list'])
