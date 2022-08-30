@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2020, Ian Santopietro
+Copyright (c) 2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -18,18 +18,6 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
-
-This subpackage contains tools for use in developing CLI applications using
-repolib. apt-manage uses this library.
 """
-#pylint: disable=invalid-name,cyclic-import
-# Can't seem to find the cyclic import being complained about.
 
 from .argparser import get_argparser
-from .add import Add
-from .list import List
-from .modify import Modify
-from .remove import Remove
-from .source import Source
-
-parser = get_argparser()
