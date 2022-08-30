@@ -1,7 +1,3 @@
-# pylint: disable=unused-import,cyclic-import
-# It isn't used by the base class, but is used by subclasses.
-# Can't seem to find the cyclic import being complained about.
-
 """
 Copyright (c) 2020, Ian Santopietro
 All rights reserved.
