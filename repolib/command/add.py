@@ -182,9 +182,12 @@ class Add(Command):
                     new_file.format = format
 
         new_file.add_source(new_source)
+        new_source.file = new_file
         self.log.debug('File format: %s', new_file.format)
         self.log.debug('File path: %s', new_file.path)
 
+        self.log.debug('Sources in file %s:\n%s', new_file.path, new_file.sources)
+        
         if not self.terse:
             print(
                 'Adding the following source: \n',
