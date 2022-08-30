@@ -117,19 +117,14 @@ class Repo(dbus.service.Object):
 
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
-        in_signature='ss', out_signature='',
+        in_signature='s', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
-    def delete_source(self, filename, key_filename, sender=None, conn=None):
+    def delete_source_file(self, filename, sender=None, conn=None):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        key_file = self.keys_dir /key_filename
         source_file = self.sources_dir / filename
-        try:
-            key_file.unlink()
-        except FileNotFoundError:
-            pass
         source_file.unlink()
 
     @dbus.service.method(
