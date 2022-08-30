@@ -22,5 +22,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from .argparser import get_argparser
 from .add import Add
+from .list import List
 
 parser = get_argparser()

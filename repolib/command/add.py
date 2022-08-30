@@ -36,6 +36,10 @@ class Add(Command):
         --disable, d
         --source-code, -s
         --terse, -t
+        --name, -n
+        --identifier, -i
+        --format, -f
+        --skip-keys, -k
     """
 
     shortcut_prefixes = {
@@ -177,6 +181,7 @@ class Add(Command):
                 if self.format == format.value:
                     new_file.format = format
 
+        new_file.add_source(new_source)
         self.log.debug('File format: %s', new_file.format)
         self.log.debug('File path: %s', new_file.path)
 

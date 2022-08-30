@@ -21,6 +21,7 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import atexit
+import logging
 import re
 import tempfile
 
@@ -35,6 +36,8 @@ SOURCES_DIR = '/etc/apt/sources.list.d'
 KEYS_DIR = '/usr/share/keyrings/'
 TESTING = False
 KEYSERVER_QUERY_URL = 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x'
+
+log = logging.getLogger(__name__)
 
 class RepoError(Exception):
     """ Exception from this module."""
@@ -200,6 +203,7 @@ CLEAN_CHARS = {
     59: None,
 }
 
+sources:dict = {}
 files:dict = {}
 keys:dict = {}
 errors:dict = {}
@@ -209,12 +213,6 @@ def _cleanup_temsps() -> None:
     _KEYS_TEMPDIR.cleanup()
 
 atexit.register(_cleanup_temsps)
-
-def sources():
-    """Generator for all source items on the system"""
-    for f in files:
-        for s in f.sources:
-            yield s
 
 def dbus_quit():
     bus = dbus.SystemBus()

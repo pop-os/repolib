@@ -35,9 +35,10 @@ from .shortcuts import PPASource
 from .shortcuts import PopdevSource
 from .key import SourceKey, KeyFileError
 from . import util
+from . import system
 
 LOG_FILE_PATH = '/var/log/repolib.log'
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 SOURCES_DIR = util.SOURCES_DIR
 KEYS_DIR = util.KEYS_DIR
 TESTING = util.TESTING
@@ -97,7 +98,7 @@ validate_debline = util.validate_debline
 strip_hashes = util.strip_hashes
 compare_sources = util.compare_sources
 combine_sources = util.combine_sources
-sources:dict = {}
+sources = util.sources
 files = util.files
 keys = util.keys
 errors = util.errors
@@ -107,36 +108,4 @@ options_inmap = util.options_inmap
 options_outmap = util.options_outmap
 true_values = util.true_values
 
-def load_all_sources() -> None:
-    """Loads all of the sources present on the system."""
-    log.info('Loading all sources')
-    sources_path = Path(SOURCES_DIR)
-    sources_files = sources_path.glob('*.sources')
-    legacy_files = sources_path.glob('*.list')
-
-    for file in sources_files:
-        try:
-            sourcefile = SourceFile(name=file.stem)
-            log.debug('Loading %s', file)
-            sourcefile.load()
-            if file.name not in files:
-                files[file.name] = sourcefile
-
-        except Exception as err:
-            util.errors[file.name] = err
-    
-    for file in legacy_files:
-        try:
-            sourcefile = SourceFile(name=file.stem)
-            sourcefile.load()
-            util.files[file.name] = sourcefile
-        except Exception as err:
-            util.errors[file.name] = err
-    
-    for f in files:
-        file = files[f]
-        for source in file.sources:
-            if source.ident in sources:
-                source.ident = f'{file.name}-{source.ident}'
-                source.file.save()
-            sources[source.ident] = source
+load_all_sources = system.load_all_sources
