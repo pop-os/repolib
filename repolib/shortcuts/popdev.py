@@ -21,8 +21,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from sys import prefix
-from repolib.command.add import DEFAULT_FORMAT
 
 from repolib.key import SourceKey
 
@@ -30,8 +28,8 @@ from ..source import Source, SourceError
 from ..file import SourceFile
 from .. import util
 
-BASE_URL = 'http://apt.pop-os.org/staging/'
 BASE_FORMAT = util.SourceFormat.DEFAULT
+BASE_URL = 'http://apt.pop-os.org/staging'
 BASE_COMPS = 'main'
 BASE_KEYURL = 'https://raw.githubusercontent.com/pop-os/pop/master/scripts/.iso.asc'
 
@@ -48,6 +46,7 @@ class PopdevSource(Source):
     Arguments:
         shortcut (str): The ppa: shortcut to process
     """
+    default_format = BASE_FORMAT
 
     @staticmethod
     def validator(shortcut:str) -> None:
@@ -78,11 +77,11 @@ class PopdevSource(Source):
             self.load_from_shortcut(self.line)
     
     def get_description(self) -> str:
-        self.__func__.__doc__ = super().__doc__
         return f'Pop Development Staging branch'
 
     
     def load_from_data(self, data: list) -> None:
+        self.log.debug('Loading line %s', data[0])
         self.load_from_shortcut(shortcut=data[0])
 
     def load_from_shortcut(self, shortcut:str='', meta:bool=True, key:bool=True) -> None:
@@ -101,8 +100,11 @@ class PopdevSource(Source):
         if not self.validator(self.line):
             raise SourceError(f'The line {self.line} is malformed')
         
+        self.log.debug('Loading shortcut %s', self.line)
+        
         self.info_parts = shortcut.split(delineator)
-        branch_name = self.info_parts[1:]
+        branch_name = ':'.join(self.info_parts[1:])
+        self.log.debug('Popdev branch name: %s', branch_name)
 
         self.ident = f'{prefix}-{branch_name}'
         if f'{self.ident}.{BASE_FORMAT.value}' not in util.files:

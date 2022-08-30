@@ -31,8 +31,8 @@ VERSION = __version__.__version__
 
 from .file import SourceFile, SourceFileError
 from .source import Source, SourceError
-from .shortcuts.ppa import PPASource
-from .shortcuts.popdev import PopdevSource
+from .shortcuts import PPASource
+from .shortcuts import PopdevSource
 from .key import SourceKey, KeyFileError
 from . import util
 

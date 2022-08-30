@@ -20,9 +20,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from soupsieve import util
-from old_repolib.util import dbus_quit
 from repolib import CLEAN_CHARS
+from .. import util
 from ..source import Source, SourceError
 from ..file import SourceFile, SourceFileError
 from ..shortcuts import ppa, popdev
@@ -86,14 +85,20 @@ class Add(Command):
         sub.add_argument(
             '-n',
             '--name',
-            default=['x-repolib-default-name'],
+            default='',
             help='A name to set for the new repo'
         )
         sub.add_argument(
             '-i',
             '--identifier',
-            default=['x-repolib-default-id'],
+            default='',
             help='The filename to use for the new source'
+        )
+        sub.add_argument(
+            '-f',
+            '--format',
+            default='sources',
+            help='The source format to save as, `sources` or `list`'
         )
         sub.add_argument(
             '-k',
@@ -110,6 +115,7 @@ class Add(Command):
         self.terse = args.terse
         self.source_code = args.source_code
         self.disable = args.disable
+        self.log.debug(args)
 
         try:
             name = args.name.split()
@@ -124,6 +130,7 @@ class Add(Command):
         self.name = ' '.join(name)
         self.ident = '-'.join(ident).translate(CLEAN_CHARS)
         self.skip_keys = args.skip_keys
+        self.format = args.format.lower()
     
     def run(self) -> bool:
         """Run the command, return `True` if successful; otherwise `False`"""
@@ -164,10 +171,14 @@ class Add(Command):
             new_source.ident = new_source.generate_default_ident()
 
         new_file = SourceFile(name=new_source.ident)
-        new_file.format = new_source.DEFAULT_FORMAT
+        new_file.format = new_source.default_format
+        if self.format:
+            for format in util.SourceFormat:
+                if self.format == format.value:
+                    new_file.format = format
 
         self.log.debug('File format: %s', new_file.format)
-        self.log.debug('File paht: %s', new_file.path)
+        self.log.debug('File path: %s', new_file.path)
 
         if not self.terse:
             print(

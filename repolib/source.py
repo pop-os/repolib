@@ -20,16 +20,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from cmath import log
 from codecs import ignore_errors
 import logging
 
 from debian import deb822
-from pathlib import Path
-
-from tomlkit import string
-
-from repolib.command.add import DEFAULT_FORMAT
 
 from .parsedeb import ParseDeb
 from .key import SourceKey
@@ -66,6 +60,8 @@ class Source(deb822.Deb822):
         file(SourceFile): The file this source belongs to
         key(SourceKey): The key which signs this source
     """
+
+    default_format = DEFAULT_FORMAT
 
     def __init__(self, *args, file=None, **kwargs) -> None:
         """Initialize this source object"""
