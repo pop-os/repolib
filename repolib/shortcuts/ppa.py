@@ -22,12 +22,13 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 from sys import prefix
+from repolib.command.add import DEFAULT_FORMAT
 
 from repolib.key import SourceKey
 
-from .source import Source, SourceError
-from .file import SourceFile
-from . import util
+from ..source import Source, SourceError
+from ..file import SourceFile
+from .. import util
 
 try:
     from launchpadlib.launchpad import Launchpad
@@ -39,6 +40,8 @@ PPA_BASE = 'http://ppa.launchpad.net/'
 PPA_DIST = 'ubuntu'
 PPA_FORMAT = util.SourceFormat.LEGACY
 PPA_COMPS = 'main'
+
+DEFAULT_FORMAT = util.SourceFormat.DEFAULT
 
 prefix = 'ppa'
 delineator = ':'
@@ -80,8 +83,19 @@ class PPASource(Source):
         self.line = line
         self.ppa = None
         self.twin_source = True
+        self._displayname = ''
+        self._description = ''
         if line:
             self.load_from_shortcut(self.line)
+    
+    def get_description(self) -> str:
+        output:str = ''
+        output += self.displayname
+        output += '\n\n'
+        output += self.description
+    
+    def load_from_data(self, data: list) -> None:
+        self.load_from_shortcut(shortcut=data[0])
 
     def load_from_shortcut(self, shortcut:str='', meta:bool=True, key:bool=True) -> None:
         """Translates the shortcut line into a full repo.
@@ -124,6 +138,8 @@ class PPASource(Source):
 
         if meta or key:
             self.ppa = get_info_from_lp(ppa_owner, ppa_name)
+            self.displayname = self.ppa.displayname
+            self.description = self.ppa.description
         
         if self.ppa and meta:
             self.name = self.ppa.displayname
@@ -139,7 +155,34 @@ class PPASource(Source):
             self.signed_by = str(self.key.path)
 
         self.enabled = True
+    
+    @property
+    def displayname(self) -> str:
+        """The name of the PPA provided by launchpad"""
+        if self._displayname:
+            return self._displayname
+        if self.ppa:
+            self._displayname = self.ppa.displayname
+        return self._displayname
+    
+    @displayname.setter
+    def displayname(self, displayname) -> None:
+        """Cache this for use without hitting LP"""
+        self._displayname = displayname
 
+    @property
+    def description(self) -> str:
+        """The description of the PPA provided by Launchpad"""
+        if self._description:
+            return self._description
+        if self.ppa:
+            self._description = self.ppa.description
+        return self._description
+    
+    @description.setter
+    def description(self, desc) -> None:
+        """Cache this for use without hitting LP"""
+        self._description = desc
 
 class PPA:
     """ An object to fetch data from PPAs. 
