@@ -72,14 +72,15 @@ class Remove(Command):
             self.log.error('You cannot remove the system sources')
             return False
         
-        if self.source_name not in system.sources:
+        if self.source_name not in util.sources:
             self.log.error(
                 'Source %s was not found. Double-check the spelling',
                 self.source_name
             )
             return False
         else:
-            self.source = system.sources[self.source_name]
+            self.source = util.sources[self.source_name]
+            self.key = self.source.key
             self.file = self.source.file
         
         print(f'This will remzove the source {self.source_name}')
@@ -93,11 +94,21 @@ class Remove(Command):
         if response in util.true_values:
             self.file.remove_source(self.source_name)
             self.file.save()
-        
+
+            system.load_all_sources()
+            for source in util.sources.values():
+                self.log.debug('Checking key for %s', source.ident)
+                try:
+                    if source.key.path == self.key.path:
+                        self.log.info('Source key in use with another source')
+                        return True
+                except AttributeError:
+                    pass
+            
+            self.log.info('No other sources found using key, deleting key')
+            self.key.delete_key()
+            return True
+
         else:
             print('Canceled.')
             return False
-        
-        return True
-        
-

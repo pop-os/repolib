@@ -153,7 +153,7 @@ class List(Command):
         if self.print_files:
             print('Configured source files:')
         
-            for file in system.files:
+            for file in util.files:
                 print(f'{file.path.name}:')
 
                 for source in file.sources:
@@ -164,28 +164,28 @@ class List(Command):
         
         else:
             print('Configured Sources:')
-            for source in system.sources:
-                output = system.sources[source]
+            for source in util.sources:
+                output = util.sources[source]
                 print(textwrap.indent(output.ui, indent))
             
             if self.legacy:
                 self.list_legacy(indent)
         
-        if system.errors:
+        if util.errors:
             print('\n\nThe following files contain formatting errors:')
-            for err in system.errors:
+            for err in util.errors:
                 print(err)
             if self.verbose or self.debug:
                 print('\nDetails about failing files:')
-                for err in system.errors:
-                    print(f'{err}: {system.errors[err]}')
+                for err in util.errors:
+                    print(f'{err}: {util.errors[err]}')
                     
         return True
     
     def run(self):
         """Run the command"""
         system.load_all_sources()
-        self.log.debug("Current sources: %s", system.sources)
+        self.log.debug("Current sources: %s", util.sources)
         ret = False
 
         if self.all:
@@ -193,14 +193,14 @@ class List(Command):
 
         if self.repo == 'x-repolib-all-sources' and not self.all:
             print('Configured Sources:')
-            for source in system.sources:
+            for source in util.sources:
                 print(source)
             
             return True
         
         else:
             try:
-                output = system.sources[self.repo]
+                output = util.sources[self.repo]
                 print(f'Details for source {output.ident}:\n{output.ui}')
                 return True
             except KeyError:

@@ -222,7 +222,7 @@ class Modify(Command):
         
         self.system_source = False
         try:
-            self.source = system.sources[self.repo]
+            self.source = util.sources[self.repo]
         except KeyError:
             self.source = None
         

@@ -120,6 +120,9 @@ class SourceKey:
             bus = dbus.SystemBus()
             privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
             privileged_object.delete_signing_key(str(self.path))
+        
+        except FileNotFoundError:
+            pass
 
     def load_key_data(self, **kwargs) -> None:
         """Loads the key data from disk into the object for processing.
