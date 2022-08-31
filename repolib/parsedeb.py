@@ -126,7 +126,7 @@ def parse_name_ident(tail:str) -> tuple:
 
     # Used for sanity checking later
     has_name = 'X-Repolib-Name' in tail
-    has_ident = 'X-Repolib-Ident' in tail
+    has_ident = 'X-Repolib-ID' in tail
 
     parts: list = tail.split()
     name_found = False
