@@ -24,5 +24,6 @@ from .argparser import get_argparser
 from .add import Add
 from .list import List
 from .remove import Remove
+from .modify import Modify
 
 parser = get_argparser()
