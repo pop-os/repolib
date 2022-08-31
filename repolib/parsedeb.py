@@ -108,7 +108,7 @@ def parse_name_ident(tail:str) -> tuple:
     """ Find a Repolib name within the given comment string.
 
     The name should be headed with "X-Repolib-Name:" and is not space terminated.
-    The ident should be headed with "X-Repolib-Ident:" and is space terminated.
+    The ident should be headed with "X-Repolib-ID:" and is space terminated.
 
     Either field ends at the end of a line, or at a subsequent definition of a
     different field, or at a subsequent ' #' substring. Additionally, the ident
@@ -136,7 +136,7 @@ def parse_name_ident(tail:str) -> tuple:
     comment:str = ''
     for item in parts:
         item_is_name = item.strip('#').strip().startswith('X-Repolib-Name')
-        item_is_ident = item.strip('#').strip().startswith('X-Repolib-Ident')
+        item_is_ident = item.strip('#').strip().startswith('X-Repolib-ID')
         
         if '#' in item and not item_is_name and not item_is_ident:
             name_found = False
