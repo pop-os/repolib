@@ -244,7 +244,7 @@ class Source(deb822.Deb822):
         """
 
 
-    def load_key(self, ginore_errors:bool = True) -> None:
+    def load_key(self, ignore_errors:bool = True) -> None:
         """Finds and loads the signing key from the system
         
         Arguments:

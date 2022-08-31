@@ -25,5 +25,6 @@ from .add import Add
 from .list import List
 from .remove import Remove
 from .modify import Modify
+from .key import Key
 
 parser = get_argparser()
