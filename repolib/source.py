@@ -361,7 +361,7 @@ class Source(deb822.Deb822):
     
 
     @property
-    def enabled(self) -> bool:
+    def enabled(self) -> util.AptSourceEnabled:
         """Whether or not the source is enabled/active"""
         try:
             enabled = self['Enabled'] in util.true_values

@@ -22,6 +22,8 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from argparse import SUPPRESS
 
+from data.service import Repo
+
 from .command import Command, RepolibCommandError
 from .. import util, system
 
@@ -218,34 +220,261 @@ class Modify(Command):
         """Run the command"""
         self.log.info('Modifying repository %s', self.repo)
         
-        system_source = False
-        source = None
+        self.system_source = False
+        self.source = None
         for i in system.sources:
             if i.ident == self.repo:
-                source = i
+                self.source = i
         
-        if not source:
+        if not self.source:
             self.log.error(
                 'The source %s could not be found. Check the spelling',
                 self.repo
             )
             return False
         
-        if source.ident == 'system':
-            system_source = True
+        if self.source.ident == 'system':
+            self.system_source = True
         
         self.log.debug('Actions taken:\n%s', self.actions)
-        self.log.debug('Source before:\n%s', source)
+        self.log.debug('Source before:\n%s', self.source)
 
+        rets = []
         for action in self.actions:
-            getattr(self, action)(self.actions[action])
+            ret = getattr(self, action)(self.actions[action])
+            rets.append(ret)
         
-        self.log.debug('Source after: \n%s', source)
+        self.log.debug('Source after: \n%s', self.source)
 
-        if self.count == 0:
-            self.log.warning('No changes specified, no actions taken')
-            return False
-        else:
-            source.file.save()
+        if True in rets:
+            self.source.file.save()
             return True
+        else:
+            self.log.warning('No valid changes specified, no actions taken.')
+            return False
+        
+    def default_mirror(self, value:str)  -> bool:
+        """Checks if this is the system source, then set the default mirror"""
+        if not value:
+            return False
+        
+        if self.system_source:
+            self.source['X-Repolib-Default-Mirror'] = value
+            return True
+        return False
+
+    def name(self, value:str) -> bool:
+        """Sets the source name"""
+        if not value:
+            return False
+        
+        self.log.info('Setting name for %s to %s', self.repo, value)
+        self.source.name = value
+        return True
+    
+    def endisable(self, value:str) -> bool:
+        """Enable or disable the source"""
+        if not value:
+            return False
+        
+        self.log.info('%sing source %s', value, self.repo)
+        if value == 'disable':
+            self.source.enabled = False
+            return True
+
+        self.source.enabled = True
+        return True
+    
+    def add_uri(self, values:list) -> bool:
+        """Adds URIs to the source, if not already present."""
+        if not values:
+            return False
+
+        self.log.info('Adding URIs: %s', values)
+        uris = self.source.uris
+
+        for uri in values.split():
+            if not util.url_validator(uri):
+                raise RepolibCommandError(
+                    f'Cannot add URI {uri} to {self.repo}. The URI is '
+                    'malformed'
+                )
+                
+            if uri not in uris:
+                uris.append(uri)
+                self.log.debug('Added URI %s', uri)
+
+            else:
+                self.log.warning(
+                    'The URI %s was already present in %s',
+                    uri, 
+                    self.repo
+                )
+
+        if uris != self.source.uris:
+            self.source.uris = uris
+            return True
+        return False
+    
+    def remove_uri(self, values:list) -> bool:
+        """Remove URIs from the soruce, if they are added."""
+        if not values:
+            return False
+        
+        self.log.info('Removing URIs %s from source %s', values, self.repo)
+        uris = self.source.uris
+
+        for uri in values.split():
+            try:
+                uris.remove(uri)
+                self.log.debug('Removed URI %s', uri)
+
+            except ValueError:
+                self.log.warning('The URI %s was not present in %s', self.repo)
+        
+        if len(uris) == 0:
+            self.log.error(
+                'Cannot remove the last URI from %s. If you meant to delete the source, try REMOVE instead.',
+                self.repo
+            )
+            return False
+        
+        if uris != self.source.uris:
+            self.source.uris = uris
+            return True
+        
+        return False
+    
+    def add_suite(self, values:list) -> bool:
+        """Adds a suite to the source"""
+        if not values:
+            return False
+
+        self.log.info('Adding suites: %s', values)
+        suites = self.source.suites
+
+        for suite in values.split():
+            if suite not in suites:
+                suites.append(suite)
+                self.log.debug('Added suite %s', suite)
+
+            else:
+                self.log.warning(
+                    'The suite %s was already present in %s',
+                    suite, 
+                    self.repo
+                )
+        
+        if suites != self.source.suites:
+            self.source.suites = suites
+            return True
+        return False
+    
+    def remove_suite(self, values:list) -> bool:
+        """Remove a suite from the source"""
+        if not values:
+            return False
+        
+        self.log.info('Removing suites %s from source %s', values, self.repo)
+        suites = self.source.suites
+
+        for suite in values.split():
+            try:
+                suites.remove(suite)
+                self.log.debug('Removed suite %s', suite)
+
+            except ValueError:
+                self.log.warning('The suite %s was not present in %s', self.repo)
+        
+        if len(suites) == 0:
+            self.log.error(
+                'Cannot remove the last suite from %s. If you meant to delete the source, try REMOVE instead.',
+                self.repo
+            )
+            return False
+        
+        if suites != self.source.suites:
+            self.source.suites = suites
+            return True
+        
+        return False
+    
+    def add_component(self, values:list) -> bool:
+        """Adds components to the source"""
+        if not values:
+            return False
+
+        self.log.info('Adding components: %s', values)
+        components = self.source.components
+
+        for component in values.split():
+            if component not in components:
+                components.append(component)
+                self.log.debug('Added component %s', component)
+
+            else:
+                self.log.warning(
+                    'The component %s was already present in %s',
+                    component, 
+                    self.repo
+                )
+        
+        if len(components) > 1:
+            if self.source.file.format == util.SourceFormat.LEGACY:
+                self.log.warning(
+                    'Adding multiple components to a legacy source is not '
+                    'supported. Consider converting the source to DEB822 format.'
+                )
+
+        if components != self.source.components:
+            self.source.components = components
+            return True
+        return False
+
+    def remove_component(self, values:list) -> bool:
+        """Removes components from the source"""
+        if not values:
+            return False
+        
+        self.log.info('Removing components %s from source %s', values, self.repo)
+        components = self.source.components
+
+        for component in values.split():
+            try:
+                components.remove(component)
+                self.log.debug('Removed component %s', component)
+
+            except ValueError:
+                self.log.warning(
+                    'The component %s was not present in %s', 
+                    self.repo
+                )
+        
+        if len(components) == 0:
+            self.log.error(
+                'Cannot remove the last component from %s. If you meant to delete the source, try REMOVE instead.',
+                self.repo
+            )
+            return False
+        
+        if components != self.source.components:
+            self.source.components = components
+            return True
+        
+        return False
+    
+    def add_option(self) -> bool:
+        """TODO: Support options"""
+        raise NotImplementedError(
+            'Options have not been implemented in this version of repolib yet. '
+            f'Please edit the file {self.source.file.path} manually.'
+        )
+        
+    
+    def remove_option(self) -> bool:
+        """TODO: Support options"""
+        raise NotImplementedError(
+            'Options have not been implemented in this version of repolib yet. '
+            f'Please edit the file {self.source.file.path} manually.'
+        )
         
