@@ -27,6 +27,8 @@ from .. import system, util
 
 from .command import Command
 
+KEYS_PATH = Path(util.KEYS_DIR)
+
 class Key(Command):
     """Key subcommand.
     
@@ -59,7 +61,7 @@ class Key(Command):
 
         sub.add_argument(
             'repository',
-            defaul=['x-repolib-none'],
+            default=['x-repolib-none'],
             help='Which repository to manage keys for.'
         )
 
@@ -103,6 +105,7 @@ class Key(Command):
         sub_group.add_argument(
             '-r',
             '--remove',
+            action='store_true',
             help=(
                 'Remove a signing key from the repo. If no other sources use '
                 'this key, its file will be deleted.'
@@ -121,12 +124,6 @@ class Key(Command):
     def finalize_options(self, args):
         super().finalize_options(args)
         self.repo = args.repository
-        self.name = args.name
-        self.path = args.path
-        self.url = args.url
-        self.ascii = args.ascii
-        self.fingerprint = args.fingerprint
-        self.remove = args.remove
         self.keyserver = args.keyserver
 
         self.actions:dict = {}
@@ -162,14 +159,17 @@ class Key(Command):
                 'The repository %s was not found. Check the spelling',
                 self.repo
             )
+            return False
         
         self.log.debug('Actions to take:\n%s', self.actions)
         self.log.debug('Source before:\n%s', self.source)
 
         rets = []
         for action in self.actions:
-            ret = getattr(self, action)(self.actions[action])
-            rets.append(ret)
+            if self.actions[action]:
+                self.log.debug('Running action: %s - (%s)', action, self.actions[action])
+                ret = getattr(self, action)(self.actions[action])
+                rets.append(ret)
         
         self.log.debug('Results: %s', rets)
         self.log.debug('Source after: \n%s', self.source)
@@ -190,12 +190,14 @@ class Key(Command):
         
         for ext in ['.gpg', '.asc']:
             if value.endswith(ext):
-                path = util.KEYS_DIR / value
+                path = KEYS_PATH / value
                 if path.exists():
                     key_path = path
                     break
             else:
-                path = util.KEYS_DIR / f'{value}{ext}'
+                if 'archive-keyring' not in value:
+                    value += '-archive-keyring'
+                path = KEYS_PATH / f'{value}{ext}'
                 if path.exists():
                     key_path = path
                     break
@@ -291,6 +293,16 @@ class Key(Command):
                 self.repo
             )
             return False
+        
+        response = 'n'
+        print(
+            'If you remove the key, there may no longer be any verification '
+            'of software packages from this repository, including for future '
+            'updates. This may cause errors with your updates.'
+        )
+        response = input('Do you want to continue? (y/N): ')
+        if response not in util.true_values:
+            return False
 
         old_key = self.source.key
         self.source.key = None
@@ -298,14 +310,17 @@ class Key(Command):
 
         for source in system.sources.values():
             if source.key == old_key:
+                self.log.info(
+                    'Key file %s in use with another key, not deleting',
+                    old_key.path
+                )
                 return True
         
         response = 'n'
         print('No other sources were found which use this key.')
         response = input('Do you want to remove it? (Y/n): ')
         if response in util.true_values:
-            old_key.path.unlink()
-            old_key.tmp_path.unlink()
+            old_key.delete_key()
         
         return True
 

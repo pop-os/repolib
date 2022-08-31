@@ -90,14 +90,18 @@ class SourceKey:
         self.log.debug('Copying %s to %s', self.path, self.tmp_path)
         try:
             shutil.copy2(self.path, self.tmp_path)
+        
         except FileNotFoundError:
             pass
+        
         self.gpg = gnupg.GPG(keyring=str(self.tmp_path))
     
     def save_gpg(self) -> None:
         """Imports the key into the GPG object."""
+        self.log.info('Saving key file %s from %s', self.path, self.tmp_path)
         try:
             shutil.copy2(self.tmp_path, self.path)
+        
         except PermissionError:
             bus = dbus.SystemBus()
             privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
@@ -105,6 +109,17 @@ class SourceKey:
                 str(self.tmp_path),
                 str(self.path)
             )
+    
+    def delete_key(self) -> None:
+        """Deletes the key file from disk."""
+        try:
+            self.tmp_path.unlink()
+            self.path.unlink()
+        
+        except PermissionError:
+            bus = dbus.SystemBus()
+            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+            privileged_object.delete_signing_key(str(self.path))
 
     def load_key_data(self, **kwargs) -> None:
         """Loads the key data from disk into the object for processing.
