@@ -89,7 +89,7 @@ class List(Command):
             '--no-names',
             action='store_true',
             dest='skip_names',
-            help="Don't print repository names"
+            help=argparse.SUPPRESS
         )
         sub.add_argument(
             '-f',
@@ -178,12 +178,8 @@ class List(Command):
             if self.verbose or self.debug:
                 print('\nDetails about failing files:')
                 for err in system.errors:
-                    print(f'{err}:')
-                    with open(err.filename) as error_file:
-                        print(error_file.read())
-                    print('Stack Trace:')
-                    traceback.print_tb(system.errors[err].__traceback__)
-                    print('\n')
+                    print(f'{err}: {system.errors[err]}')
+                    
         return True
     
     def run(self):
