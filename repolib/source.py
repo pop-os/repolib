@@ -195,9 +195,10 @@ class Source(deb822.Deb822):
     @sourcecode_enabled.setter
     def sourcecode_enabled(self, enabled) -> None:
         """Accept a variety of input values"""
-        self.types = [util.SourceType.BINARY]
+        types = [util.SourceType.BINARY]
         if enabled in util.true_values:
-            self.types.append(util.SourceType.SOURCECODE)
+            types.append(util.SourceType.SOURCECODE)
+        self.types = types
 
 
     def generate_default_ident(self, prefix='') -> str:
