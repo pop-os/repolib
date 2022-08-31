@@ -151,7 +151,7 @@ class Key(Command):
             return False
         
         try:
-            self.source = system.sources[self.repo]
+            self.source = util.sources[self.repo]
             if self.repo == 'system':
                 self.system_source = True
         except KeyError:
@@ -308,7 +308,7 @@ class Key(Command):
         self.source.key = None
         self.source.signed_by = ''
 
-        for source in system.sources.values():
+        for source in util.sources.values():
             if source.key == old_key:
                 self.log.info(
                     'Key file %s in use with another key, not deleting',

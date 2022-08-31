@@ -32,14 +32,15 @@ log = logging.getLogger(__name__)
 
 SOURCES_DIR = util.SOURCES_DIR
 
-sources = util.sources
-files = util.files
-keys = util.keys
-errors = util.errors
-
 def load_all_sources() -> None:
     """Loads all of the sources present on the system."""
     log.info('Loading all sources')
+
+    util.sources = {}
+    util.files = {}
+    util.keys = {}
+    util.errors = {}
+
     sources_path = Path(SOURCES_DIR)
     sources_files = sources_path.glob('*.sources')
     legacy_files = sources_path.glob('*.list')
@@ -49,8 +50,8 @@ def load_all_sources() -> None:
             sourcefile = SourceFile(name=file.stem)
             log.debug('Loading %s', file)
             sourcefile.load()
-            if file.name not in files:
-                files[file.name] = sourcefile
+            if file.name not in util.files:
+                util.files[file.name] = sourcefile
 
         except Exception as err:
             util.errors[file.name] = err
@@ -63,10 +64,10 @@ def load_all_sources() -> None:
         except Exception as err:
             util.errors[file.name] = err
     
-    for f in files:
-        file = files[f]
+    for f in util.files:
+        file = util.files[f]
         for source in file.sources:
-            if source.ident in sources:
+            if source.ident in util.sources:
                 source.ident = f'{file.name}-{source.ident}'
                 source.file.save()
-            sources[source.ident] = source
+            util.sources[source.ident] = source
