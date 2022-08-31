@@ -22,8 +22,6 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from argparse import SUPPRESS
 
-from data.service import Repo
-
 from .command import Command, RepolibCommandError
 from .. import util, system
 
@@ -84,18 +82,22 @@ class Modify(Command):
             )
         )
 
-        modify_enable.add_argument(
+        modify_source = sub.add_mutually_exclusive_group(
+            required=False
+        )
+
+        modify_source.add_argument(
             '--source-enable',
             action='store_true',
             help='Enable source code for the repository, if disabled.'
         )
-        modify_enable.add_argument(
+        modify_source.add_argument(
             '--source-disable',
             action='store_true',
             help='Disable source code for the repository, if enabled.'
         )
 
-        modify_enable.add_argument(
+        sub.add_argument(
             '--default-mirror',
             help=SUPPRESS
             #help='Sets the default mirror for the system source.'
@@ -209,8 +211,6 @@ class Modify(Command):
             'remove_uri',
             'remove_suite',
             'remove_component',
-            'add_option',
-            'remove_option'
         ]:
             self.actions[arg] = getattr(args, arg)
         
@@ -221,10 +221,10 @@ class Modify(Command):
         self.log.info('Modifying repository %s', self.repo)
         
         self.system_source = False
-        self.source = None
-        for i in system.sources:
-            if i.ident == self.repo:
-                self.source = i
+        try:
+            self.source = system.sources[self.repo]
+        except KeyError:
+            self.source = None
         
         if not self.source:
             self.log.error(
@@ -244,6 +244,7 @@ class Modify(Command):
             ret = getattr(self, action)(self.actions[action])
             rets.append(ret)
         
+        self.log.debug('Results: %s', rets)
         self.log.debug('Source after: \n%s', self.source)
 
         if True in rets:
@@ -277,12 +278,25 @@ class Modify(Command):
         if not value:
             return False
         
-        self.log.info('%sing source %s', value, self.repo)
+        self.log.info('%sing source %s', value[:-1], self.repo)
         if value == 'disable':
             self.source.enabled = False
             return True
 
         self.source.enabled = True
+        return True
+    
+    def source_endisable(self, value:str) -> bool:
+        """Enable/disable source code for the repo"""
+        if not value:
+            return False
+        
+        self.log.info('%sing source code for source %s', value[7:-1], self.repo)
+        if value == 'source_disable':
+            self.source.sourcecode_enabled = False
+            return True
+        
+        self.source.sourcecode_enabled = True
         return True
     
     def add_uri(self, values:list) -> bool:
@@ -323,6 +337,7 @@ class Modify(Command):
         
         self.log.info('Removing URIs %s from source %s', values, self.repo)
         uris = self.source.uris
+        self.log.debug('Starting uris: %s', uris)
 
         for uri in values.split():
             try:
@@ -330,7 +345,11 @@ class Modify(Command):
                 self.log.debug('Removed URI %s', uri)
 
             except ValueError:
-                self.log.warning('The URI %s was not present in %s', self.repo)
+                self.log.warning(
+                    'The URI %s was not present in %s', 
+                    uri,
+                    self.repo
+                )
         
         if len(uris) == 0:
             self.log.error(
@@ -377,6 +396,7 @@ class Modify(Command):
         
         self.log.info('Removing suites %s from source %s', values, self.repo)
         suites = self.source.suites
+        self.log.debug('Starting suites: %s', suites)
 
         for suite in values.split():
             try:
@@ -384,7 +404,11 @@ class Modify(Command):
                 self.log.debug('Removed suite %s', suite)
 
             except ValueError:
-                self.log.warning('The suite %s was not present in %s', self.repo)
+                self.log.warning(
+                    'The suite %s was not present in %s', 
+                    suite,
+                    self.repo
+                )
         
         if len(suites) == 0:
             self.log.error(
@@ -438,6 +462,7 @@ class Modify(Command):
         
         self.log.info('Removing components %s from source %s', values, self.repo)
         components = self.source.components
+        self.log.debug('Starting components: %s', components)
 
         for component in values.split():
             try:
@@ -447,6 +472,7 @@ class Modify(Command):
             except ValueError:
                 self.log.warning(
                     'The component %s was not present in %s', 
+                    component,
                     self.repo
                 )
         
@@ -463,7 +489,7 @@ class Modify(Command):
         
         return False
     
-    def add_option(self) -> bool:
+    def add_option(self, values) -> bool:
         """TODO: Support options"""
         raise NotImplementedError(
             'Options have not been implemented in this version of repolib yet. '
@@ -471,10 +497,9 @@ class Modify(Command):
         )
         
     
-    def remove_option(self) -> bool:
+    def remove_option(self, values) -> bool:
         """TODO: Support options"""
         raise NotImplementedError(
             'Options have not been implemented in this version of repolib yet. '
             f'Please edit the file {self.source.file.path} manually.'
         )
-        
