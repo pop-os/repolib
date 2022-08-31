@@ -40,7 +40,7 @@ class List(Command):
         --verbose, -v
         --all, -a
         --no-names, -n
-        --no-file-names, -f
+        --file-names, -f
         --no-indentation
     """
 

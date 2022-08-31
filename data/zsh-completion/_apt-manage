@@ -16,7 +16,7 @@ case "$state" in
       'list'
       'modify'
       'remove'
-      'source'
+      'key'
      )
       _describe -t commands 'command' commands && ret=0
   ;;
@@ -28,22 +28,40 @@ case "$state" in
   (args)
     local arguments
     arguments=(
-      '--help'
-      '--disable'
-      '--source-code'
-      '--expand'
-      '--verbose'
-      '--legacy'
-      '--no-names'
-      '--enable'
-      '--disable'
-      '--name'
-      '--add-suite'
-      '--remove-suite'
-      '--add-component'
-      '--remove-component'
-      '--add-uri'
-      '--remove-uri'
+      # Main command
+      '--help',
+      # Add subcommand
+      '--disable',
+      '--source-code',
+      '--terse',
+      '--name',
+      '--identifier',
+      '--format',
+      '--skip-keys',
+      # Key Ssbcommand
+      '--path',
+      '--url',
+      '--ascii',
+      '--fingerprint',
+      '--keyserver',
+      '--remove',
+      # List subcommand
+      '--legacy',
+      '--verbose',
+      '--all',
+      '--file-names',
+      # Modify subcommand
+      '--enable',
+      '--source-enable',
+      '--source-disable',
+      '--add-uri',
+      '--add-suite',
+      '--add-component',
+      '--remove-uri',
+      '--remove-suite',
+      '--remove-component',
+      # Remove subcommand
+      '--assume-yes'
     )
     _describe -t arguments 'argument' arguments && ret=0
   ;;
