@@ -718,6 +718,21 @@ class Source(deb822.Deb822):
         if data:
             self['Valid-Until-Max'] = data
         self._update_legacy_options()
+    
+    @property
+    def default_mirror(self) -> str:
+        """The default mirror/URI for the source"""
+        try:
+            return self['X-Repolib-Default-Mirror']
+        except KeyError:
+            return ''
+    
+    @default_mirror.setter
+    def default_mirror(self, mirror) -> None:
+        if mirror:
+            self['X-Repolib-Default-Mirror'] = mirror
+        else:
+            self['X-Repolib-Default-Mirror'] = ''
 
 
     ## Output Properties
