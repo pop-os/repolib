@@ -236,7 +236,7 @@ class Modify(Command):
         if self.source.ident == 'system':
             self.system_source = True
         
-        self.log.debug('Actions taken:\n%s', self.actions)
+        self.log.debug('Actions to take:\n%s', self.actions)
         self.log.debug('Source before:\n%s', self.source)
 
         rets = []

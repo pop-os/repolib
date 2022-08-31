@@ -292,6 +292,7 @@ class SourceFile:
                             idents[old_source.ident] = old_source
                         idents[new_source.ident] = new_source
                         if to_add:
+                            new_source.file = self
                             self.contents.append(new_source)
                             self.sources.append(new_source)
                     
@@ -322,6 +323,7 @@ class SourceFile:
                             idents[old_source.ident] = old_source
                         idents[new_source.ident] = new_source
                         if to_add:
+                            new_source.file = self
                             self.contents.append(new_source)
                             self.sources.append(new_source)
                 
@@ -361,6 +363,7 @@ class SourceFile:
                         self.find_unique_ident(old_source, new_source)
                         idents[old_source.ident] = old_source
                     idents[new_source.ident] = new_source
+                    new_source.file = self
                     self.contents.append(new_source)
                     self.sources.append(new_source)
                     raw822 = []
@@ -384,6 +387,7 @@ class SourceFile:
                 self.find_unique_ident(old_source, new_source)
                 idents[old_source.ident] = old_source
             idents[new_source.ident] = new_source
+            new_source.file = self
             self.contents.append(new_source)
             self.sources.append(new_source)
             raw822 = []
