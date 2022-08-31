@@ -90,6 +90,18 @@ class Repo(dbus.service.Object):
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
+        in_signature='s', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def delete_signing_key(self, src, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        key_path = Path(src)
+        key_path.unlink()
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
         in_signature='ss', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
