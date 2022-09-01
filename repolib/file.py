@@ -401,7 +401,7 @@ class SourceFile:
         self.log.debug(f'Saving source file to {self.path}')
 
         for source in self.sources:
-            self.log.debug('New Source: \n%s', source)
+            self.log.debug('New Source %s: \n%s', source.ident, source)
 
         save_path = SOURCES_DIR / f'{self.name}.save'
 
