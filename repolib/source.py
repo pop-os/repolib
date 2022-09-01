@@ -274,6 +274,9 @@ class Source(deb822.Deb822):
     def remove_key(self) -> None:
         """Removes the source signing key from the system."""
 
+    def save(self) -> None:
+        """Proxy method to save the source"""
+        self.file.save()
 
     def output_legacy(self) -> str:
         """Outputs a legacy representation of this source
