@@ -20,11 +20,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from repolib import CLEAN_CHARS
 from .. import util
 from ..source import Source, SourceError
 from ..file import SourceFile, SourceFileError
-from ..shortcuts import ppa, popdev
+from ..shortcuts import ppa, popdev, shortcut_prefixes
 from .command import Command, RepolibCommandError
 
 class Add(Command):
@@ -41,13 +40,6 @@ class Add(Command):
         --format, -f
         --skip-keys, -k
     """
-
-    shortcut_prefixes = {
-        'deb': Source,
-        'deb-src': Source,
-        ppa.prefix: ppa.PPASource,
-        popdev.prefix: popdev.PopdevSource
-    }
 
     @classmethod
     def init_options(cls, subparsers):
@@ -132,7 +124,7 @@ class Add(Command):
             ident = args.identifier
 
         self.name = ' '.join(name)
-        self.ident = '-'.join(ident).translate(CLEAN_CHARS)
+        self.ident = '-'.join(ident).translate(util.CLEAN_CHARS)
         self.skip_keys = args.skip_keys
         self.format = args.format.lower()
     
@@ -153,11 +145,11 @@ class Add(Command):
 
         self.log.debug('Adding line %s', self.deb_line)
         
-        for prefix in self.shortcut_prefixes:
+        for prefix in shortcut_prefixes:
             self.log.debug('Trying prefix %s', prefix)
             if self.deb_line.startswith(prefix):
                 self.log.debug('Line is prefix:  %s', prefix)
-                new_source = self.shortcut_prefixes[prefix]()
+                new_source = shortcut_prefixes[prefix]()
                 break
         
         new_source.load_from_data([self.deb_line])

@@ -26,6 +26,8 @@ from pathlib import Path
 
 from . import util
 from .file import SourceFile
+from .source import Source
+from .shortcuts import popdev, ppa
 
 
 log = logging.getLogger(__name__)

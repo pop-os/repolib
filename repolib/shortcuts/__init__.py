@@ -22,3 +22,11 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 
 from .popdev import PopdevSource
 from .ppa import PPASource
+from ..source import Source
+
+shortcut_prefixes = {
+    'deb': Source,
+    'deb-src': Source,
+    ppa.prefix: ppa.PPASource,
+    popdev.prefix: popdev.PopdevSource
+}
