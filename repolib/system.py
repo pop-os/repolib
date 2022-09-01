@@ -38,10 +38,10 @@ def load_all_sources() -> None:
     """Loads all of the sources present on the system."""
     log.info('Loading all sources')
 
-    util.sources = {}
-    util.files = {}
-    util.keys = {}
-    util.errors = {}
+    util.sources.clear()
+    util.files.clear()
+    util.keys.clear()
+    util.errors.clear()
 
     sources_path = Path(SOURCES_DIR)
     sources_files = sources_path.glob('*.sources')

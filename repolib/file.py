@@ -400,6 +400,9 @@ class SourceFile:
         """Saves the source file to disk using the current format"""
         self.log.debug(f'Saving source file to {self.path}')
 
+        for source in self.sources:
+            self.log.debug('New Source: \n%s', source)
+
         save_path = SOURCES_DIR / f'{self.name}.save'
 
         for source in self.sources:
