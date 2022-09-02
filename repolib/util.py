@@ -167,6 +167,7 @@ keys_map = {
 PRETTY_PRINT = '\n    '
 
 _KEYS_TEMPDIR = tempfile.TemporaryDirectory()
+_TESTING_TEMPDIR = tempfile.TemporaryDirectory()
 
 options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
@@ -208,9 +209,30 @@ files:dict = {}
 keys:dict = {}
 errors:dict = {}
 
+def set_testing(testing:bool=True) -> None:
+    """Sets Repolib in testing mode where changes will not be saved.
+    
+    Arguments:
+        testing(bool): Whether testing mode should be enabled or disabled
+            (Defaul: True)
+    """
+    global KEYS_DIR
+    global SOURCES_DIR
+
+    if not testing:
+        KEYS_DIR = '/usr/share/keyrings'
+        SOURCES_DIR = '/etc/apt/sources.list.d'
+        return
+    
+    testing_root = Path(_TESTING_TEMPDIR.name)
+    KEYS_DIR = testing_root / 'usr' / 'share' / 'keyrings'
+    SOURCES_DIR = testing_root / 'etc' / 'apt' / 'sources.list.d'
+
+
 def _cleanup_temsps() -> None:
     """Clean up our tempdir"""
     _KEYS_TEMPDIR.cleanup()
+    _TESTING_TEMPDIR.cleanup()
 
 atexit.register(_cleanup_temsps)
 

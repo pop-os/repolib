@@ -29,7 +29,7 @@ from . import __version__
 
 VERSION = __version__.__version__
 
-from .file import SourceFile, SourceFileError
+from .file import SOURCES_DIR, SourceFile, SourceFileError
 from .source import Source, SourceError
 from .shortcuts import PPASource, PopdevSource, shortcut_prefixes
 from .key import SourceKey, KeyFileError
@@ -38,8 +38,8 @@ from . import system
 
 LOG_FILE_PATH = '/var/log/repolib.log'
 LOG_LEVEL = logging.WARNING
-SOURCES_DIR = util.SOURCES_DIR
 KEYS_DIR = util.KEYS_DIR
+SOURCES_DIR = util.SOURCES_DIR
 TESTING = util.TESTING
 KEYSERVER_QUERY_URL = util.KEYSERVER_QUERY_URL
 DISTRO_CODENAME = util.DISTRO_CODENAME
@@ -87,6 +87,16 @@ if systemd_support:
     log.addHandler(journald_log)
 
 log.setLevel(logging.DEBUG)
+
+def set_testing(testing:bool = True) -> None:
+    """Puts Repolib into testing mode"""
+    global KEYS_DIR
+    global SOURCES_DIR
+
+    util.set_testing(testing=testing)
+    KEYS_DIR = util.KEYS_DIR
+    SOURCES_DIR = util.SOURCES_DIR
+
 
 def set_logging_level(level:int) -> None:
     """Set the logging level for this current repolib

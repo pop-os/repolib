@@ -32,8 +32,6 @@ from .shortcuts import popdev, ppa
 
 log = logging.getLogger(__name__)
 
-SOURCES_DIR = util.SOURCES_DIR
-
 def load_all_sources() -> None:
     """Loads all of the sources present on the system."""
     log.info('Loading all sources')
@@ -43,7 +41,7 @@ def load_all_sources() -> None:
     util.keys.clear()
     util.errors.clear()
 
-    sources_path = Path(SOURCES_DIR)
+    sources_path = Path(util.SOURCES_DIR)
     sources_files = sources_path.glob('*.sources')
     legacy_files = sources_path.glob('*.list')
 
