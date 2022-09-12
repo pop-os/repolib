@@ -20,7 +20,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from cmath import log
 import logging
 import shutil
 
@@ -31,8 +30,6 @@ from urllib import request
 
 from . import util
 
-KEYS_DIR = Path(util.KEYS_DIR)
-TEMP_DIR = Path(util._KEYS_TEMPDIR.name)
 SKS_KEYSERVER = 'https://keyserver.ubuntu.com/'
 SKS_KEYLOOKUP_PATH = 'pks/lookup?op=get&options=mr&exact=on&search=0x'
 
@@ -77,12 +74,16 @@ class SourceKey:
         
         if name:
             file_name = f'{name}-{suffix}.gpg'
-            self.tmp_path = TEMP_DIR / file_name
-            self.path = KEYS_DIR / file_name
+            self.tmp_path = util.TEMP_DIR / file_name
+            self.path = util.KEYS_DIR / file_name
         elif path:
             self.path = Path(path)
-            self.tmp_path = TEMP_DIR / self.path.name
+            self.tmp_path = util.TEMP_DIR / self.path.name
+        
         self.setup_gpg()
+        
+        self.log.debug('Key Path: %s', self.path)
+        self.log.debug('Temp Path: %s', self.tmp_path)
     
     def setup_gpg(self) -> None:
         """Set up the GPG object for this key."""
@@ -95,12 +96,23 @@ class SourceKey:
             pass
         
         self.gpg = gnupg.GPG(keyring=str(self.tmp_path))
+        self.log.debug('GPG Setup: %s', self.gpg.keyring)
     
     def save_gpg(self) -> None:
-        """Imports the key into the GPG object."""
+        """Saves the key to disk."""
         self.log.info('Saving key file %s from %s', self.path, self.tmp_path)
+        self.log.debug('Key contents: %s', self.gpg.list_keys())
+        self.log.debug('Temp key exists? %s', self.tmp_path.exists())
+        if not util.KEYS_DIR.exists():
+            try:
+                util.KEYS_DIR.mkdir(parents=True)
+            except PermissionError:
+                self.log.error(
+                    'Key destination path does not exist and cannot be created '
+                    'Failures expected now.'
+                )
         try:
-            shutil.copy2(self.tmp_path, self.path)
+            shutil.copy(self.tmp_path, self.path)
         
         except PermissionError:
             bus = dbus.SystemBus()
@@ -142,12 +154,13 @@ class SourceKey:
         NOTE: The keyserver and keypath args only affect the operation of the 
             `fingerprint` keyword.
         """
-        self.setup_gpg()
         
-        if self.tmp_path.exists():
-            with open(self.tmp_path, mode='rb') as keyfile:
+        if self.path.exists():
+            with open(self.path, mode='rb') as keyfile:
                 self.data = keyfile.read()
             return
+        
+        self.tmp_path.touch()
         
         if 'raw' in kwargs:
             self.data = kwargs['raw']

@@ -29,7 +29,7 @@ from . import __version__
 
 VERSION = __version__.__version__
 
-from .file import SOURCES_DIR, SourceFile, SourceFileError
+from .file import SourceFile, SourceFileError
 from .source import Source, SourceError
 from .shortcuts import PPASource, PopdevSource, shortcut_prefixes
 from .key import SourceKey, KeyFileError
@@ -37,7 +37,7 @@ from . import util
 from . import system
 
 LOG_FILE_PATH = '/var/log/repolib.log'
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.DEBUG
 KEYS_DIR = util.KEYS_DIR
 SOURCES_DIR = util.SOURCES_DIR
 TESTING = util.TESTING
