@@ -28,7 +28,6 @@ import dbus
 from .source import Source, SourceError
 from . import util
 
-SOURCES_DIR = Path(util.SOURCES_DIR)
 FILE_COMMENT = "## Added/managed by repolib ##"
 
 class SourceFileError(util.RepoError):
@@ -130,8 +129,8 @@ class SourceFile:
         swap back to DEB822 format, as this is likely a new file."""
         self.log.debug('Resetting path')
 
-        default_path = SOURCES_DIR / f'{self.name}.sources'
-        legacy_path = SOURCES_DIR / f'{self.name}.list'
+        default_path = util.SOURCES_DIR / f'{self.name}.sources'
+        legacy_path = util.SOURCES_DIR / f'{self.name}.list'
 
         if default_path.exists():
             self.path = default_path
@@ -403,7 +402,7 @@ class SourceFile:
         for source in self.sources:
             self.log.debug('New Source %s: \n%s', source.ident, source)
 
-        save_path = SOURCES_DIR / f'{self.name}.save'
+        save_path = util.SOURCES_DIR / f'{self.name}.save'
 
         for source in self.sources:
             if source.key:
@@ -412,6 +411,15 @@ class SourceFile:
         if not self.name or not self.format:
             raise SourceFileError('There was not a complete filename to save')
         
+        if not util.SOURCES_DIR.exists():
+            try:
+                util.SOURCES_DIR.mkdir(parents=True)
+            except PermissionError:
+                self.log.error(
+                    'Source destination path does not exist and cannot be created '
+                    'Failures expected now.'
+                )
+
         if len(self.sources) > 0:
             
             try:
@@ -447,7 +455,7 @@ class SourceFile:
     def format(self, format:util.SourceFormat) -> None:
         """The path needs to be updated when the format changes"""
         self._format = format
-        self.path = SOURCES_DIR / f'{self.name}.{self._format.value}'
+        self.path = util.SOURCES_DIR / f'{self.name}.{self._format.value}'
 
     ## Output properties
     @property 

@@ -32,8 +32,8 @@ from urllib import request, error
 
 import dbus
 
-SOURCES_DIR = '/etc/apt/sources.list.d'
-KEYS_DIR = '/usr/share/keyrings/'
+SOURCES_DIR = Path('/etc/apt/sources.list.d')
+KEYS_DIR = Path('/usr/share/keyrings/')
 TESTING = False
 KEYSERVER_QUERY_URL = 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x'
 
@@ -167,7 +167,7 @@ keys_map = {
 PRETTY_PRINT = '\n    '
 
 _KEYS_TEMPDIR = tempfile.TemporaryDirectory()
-_TESTING_TEMPDIR = tempfile.TemporaryDirectory()
+TEMP_DIR = Path(_KEYS_TEMPDIR.name)
 
 options_re = re.compile(r'[^@.+]\[([^[]+.+)\]\ ')
 uri_re = re.compile(r'\w+:(\/?\/?)[^\s]+')
@@ -219,12 +219,14 @@ def set_testing(testing:bool=True) -> None:
     global KEYS_DIR
     global SOURCES_DIR
 
+    testing_tempdir = tempfile.TemporaryDirectory()
+
     if not testing:
         KEYS_DIR = '/usr/share/keyrings'
         SOURCES_DIR = '/etc/apt/sources.list.d'
         return
     
-    testing_root = Path(_TESTING_TEMPDIR.name)
+    testing_root = Path(testing_tempdir.name)
     KEYS_DIR = testing_root / 'usr' / 'share' / 'keyrings'
     SOURCES_DIR = testing_root / 'etc' / 'apt' / 'sources.list.d'
 
@@ -232,7 +234,7 @@ def set_testing(testing:bool=True) -> None:
 def _cleanup_temsps() -> None:
     """Clean up our tempdir"""
     _KEYS_TEMPDIR.cleanup()
-    _TESTING_TEMPDIR.cleanup()
+    # _TESTING_TEMPDIR.cleanup()
 
 atexit.register(_cleanup_temsps)
 
