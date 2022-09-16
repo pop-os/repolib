@@ -1,4 +1,4 @@
-.. _source-object:
+.. _source_object:
 
 =============
 Source object
@@ -18,16 +18,13 @@ several methods for dumping data to files and other helpful functions.
     ppa-object
     system
 
-class repolib.Source (ident='', filename='')
-    Create a new :ref:`source-object`. All parameters should be passed as 
-    keyword arguments. Each parameter has its own more detailed description 
-    below, but in short they are:
+class repolib.Source (file=None)
+    Create a new :ref:`source_object`. 
+
+    
+    The Source object has the following attributes:
 
         * :ref:`ident` - The system-identifier to use for this source.
-        * :ref:`filename` - The filename to save to on disk.
-    
-    The following additional attributes are also specified:
-
         * :ref:`name` - The human-readable name of the source. (default: '')
         * :ref:`enabled` - Whether the source is enabled or not at creation. 
           (default: True)
@@ -39,7 +36,11 @@ class repolib.Source (ident='', filename='')
           [])
         * :ref:`components` - Components of the source repository to enable. 
           (default: [])
-        * :ref:`options` - Optional items affecting the source. (default: {})
+        * :ref:`signed_by` - The path to the signing key for this source
+        * :ref:`file` - The :ref:`file_object` for this source
+        * :ref:`key` - The :ref:`key_object` for this source.
+        * :ref:`twin_source`: - This source should be saved with both binary and
+          source code types enabled.
 
 The following decribe how each of these are used. 
 
@@ -51,16 +52,6 @@ ident
 The ``ident`` is the system-identifier for this source. This determines the 
 filename the source will use on-disk as well as the way to specify a source to 
 load. 
-
-.. _filename:
-
-filename
---------
-
-The ``filename`` is an alternate method to specify the ident, and is retained 
-for backwards compatibility with RepoLib 1.0.x. If the filename is specified, 
-any ``.list`` or ``.source`` suffixes are stripped, then the name is saved as 
-the :ref:`ident` attribute.
 
 .. _name:
 
@@ -155,182 +146,136 @@ This value is a list of strings describing the enabled distro components to
 download software from. Common values include ``main``, ``restricted``, 
 ``nonfree``, etc.
 
-.. _options:
+.. _signed_by
 
-options
--------
+signed_by
+---------
+The path to the keyring containing the signing key used to verify packages 
+downloaded from this repository. This should generally match the 
+:ref:`key-path` attribute for this source's :ref:`key` object.
 
-This is a dictionary containing key value pairs of options to add to the source. 
-Options often are used to restrict a source to certain CPU architectures or 
-languages. Valid options include:
+.. _source-file
 
-    * ``Architectures``
-    * ``Languages``
-    * ``Targets``
-    * ``PDiffs``
-    * ``By-Hash``
+file
+----
+The :ref:`file_object` for the file which contains this source. 
+
+.. _key
+
+key
+---
+The :ref:`key_object` for this source.
 
 =======
 Methods
 =======
 
-.. _make-source-string:
 
-make_source_string()
---------------------
+.. _get_description
 
-Source.make_source_string()
-    Takes the data from the :ref:`source-object` and makes it a printable string 
-    for output to console or for saving to a file. The :ref:`save-to-disk` 
-    method uses this method as a basis for its file output.
+Source.get_description() -> str
+    Returns a :obj:`str` containing a UI-compatible description of the source. 
 
-.. note::
-    The ``Name:`` field output by this method is not suitable for directly 
-    saving to a file without additional processing. When using this method to 
-    generate data for manually saving to disk, be sure to replace ``Name:`` with 
-    ``X-Repolib-Name:`` first.
+.. _reset_values:
 
-.. _save-to-disk:
-
-save_to_disk() 
---------------
-
-Source.save_to_disk(save=True)
-    Takes all of the current data saved in the :ref:`source-object` and writes 
-    it to the disk. It uses the current :ref:`filename` attribute as the storage 
-    location within ``/etc/apt/sources.list.d``. 
-    
-    The ``save`` parameter affects whether the source is actually saved or not.
-    This is useful in some subclasses.
-
-.. _load-from-file:
-
-load_from_file()
-----------------
-
-Source.load_from_file(filename=None, ident=None)
-    Loads the source from a file on disk. The location loaded depends on the 
-    :ref:`lff-filename` and :refF`lff-ident` parameter's value, as described 
-    below:
-
-.. _lff-ident:
-
-ident
-^^^^^
-
-The ident of the source to load from the disk. If omitted, load from the 
-specified filename or the the current :ref:`ident` attribute. If provided, this
-method will set the :ref:`ident` attribute. For example::
-
-    >>> source = Source()
-    >>> source.filename 
-    'example.sources'
-    >>> source.load_from_file(ident='google-chrome')
-    >>> source.ident 
-    'google-chrome'
-    >>> source_with_name = Source()
-    >>> source_with_name.ident = 'ppa-system76-pop'
-    >>> source_with_name.load_from_file()
-    >>> source_with_name.ident
-    'ppa-system76-pop'
-
-.. _lff-filename:
-
-filename
-^^^^^^^^
-
-The ident of the source to load from the disk. If omitted, load from the 
-specified filename or the the current :ref:`ident` attribute. If provided, this
-method will set the :ref:`ident` attribute. For example::
-
-    >>> source = Source()
-    >>> source.filename 
-    'example.sources'
-    >>> source.load_from_file(filename='google-chrome.sources')
-    >>> source.ident 
-    'google-chrome'
-    >>> source_with_name = Source()
-    >>> source_with_name.ident = 'ppa-system76-pop'
-    >>> source_with_name.load_from_file()
-    >>> source_with_name.ident
-    'ppa-system76-pop'
-
-.. _make_source_string:
-
-make_source_string()
---------------------
-
-Source.make_source_string()
-    This method returns a string-representation of the source. Note that this 
-    method is intended for user-facing output. If you need the string data as 
-    it will be written to disk, use the ``Source.dump()`` method instead.
-
-.. _set-source-enabled:
-
-set_source_enabled()
---------------------
-
-Source.set_source_enabled(is_enabled)
-    This method can be used to quickly set the :ref:`source-object`.``types``
-    attribute. Since the ``types`` attribute is a list of 
-    :ref:`aptsourcetype-enum` values, this method can quickly set the type to 
-    either of these values without needing to use the Enum directly. The 
-    argument :ref:`sse-is-enabled` is a boolean value.
-
-.. _sse-is-enabled:
-
-is_enabled
-^^^^^^^^^^
-
-If ``True``, the :ref:`source-object` ``types`` attribute is set to 
-[:ref:`aptsourcetype-enum`.BINARY, :ref:`aptsourcetype-enum`.SOURCE]. 
-Otherwise, it's set to [:ref:`aptsourcetype-enum`.BINARY] only.
-
-.. _copy:
-
-copy()
-------
-
-Source.copy(source_code=True)
-    Copies the source and returns an identical source object to the current 
-    source. This is useful for legacy one-line sources to create copies of 
-    sources with all data identical to the first source. 
-  
-.. _c-source-code:
-
-source_code
-^^^^^^^^^^^
-
-If ``True``, the returned Source will be identical except that the :ref:`types`
-attribute will be set equal to ``['deb-src']`` instead of the current value.
-
-.. _make-name:
-
-make_name()
------------
-
-Source.make_name(prefix='')
-    Creates a name for the source, with the optional ``prefix`` specified. If a 
-    ``prefix`` is specified, it will be appended to the name with a ``-``
-    character separating the prefix from the generated name. 
-
-.. _init-values:
-
-init_values()
+reset_values()
 -------------
 
-Source.init_values()
+Source.reset_values()
     Initializes the Source's attributes with default data in-order. This is 
     recommended to ensure that the fields in the underlying deb822 Dict are 
-    in order.
+    in order and correctly capitalized.
 
-.. _make-debline:
+.. _load_from_data
 
-make_debline()
---------------
+load_from_data()
+----------------
 
-Source.make_debline()
-    Returns a one-line style source line for this source. If the :ref:`uris`, 
-    :ref:`suites`, or :ref:`types` fields contain more than a single value, the 
-    output will raise a ``SourceError`` exception, since one-line sources can 
-    only contain one of these different types.
+Source.load_from_data(data: list) -> None
+    Loads configuration information from a list of data, rather than using 
+    manual entry. The data can either be a list of strings with DEB822 data, or
+    a single-element list containing a one-line legacy line.
+
+data
+^^^^
+The data load load into the source. If this contains a legacy-format one-line 
+repository, it must be a single-element list. Otherwise, it should contain a 
+list of strings, each being a line from a DEB822 configuration.
+
+.. _generate_default_ident
+
+generate_default_ident()
+------------------------
+
+Source.generate_default_ident(prefix: str = '') -> str
+    Generates a suitable default ident, optionally with a prefix, and sets it. 
+    The generated ident is also returned for processing convenience.
+
+prefix
+^^^^^^
+The prefix to prepend to the ident.
+
+.. _generate_default_name
+
+generate_default_name()
+_______________________
+
+Source.generate_default_name() ->
+    Generates a default name for the source and sets it. The generated name is
+    also returned for convenience.
+
+.. _load_key
+
+load_key()
+__________
+
+Source.load_key(ignore_errors: bool = True) -> None
+    Finds the signing key for this source spefified in :ref:`signed_by` and 
+    loads a :ref:`key_object` for it. 
+
+ignore_errors
+^^^^^^^^^^^^^
+If `False`, raise a :ref:`exc_sourceerror` if the key can't be loaded or doesn't
+exist.
+
+.. _source_save
+
+save()
+------
+
+Source.save()
+    Proxy method for the :ref:`file-save` method for this source's 
+    :ref:`file_object`.
+
+Output Properties
+=================
+
+There are three output properties which contain the current source data for 
+output in a variety of formats.
+
+.. _source_deb822
+
+deb822
+------
+
+Source.deb822
+    A representation of the source data as a DEB822-formatted string
+
+.. _source_legacy
+
+legacy
+------
+
+Source.legacy
+    A one-line formatted string of the source. It :ref:`twin_source` is ``True``,
+    then there will additionally be a ``deb-src`` line following the primary 
+    line.
+
+.. _source_ui
+
+ui
+--
+
+Source.ui
+    A representation of the source with certain key names translated to better
+    represent their use in a UI for display to a user.
