@@ -12,8 +12,8 @@ export PYBUILD_OPTION=--test-pytest
 ## Uncomment to disable testing during package builds
 ## NOTE for QA or Engineering Review: This should not be uncommented in a
 ## PR. If it is, DO NOT APPROVE THE PR!!!
-override_dh_auto_test:
-	true
+# override_dh_auto_test:
+# 	true
 
 # If you need to rebuild the Sphinx documentation
 # Add spinxdoc to the dh --with line
