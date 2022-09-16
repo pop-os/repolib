@@ -33,7 +33,7 @@ from urllib import request, error
 import dbus
 
 SOURCES_DIR = Path('/etc/apt/sources.list.d')
-KEYS_DIR = Path('/usr/share/keyrings/')
+KEYS_DIR = Path('/etc/apt/keyrings/')
 TESTING = False
 KEYSERVER_QUERY_URL = 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x'
 
@@ -357,25 +357,6 @@ def prettyprint_enable(enabled: bool = True) -> None:
     else:
         PRETTY_PRINT = ''
 
-def fetch_key(fingerprint, query_url=KEYSERVER_QUERY_URL):
-    """ Fetches a PGP Key from a keyserver.
-
-    Arguments:
-        :str fingerprint: The fingerprint of the key to fetch.
-        :str query_url: the URL to use to fetch the query.
-
-    Returns
-        :Bytes: The data containing the Key data.
-    """
-
-    full_url = query_url + fingerprint
-    try:
-        req = request.urlopen(full_url)
-    except error.URLError:
-        req = None
-
-    return req.read()
-
 def url_validator(url):
     """ Validate a url and tell if it's good or not.
 
@@ -404,71 +385,6 @@ def url_validator(url):
     except:
         return False
 
-def get_source_path(name, log=None):
-    """ Tries to get the full path to the source.
-
-    This is necessary because some sources end in .list, others in .sources
-
-    Returns:
-        pathlib.Path for the actual full path.
-    """
-    full_name = f'{name}.sources'
-    full_path = get_sources_dir() / full_name
-    if log:
-        log.debug('Trying to load %s', full_path)
-    if full_path.exists():
-        if log:
-            log.debug('Path %s exists!', full_path)
-        return full_path
-
-    full_name = f'{name}.list'
-    full_path = get_sources_dir() / full_name
-    if log:
-        log.debug('Trying to load %s', full_path)
-    if full_path.exists():
-        if log:
-            log.debug('Path %s exists!', full_path)
-        return full_path
-    return None
-
-def get_keys_dir(testing=False):
-    """ Get the path to the signing keys dir.
-
-    Arguments:
-        :bool testing: Whether we should be in testing mode or not.
-
-    Returns:
-        pathlib.Path: The Keys dir.
-    """
-    # pylint: disable=global-statement
-    # As with get_sources_dir(), we're setting a mode here.
-    if testing:
-        global KEYS_DIR
-        KEYS_DIR = '/tmp/replib_testing/keys'
-    # pylint: enable=global-statement
-    keys_dir = Path(KEYS_DIR)
-    keys_dir.mkdir(parents=True, exist_ok=True)
-    return keys_dir
-
-def get_sources_dir(testing=False):
-    """ Get the path to the sources dir.
-
-    Returns:
-        pathlib.Path: The Sources dir.
-    """
-    # pylint: disable=global-statement
-    # We want to stop using the old dir and use the testing dir on subsequent
-    # calls.
-    if testing:
-        global SOURCES_DIR
-        SOURCES_DIR = '/tmp/repolib_testing'
-    # pylint: enable=global-statement
-    sources_dir = Path(SOURCES_DIR)
-    sources_dir.mkdir(parents=True, exist_ok=True)
-    return sources_dir
-
-# pylint: disable=inconsistent-return-statements
-# This is a better way to check these
 def validate_debline(valid):
     """ Basic checks to see if a given debline is valid or not.
 
