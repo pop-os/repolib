@@ -111,10 +111,11 @@ it onto your system. You will need the following build-dependencies:
     * python3-setuptools
     * python3-distutils
     * python3-pytest
+    * python3-gnupg
 
 You can use this command to install these all in one go::
 
-    sudo apt install debhelper dh-python python3-all python3-setuptools
+    sudo apt install debhelper dh-python python3-all python3-setuptools python3-gnupg
 
 Then build and install the package::
 
@@ -161,7 +162,7 @@ This command will remove all of these for you::
 |
 |
 
-Copyright © 2019-2020, Ian Santopietro
+Copyright © 2019-2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
