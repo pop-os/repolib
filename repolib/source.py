@@ -20,7 +20,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from codecs import ignore_errors
 import logging
 
 from debian import deb822
@@ -56,7 +55,6 @@ class Source(deb822.Deb822):
         components([str]): A list of enabled components for this source
         comments(str): Comments for this source 
         signed_by(Path): The path to this source's key file
-        options(dict): A dictionary mapping for this source's options
         file(SourceFile): The file this source belongs to
         key(SourceKey): The key which signs this source
     """
@@ -103,10 +101,6 @@ class Source(deb822.Deb822):
             The formatted description.
         """
         return self.name
-
-
-    def add_key(self) -> None:
-        """Adds a key from disk"""
     
     def reset_values(self) -> None:
         """Reset the default values for all attributes"""
@@ -235,15 +229,6 @@ class Source(deb822.Deb822):
         
         return name
 
-
-    def set_key(key:SourceKey) -> None:
-        """Sets the source signing key
-        
-        Arguments:
-            key(SourceKey): The key to set as the signing key
-        """
-
-
     def load_key(self, ignore_errors:bool = True) -> None:
         """Finds and loads the signing key from the system
         
@@ -265,14 +250,6 @@ class Source(deb822.Deb822):
             util.keys[str(new_key.path)] = new_key
         else:
             self.key = util.keys[self.signed_by]
-
-
-    def add_key(self) -> None:
-        """Adds the source signing key to the system"""
-
-
-    def remove_key(self) -> None:
-        """Removes the source signing key from the system."""
 
     def save(self) -> None:
         """Proxy method to save the source"""

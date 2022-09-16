@@ -92,6 +92,7 @@ class SourceFile:
         if source not in self.sources:
             self.contents.append(source)
             self.sources.append(source)
+            source.file = self
     
     def remove_source(self, ident:str) -> None:
         """Removes a source from the file

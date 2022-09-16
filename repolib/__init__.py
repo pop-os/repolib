@@ -37,7 +37,7 @@ from . import util
 from . import system
 
 LOG_FILE_PATH = '/var/log/repolib.log'
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.WARNING
 KEYS_DIR = util.KEYS_DIR
 SOURCES_DIR = util.SOURCES_DIR
 TESTING = util.TESTING
@@ -125,11 +125,7 @@ SourceType = util.SourceType
 AptSourceEnabled = util.AptSourceEnabled
 
 url_validator = util.url_validator
-fetch_key = util.fetch_key
 prettyprint_enable = util.prettyprint_enable
-get_source_path = util.get_source_path
-get_keys_dir = util.get_keys_dir
-get_sources_dir = util.get_sources_dir
 validate_debline = util.validate_debline
 strip_hashes = util.strip_hashes
 compare_sources = util.compare_sources
