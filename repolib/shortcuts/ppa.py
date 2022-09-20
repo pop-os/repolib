@@ -39,7 +39,7 @@ BASE_URL = 'http://ppa.launchpad.net'
 BASE_DIST = 'ubuntu'
 BASE_COMPS = 'main'
 
-DEFAULT_FORMAT = util.SourceFormat.DEFAULT
+DEFAULT_FORMAT = util.SourceFormat.LEGACY
 
 prefix = 'ppa'
 delineator = ':'
