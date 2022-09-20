@@ -21,6 +21,9 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
+from pathlib import Path
+
+import dbus
 
 from repolib.key import SourceKey
 
@@ -46,6 +49,7 @@ class PopdevSource(Source):
     Arguments:
         shortcut (str): The ppa: shortcut to process
     """
+    prefs_dir = Path('/etc/apt/preferences.d')
     default_format = BASE_FORMAT
 
     @staticmethod
@@ -73,8 +77,30 @@ class PopdevSource(Source):
         self.log = logging.getLogger(__name__)
         self.line = line
         self.twin_source = True
+        self.prefs_path = None
+        self.branch_name = ''
         if line:
             self.load_from_shortcut(self.line)
+    
+    def tasks_save(self, *args, **kwargs) -> None:
+        super().tasks_save(*args, **kwargs)
+        self.log.info('Saving prefs file for %s', self.ident)
+        prefs_contents = 'Package: *\n'
+        prefs_contents += f'Pin: release o=pop-os-staging-{self.branch_name}\n'
+        prefs_contents += 'Pin-Priority: 1002\n'
+
+        self.log.debug('%s prefs for pin priority:\n%s', self.ident, prefs_contents)
+
+        try:
+            with open(self.prefs, mode='w') as prefs_file:
+                prefs_file.write(prefs_contents)
+        except PermissionError:
+            bus = dbus.SystemBus()
+            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+            privileged_object.output_prefs_to_disk(str(self.prefs), prefs_contents)
+        
+        self.log.debug('Pin priority saved for %s', self.ident)
+
     
     def get_description(self) -> str:
         return f'Pop Development Staging branch'
@@ -103,10 +129,10 @@ class PopdevSource(Source):
         self.log.debug('Loading shortcut %s', self.line)
         
         self.info_parts = shortcut.split(delineator)
-        branch_name = ':'.join(self.info_parts[1:])
-        self.log.debug('Popdev branch name: %s', branch_name)
+        self.branch_name = ':'.join(self.info_parts[1:])
+        self.log.debug('Popdev branch name: %s', self.branch_name)
 
-        self.ident = f'{prefix}-{branch_name}'
+        self.ident = f'{prefix}-{self.branch_name}'
         if f'{self.ident}.{BASE_FORMAT.value}' not in util.files:
             new_file = SourceFile(name=self.ident)
             new_file.format = BASE_FORMAT
@@ -117,8 +143,8 @@ class PopdevSource(Source):
         
         self.file.add_source(self)
         
-        self.name = f'Pop Development Branch {branch_name}'
-        self.uris = [f'{BASE_URL}/{branch_name}']
+        self.name = f'Pop Development Branch {self.branch_name}'
+        self.uris = [f'{BASE_URL}/{self.branch_name}']
         self.suites = [util.DISTRO_CODENAME]
         self.components = [BASE_COMPS]
 
@@ -126,5 +152,8 @@ class PopdevSource(Source):
         key.load_key_data(url=BASE_KEYURL)
         self.key = key
         self.signed_by = str(self.key.path)
+
+        self.prefs_path = self.prefs_dir / f'pop-os-staging-{self.branch_name}'
+        self.prefs = self.prefs_path
 
         self.enabled = True

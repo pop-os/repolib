@@ -102,6 +102,31 @@ class Repo(dbus.service.Object):
     
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
+        in_signature='s', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def delete_prefs_file(self, src, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        prefs_path = Path(src)
+        prefs_path.unlink()
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='ss', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def output_prefs_to_disk(self, path, contents, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        full_path = Path(path)
+        with open(full_path, mode='w') as output_file:
+            output_file.write(contents)
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
         in_signature='ss', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )

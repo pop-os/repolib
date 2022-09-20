@@ -116,6 +116,7 @@ class SourceTestCase(unittest.TestCase):
             'Components: main contrib nonfree\n'
             'Architectures: amd64 armel\n'
             'Languages: en_US en_CA\n'
+            ''
         )
         legacy_source_string = (
             'test-legacy:\n'

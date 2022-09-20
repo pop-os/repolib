@@ -192,16 +192,20 @@ class List(Command):
             return self.list_all()
 
         if self.repo == 'x-repolib-all-sources' and not self.all:
-            print('Configured Sources:')
+            if not self.skip_names:
+                print('Configured Sources:')
             for source in util.sources:
-                print(source)
+                line = source
+                if not self.skip_names:
+                    line += f' - {util.sources[source].name}'
+                print(line)
             
             return True
         
         else:
             try:
                 output = util.sources[self.repo]
-                print(f'Details for source {output.ident}:\n{output.ui}')
+                print(f'Details for source {output.ui}')
                 return True
             except KeyError:
                 self.log.error(
