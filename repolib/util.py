@@ -90,9 +90,10 @@ class AptSourceEnabled(Enum):
 
 valid_keys = [
     'X-Repolib-Name:',
-    'X-Repolib-Ident:',
+    'X-Repolib-ID:',
     'X-Repolib-Default-Mirror:',
     'X-Repolib-Comment',
+    'X-Repolib-Prefs',
     'Enabled:',
     'Types:',
     'URIs:',
