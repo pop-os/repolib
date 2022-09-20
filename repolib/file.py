@@ -103,6 +103,22 @@ class SourceFile:
         source = self.get_source_by_ident(ident)
         self.contents.remove(source)
         self.sources.remove(source)
+        self.save()
+
+        ## Remove sources prefs files/pin-priority
+        prefs_path = source.prefs
+        try:
+            if prefs_path.exists():
+                prefs_path.unlink()
+        
+        except AttributeError:
+            # No prefs path
+            pass
+        
+        except PermissionError:
+            bus = dbus.SystemBus()
+            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+            privileged_object.delete_prefs_file(str(prefs_path))
 
     def get_source_by_ident(self, ident: str) -> Source:
         """Find a source within this file by its ident
@@ -408,6 +424,7 @@ class SourceFile:
         for source in self.sources:
             if source.key:
                 source.key.save_gpg()
+            source.tasks_save()
 
         if not self.name or not self.format:
             raise SourceFileError('There was not a complete filename to save')

@@ -114,6 +114,11 @@ valid_keys = [
     'Valid-Until-Max:',
 ]
 
+output_skip_keys = [
+    'X-Repolib-Prefs',
+    'X-Repolib-ID', 
+]
+
 options_inmap = {
     'arch': 'Architectures',
     'lang': 'Languages',
@@ -163,6 +168,7 @@ keys_map = {
     'X-Repolib-Name: ': 'Name: ',
     'X-Repolib-ID: ': 'Ident: ',
     'X-Repolib-Comments: ': 'Comments: ',
+    'X-Repolib-Default-Mirror: ': 'Default Mirror: ',
 }
 
 PRETTY_PRINT = '\n    '

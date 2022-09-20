@@ -21,6 +21,7 @@ along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
+from pathlib import Path
 
 from debian import deb822
 
@@ -127,6 +128,7 @@ class Source(deb822.Deb822):
         self.check_valid_until = ''
         self.valid_until_min = ''
         self.valid_until_max = ''
+        self.prefs = ''
         self._update_legacy_options()
         self.file = None
         self.key = None
@@ -295,6 +297,9 @@ class Source(deb822.Deb822):
         _list.append(item)
         prop = _list
 
+    def tasks_save(self, *args, **kwargs) -> None:
+        """Extra tasks to perform when saving a source"""
+        return
 
     ## Properties are stored/retrieved from the underlying Deb822 dict
     @property
@@ -436,6 +441,30 @@ class Source(deb822.Deb822):
             if self.signed_by:
                 options.pop('Signed-By')
         self._options = options
+    
+    @property
+    def prefs(self) -> Path:
+        """The path to any apt preferences files for this source."""
+        try:
+            prefs = self['X-Repolib-Prefs']
+        except KeyError: 
+            prefs = ''
+        
+        if prefs:
+            return Path(prefs)
+        return None
+    
+    @prefs.setter
+    def prefs(self, prefs):
+        """Accept a str or a Path-like object"""
+        try:
+            del self['X-Repolib-Prefs']
+        except KeyError:
+            pass
+        
+        if prefs:
+            prefs_str = str(prefs)
+            self['X-Repolib-Prefs'] = prefs_str
     
 
     ## Option properties
@@ -735,17 +764,26 @@ class Source(deb822.Deb822):
         """The UI-friendly representation of this source"""
         self._update_legacy_options()
         _ui_list:list = self.deb822.split('\n')
-        if _ui_list[0].startswith('X-Repolib-ID'):
-            _ui_list[0] = f'{self.ident}:'
-        _ui:str = '\n'.join(_ui_list)
+        ui_output: str = f'{self.ident}:\n'
+        for line in _ui_list:
+            key = line.split(':')[0]
+            if key not in util.output_skip_keys:
+                if line:
+                    ui_output += f'{line}\n'
         for key in util.keys_map:
-            _ui = _ui.replace(key, util.keys_map[key])
-        return _ui
+            ui_output = ui_output.replace(key, util.keys_map[key])
+        return ui_output
     
     @property
     def legacy(self) -> str:
         """The legacy/one-line format representation of this source"""
         self._update_legacy_options()
+
+        if self.prefs:
+            raise SourceError(
+                'Apt Preferences files can only be used with DEB822-format sources.'
+            )
+
         legacy = ''
 
         legacy += self._generate_legacy_output()
