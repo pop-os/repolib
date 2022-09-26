@@ -39,4 +39,4 @@ _apt_manage()
     fi
 
 } &&
-complete -F _apt-manage apt-manage
+complete -F _apt_manage apt-manage
