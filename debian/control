@@ -8,6 +8,7 @@ Build-Depends: debhelper (>= 11),
                python3-dbus,
                python3-debian,
                python3-distro,
+               python3-gnupg,
                python3-lazr.restfulclient,
                python3-launchpadlib,
                python3-setuptools,
@@ -26,7 +27,8 @@ Depends: ${python3:Depends},
          apt,
          lsb-release,
          python3-dbus,
-         python3-debian
+         python3-debian,
+         python3-gnupg
 Recommends: python3-lazr.restfulclient,
             python3-launchpadlib
 Description: Repository Management for APT in Python (Python 3)
