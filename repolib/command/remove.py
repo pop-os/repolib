@@ -106,7 +106,8 @@ class Remove(Command):
                     pass
             
             self.log.info('No other sources found using key, deleting key')
-            self.key.delete_key()
+            if self.key:
+                self.key.delete_key()
             return True
 
         else:
