@@ -1,10 +1,10 @@
-repolib (2.0.0) UNRELEASED; urgency=medium
+repolib (2.0.0) jammy; urgency=medium
 
   * Newly rewritten architecture
   * Better support for files with multiple separate sources
   * Support for key management (a la apt-key, but updated for modern standards)
 
- -- Ian Santopietro <ian@system76.com>  Fri, 26 Aug 2022 17:47:37 -0600
+ -- Ian Santopietro <ian@system76.com>  Mon, 26 Sep 2022 11:06:38 -0600
 
 repolib (1.5.2) groovy; urgency=medium
 
