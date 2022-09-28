@@ -21,45 +21,60 @@ Verify that the information output and the resulting deb lines (at the end of
 the output) appear correct for the given PPA.
 
 ```
-sudo apt-manage -b add -s ppa:system76/proposed
+sudo apt-manage add -s ppa:system76/proposed
 ```
-Verify that the `deb-src` repository is uncommented in the command output.
+Verify that the `deb-src` is included in the `Types` field, then remove the 
+repository: `sudo apt-manage remove ppa-system76-proposed`
 
 ```
-sudo apt-manage -b add -d ppa:system76/proposed
+sudo apt-manage add -d ppa:system76/proposed
 ```
-Verify that both `deb-src` and `deb` repositories are commented out in the 
-command output.
-
-After each of the preceeding tests, ensure that no changes are made to the 
-system in `/etc/apt/sources.list.d`
+Verify that the `Enabled` field is set to `no`, then remove the 
+repository: `sudo apt-manage remove ppa-system76-proposed`
 
 ```
-sudo apt-manage add -e ppa:system76/proposed
+sudo apt-manage add ppa:system76/proposed
 ```
 Verify that the command asks for verification before completing and displays
 information about the PPA (similar to `add-apt-repository`). Verify that the 
 command fetches the signing key and adds it to the system. Verify that the 
-the correct `.list` file is added to `/etc/apt/sources.list.d`
+the correct `.list` file is added to `/etc/apt/sources.list.d`, then remove the 
+repository: `sudo apt-manage remove ppa-system76-proposed`
 
 
 2. Test adding deb repositories 
 
 ```
-sudo apt-manage add deb http://example.com/ubuntu focal main
+sudo apt-manage add --format list deb http://example.com/ubuntu focal main
 ```
 Verify that the added repository matches the given input, and that there is a
-commented-out `deb-src` repository with it. 
+commented-out `deb-src` repository with it. Ensure that the added repository 
+file ends in `.list` and that the contents match legacy Deb format.
+
+Remove the repository with `sudo apt-manage remove 
 
 3. Test adding URLs
 
 ```
-sudo apt-manage add http://example.com/ubuntu
+sudo apt-manage add --format list http://example.com/ubuntu
 ```
 Verify that the repository is correctly expanded to include the `deb` at the 
 beginning, and the correct `{RELEASE} main` suites and components, where 
 {RELEASE} matches the current version codename. Verify that a matching `deb-src`
 entry is added as well in the command output. 
+
+4. Test adding Pop Development repositories
+
+```
+sudo apt-manage add popdev:master
+```
+
+Verify that the repository details are correct, that the `Signed-by` field 
+points to `/etc/apt/keyrings/popdev-archive-keyring.gpg`, that the key file 
+exists at that path. Then, delete the repostiory: 
+```
+sudo apt-manage remove popdev-master
+```
 
 #### Test Listing Details
 
@@ -68,13 +83,13 @@ entry is added as well in the command output.
 ```
 apt-manage list
 ```
-Verify that all 3rd-party repositories added to `/etc/apt/sources.list.d` are 
+Verify that all configured repositories added to `/etc/apt/sources.list.d` are 
 printed in the command output.
 
 2. Test that details for all repositories are listed
 
 ```
-apt-manage list -v
+apt-manage list -a
 ```
 
 Verify that the specific configuration for each repository listed in step 1 is
@@ -83,22 +98,12 @@ presented in the output.
 3. Test that details for a specific repository are listed
 
 ```
-apt-manage list example-com-ubuntu
+apt-manage list system
 ```
 
 Verify that the detailed configuration for only the specified repository is 
 listed in the output.
 
-4. Test that contents of `/etc/apt/sources.list` are output
-
-```
-apt-manage list -l
-cat /etc/apt/sources.list
-```
-
-Verify that in addition to the main sources, the repositories in the system-wide
-`/etc/apt/sources.list` are presented in the output, and that they match the 
-entries in the file.
 
 #### Removing repositories
 
@@ -116,8 +121,8 @@ removed using `apt-manage list`.
 On the second run, simply press enter. Verify that the source is not removed by
 using `apt-manage list`.
 
-On the third run, enter 'v' and press enter. Verify that the prompt re-appears
-and waits for valid input ('y', 'n', or Enter).
+On the third run, enter 'v' and press enter. Verify that the source is not removed by
+using `apt-manage list`.
 
 2. Test removing sources
 
@@ -144,16 +149,16 @@ system.sources file does not exist) using `apt-manage list`
 Add a testing repository:
 
 ```
-sudo apt-manage add ppa:system76/proposed
-apt-manage list ppa-system76-proposed
+sudo apt-manage add popdev:master
+apt-manage list popdev-master
 ```
 Verify that the details are correct in the output.
 
 1. Change Repository Name
 
 ```
-sudo apt-manage modify ppa-system76-proposed --name 'Testing Repo'
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --name 'Testing Repo'
+apt-manage list popdev-master
 ```
 
 Verify that the name was updated in the final output to match the given input
@@ -162,36 +167,36 @@ Verify that the name was updated in the final output to match the given input
 2. Disable Repository
 
 ```
-sudo apt-manage modify ppa-system76-proposed --disable
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --disable
+apt-manage list popdev-master
 ```
 Ensure that the repository is now listed as `Enabled: no`.
 
 3. Add/Remove URI
 
 ```
-sudo apt-manage modify ppa-system76-proposed --add-uri http://example.com/
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --add-uri http://example.com/
+apt-manage list popdev-master
 ```
 Ensure that the `http://example.com` URI was added to the source.
 
 ```
-sudo apt-manage modify ppa-system76-proposed --remove-uri http://example.com
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --remove-uri http://example.com
+apt-manage list popdev-master
 ```
 Ensure that the `http://example.com` URI was removed.
 
 4. Add/Remove Suite
 
 ```
-sudo apt-manage modify ppa-system76-proposed --add-suite xenial
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --add-suite xenial
+apt-manage list popdev-master
 ```
 Ensure that the suite `xenial` was added to the source.
 
 ```
-sudo apt-manage modify ppa-system76-proposed --remove-suite xenial
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --remove-suite xenial
+apt-manage list popdev-master
 ```
 
 Ensure that the suite `xenial` was removed from the source.
@@ -199,14 +204,14 @@ Ensure that the suite `xenial` was removed from the source.
 5. Add/Remove Components
 
 ```
-sudo apt-manage modify ppa-system76-proposed --add-component 'universe multiverse'
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --add-component 'universe multiverse'
+apt-manage list popdev-master
 ```
 Ensure that the components `universe` and `multiverse` were added to the source.
 
 ```
-sudo apt-manage modify ppa-system76-proposed --remove-component 'main multiverse'
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify popdev-master --remove-component 'main multiverse'
+apt-manage list popdev-master
 ```
 Ensure that the components `main` and `multiverse` were removed from the source.
 
@@ -218,8 +223,7 @@ Ensure that the components `main` and `multiverse` were removed from the source.
 Add a testing repository:
 
 ```
-sudo apt-manage add ppa:system76/proposed
-apt-manage list ppa-system76-proposed
+apt-manage list popdev-master
 ```
 Verify that the details are correct in the output and that `Types:` is just 
 `deb`.
@@ -227,18 +231,23 @@ Verify that the details are correct in the output and that `Types:` is just
 1. Enable source code for one repo
 
 ```
-sudo apt-manage source -e ppa-system76-proposed
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify --source-enable popdev-master
+apt-manage list popdev-master
 ```
 Verify that the `Types:` is now `deb deb-src`.
 
 2. Disable source code for one repo
 
 ```
-sudo apt-manage source -d ppa-system76-proposed
-apt-manage list ppa-system76-proposed
+sudo apt-manage modify --source-disable popdev-master
+apt-manage list popdev-master
 ```
 Verify that the `Types:` is now just `deb`.
+
+Finally, remove the testing repository: 
+```
+sudo apt-manage remove popdev-master
+```
 
 ### Installation/upgrading (packaging tests)
 
