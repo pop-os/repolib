@@ -797,6 +797,11 @@ class Source(deb822.Deb822):
         """Generate a string of the current source in legacy format"""
         legacy = ''
 
+        if len(self.types) > 1:
+            self.twin_source = True
+            self.types = [util.SourceType.BINARY]
+            self.sourcecode_enabled = True
+
         for attr in ['types', 'uris', 'suites']:
             if len(getattr(self, attr)) > 1:
                 msg = f'The source has too many {attr}.'

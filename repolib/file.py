@@ -439,7 +439,7 @@ class SourceFile:
                 )
 
         if len(self.sources) > 0:
-            
+            self.log.debug('Saving, Main path %s; Alt path: %s', self.path, self.alt_path)
             try:
                 with open(self.path, mode='w') as output_file:
                     output_file.write(self.output)
@@ -474,6 +474,10 @@ class SourceFile:
         """The path needs to be updated when the format changes"""
         self._format = format
         self.path = util.SOURCES_DIR / f'{self.name}.{self._format.value}'
+        for format_ in util.SourceFormat:
+            if format != format_:
+                alt_format = format_
+        self.alt_path = util.SOURCES_DIR / f'{self.name}.{alt_format.value}'
 
     ## Output properties
     @property 
