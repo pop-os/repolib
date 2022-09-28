@@ -154,7 +154,7 @@ class Add(Command):
         
         new_source.load_from_data([self.deb_line])
         new_source.twin_source = True
-        new_source.source_code_enabled = self.source_code
+        new_source.sourcecode_enabled = self.source_code
 
         if self.name:
             new_source.name = self.name
