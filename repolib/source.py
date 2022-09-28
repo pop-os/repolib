@@ -783,35 +783,39 @@ class Source(deb822.Deb822):
             raise SourceError(
                 'Apt Preferences files can only be used with DEB822-format sources.'
             )
+        
+        sourcecode = self.sourcecode_enabled
+        if len(self.types) > 1:
+            self.twin_source = True
+            self.types = [util.SourceType.BINARY]
+            sourcecode = True
 
         legacy = ''
 
         legacy += self._generate_legacy_output()
         if self.twin_source:
             legacy += '\n'
-            legacy += self._generate_legacy_output(sourcecode=True)
+            legacy += self._generate_legacy_output(sourcecode=True, enabled=sourcecode)
 
         return legacy
 
-    def _generate_legacy_output(self, sourcecode:bool = False) -> str:
+    def _generate_legacy_output(self, sourcecode=False, enabled=True) -> str:
         """Generate a string of the current source in legacy format"""
         legacy = ''
 
         if len(self.types) > 1:
             self.twin_source = True
             self.types = [util.SourceType.BINARY]
-            self.sourcecode_enabled = True
-
         for attr in ['types', 'uris', 'suites']:
             if len(getattr(self, attr)) > 1:
                 msg = f'The source has too many {attr}.'
                 msg += f'Legacy-format sources support one {attr[:-1]} only.'
                 raise SourceError(msg)
         
-        if not self.enabled.get_bool()and not sourcecode:
+        if not self.enabled.get_bool() and not sourcecode:
             legacy += '# '
         
-        if sourcecode and not self.sourcecode_enabled:
+        if sourcecode and not enabled:
             legacy += '# '
         
         if sourcecode:
