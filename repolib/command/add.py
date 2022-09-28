@@ -169,9 +169,11 @@ class Add(Command):
         new_file = SourceFile(name=new_source.ident)
         new_file.format = new_source.default_format
         if self.format:
+            self.log.info('Setting new source format to %s', self.format)
             for format in util.SourceFormat:
                 if self.format == format.value:
                     new_file.format = format
+                    self.log.debug('New source format set to %s', format.value)
 
         new_file.add_source(new_source)
         new_source.file = new_file
