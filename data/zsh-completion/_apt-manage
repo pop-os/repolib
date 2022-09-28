@@ -29,37 +29,37 @@ case "$state" in
     local arguments
     arguments=(
       # Main command
-      '--help',
+      '--help'
       # Add subcommand
-      '--disable',
-      '--source-code',
-      '--terse',
-      '--name',
-      '--identifier',
-      '--format',
-      '--skip-keys',
+      '--disable'
+      '--source-code'
+      '--terse'
+      '--name'
+      '--identifier'
+      '--format'
+      '--skip-keys'
       # Key Ssbcommand
-      '--path',
-      '--url',
-      '--ascii',
-      '--fingerprint',
-      '--keyserver',
-      '--remove',
+      '--path'
+      '--url'
+      '--ascii'
+      '--fingerprint'
+      '--keyserver'
+      '--remove'
       # List subcommand
-      '--legacy',
-      '--verbose',
-      '--all',
-      '--file-names',
+      '--legacy'
+      '--verbose'
+      '--all'
+      '--file-names'
       # Modify subcommand
-      '--enable',
-      '--source-enable',
-      '--source-disable',
-      '--add-uri',
-      '--add-suite',
-      '--add-component',
-      '--remove-uri',
-      '--remove-suite',
-      '--remove-component',
+      '--enable'
+      '--source-enable'
+      '--source-disable'
+      '--add-uri'
+      '--add-suite'
+      '--add-component'
+      '--remove-uri'
+      '--remove-suite'
+      '--remove-component'
       # Remove subcommand
       '--assume-yes'
     )
