@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019-2022, Ian Santopietro
+Copyright (c) 2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -19,4 +19,14 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-__version__ = "2.0.0"
+
+from .popdev import PopdevSource
+from .ppa import PPASource
+from ..source import Source
+
+shortcut_prefixes = {
+    'deb': Source,
+    'deb-src': Source,
+    ppa.prefix: ppa.PPASource,
+    popdev.prefix: popdev.PopdevSource
+}

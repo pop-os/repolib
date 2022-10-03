@@ -1,6 +1,7 @@
+#!/usr/bin/python3
 
 """
-Copyright (c) 2020, Ian Santopietro
+Copyright (c) 2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -17,142 +18,98 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
-
-Command to remove sources from the system.
 """
 
-from pathlib import Path
+from .. import util, system
+from .command import Command
 
-import dbus
+class Remove(Command):
+    """Remove subcommand
+    
+    Removes configured sources from the system
 
-from . import command
-from ..source import Source
-from ..legacy_deb import LegacyDebSource
-from ..util import get_sources_dir, RepoError
-
-class Remove(command.Command):
-    # pylint: disable=no-self-use,too-few-public-methods
-    # This is a base class for other things to inherit and give other programs
-    # a standardized interface for interacting with commands.
-    """ Remove subcommand.
-
-    The remove command will remove the selected source. It has no options. Note
-    that the system sources cannot be removed. This requires root.
+    Options:
+        --assume-yes, -y
     """
 
     @classmethod
     def init_options(cls, subparsers):
-        """ Sets up this command's options parser.
-
-        Returns:
-            The subparser for this command.
+        """Sets up the argument parser for this command
+        
+        Returns: argparse.subparser
+            This command's subparser
         """
-        parser_remove = subparsers.add_parser(
+
+        sub = subparsers.add_parser(
             'remove',
-            help='Remove a configured repository.'
-        )
-        parser_remove.add_argument(
-            'repository',
-            help='The name of the repository to remove. See LIST'
+            help='Remove a configured repository'
         )
 
-        parser_remove.add_argument(
+        sub.add_argument(
+            'repository',
+            help='The identifier of the repository to remove. See LIST'
+        )
+        sub.add_argument(
             '-y',
             '--assume-yes',
             action='store_true',
-            help='Remove sources without prompting for confirmation.'
+            help='Remove without prompting for confirmation'
         )
 
-    def __init__(self, log, args, parser):
-        super().__init__(log, args, parser)
-        self.source = args.repository
-        self.sources_dir = get_sources_dir()
-
     def finalize_options(self, args):
-        """ Finish setting up our options/arguments. """
         super().finalize_options(args)
-        self.source = args.repository
+        system.load_all_sources()
+        self.source_name = args.repository
         self.assume_yes = args.assume_yes
-
-    def get_source_path(self):
-        """ Tries to get the full path to the source.
-
-        This is necessary because some sources end in .list, others in .sources
-
-        Returns:
-            A tuple with the pathlib.Path to the sources, and the pathlib.Path
-            to the '.save' file.
-        """
-        full_name = f'{self.source}.sources'
-        full_path = self.sources_dir / full_name
-        self.log.debug('Trying to load %s', full_path)
-        if full_path.exists():
-            remove_source = Source(ident=self.source)
-            remove_source.load_from_file()
-            return full_path, full_path, remove_source
-
-        full_name = f'{self.source}.list'
-        full_path = self.sources_dir / full_name
-        self.log.debug('Trying to load %s', full_path)
-        if full_path.exists():
-            save_path = Path(f'{full_path}.save')
-            remove_source = LegacyDebSource(ident=self.source)
-            remove_source.load_from_file()
-            return full_path, save_path, remove_source
-
-        raise RepoError('The path does not exist (checked .sources and .list files.')
-
+        self.source = None
+    
     def run(self):
-        """ Run the command. """
+        """Run the command"""
 
-        if self.source.lower() == 'system':
-            self.log.error("You cannot remove the system sources!")
+        self.log.info('Looking up %s for removal', self.source_name)
+
+        if self.source_name == 'system':
+            self.log.error('You cannot remove the system sources')
             return False
-
-        try:
-            remove_path, remove_path_save, remove_source = self.get_source_path()
-        except RepoError:
+        
+        if self.source_name not in util.sources:
             self.log.error(
-                'No source %s found on system. Check the spelling.', self.source
+                'Source %s was not found. Double-check the spelling',
+                self.source_name
             )
             return False
-
-        key_file = remove_source.key_file
-
+        else:
+            self.source = util.sources[self.source_name]
+            self.key = self.source.key
+            self.file = self.source.file
+        
+        print(f'This will remzove the source {self.source_name}')
+        print(self.source.ui)
+        response:str = 'n'
         if self.assume_yes:
             response = 'y'
-
         else:
-            print(
-                f'You are about to remove the sources contained in {remove_path.name}.'
-                '\nAre you sure you want to do this?\n'
-            )
-            response = 'f'
-            while response.lower() not in ['y', 'n']:
-                response = input(f'Remove {remove_path.name}? (y/N) ')
-                if response == '':
-                    response = 'n'
+            response = input('Are you sure you want to do this? (y/N) ')
+        
+        if response in util.true_values:
+            self.file.remove_source(self.source_name)
+            self.file.save()
 
-        if response.lower() == 'y':
-            if self.args.debug != 0:
-                self.log.info('Simulate: Remove %s', remove_path)
-                self.log.info('Simulate: Remove %s', remove_path_save)
-            else:
+            system.load_all_sources()
+            for source in util.sources.values():
+                self.log.debug('Checking key for %s', source.ident)
                 try:
-                    try:
-                        key_file.unlink()
-                    except FileNotFoundError:
-                        pass
-                    remove_path.unlink()
-                    remove_path_save.unlink(missing_ok=True)
-                except PermissionError:
-                    bus = dbus.SystemBus()
-                    privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-                    privileged_object.delete_source(remove_path.name, key_file.name)
-                    privileged_object.exit()
+                    if source.key.path == self.key.path:
+                        self.log.info('Source key in use with another source')
+                        return True
+                except AttributeError:
+                    pass
+            
+            self.log.info('No other sources found using key, deleting key')
+            if self.key:
+                self.key.delete_key()
+            return True
 
         else:
             print('Canceled.')
             return False
-
-        return True

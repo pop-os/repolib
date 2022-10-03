@@ -19,6 +19,7 @@
 '''
 #pylint: skip-file
 
+import shutil
 import subprocess
 
 import gi
@@ -81,6 +82,54 @@ class Repo(dbus.service.Object):
         in_signature='ss', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
+    def install_signing_key(self, src, dest, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        shutil.copy2(src, dest)
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='s', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def delete_signing_key(self, src, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        key_path = Path(src)
+        key_path.unlink()
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='s', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def delete_prefs_file(self, src, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        prefs_path = Path(src)
+        prefs_path.unlink()
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='ss', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def output_prefs_to_disk(self, path, contents, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
+        full_path = Path(path)
+        with open(full_path, mode='w') as output_file:
+            output_file.write(contents)
+    
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='ss', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
     def output_file_to_disk(self, filename, source, sender=None, conn=None):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
@@ -88,22 +137,31 @@ class Repo(dbus.service.Object):
         full_path = self.sources_dir / filename
         with open(full_path, mode='w') as output_file:
             output_file.write(source)
-
+    
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
         in_signature='ss', out_signature='',
         sender_keyword='sender', connection_keyword='conn'
     )
-    def delete_source(self, filename, key_filename, sender=None, conn=None):
+    def backup_alt_file(self, alt_file, save_file, sender=None, conn=None):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        key_file = self.keys_dir /key_filename
+        alt_path = self.sources_dir / alt_file
+        save_path = self.sources_dir / save_file
+        if alt_path.exists():
+            alt_path.rename(save_path)
+
+    @dbus.service.method(
+        "org.pop_os.repolib.Interface",
+        in_signature='s', out_signature='',
+        sender_keyword='sender', connection_keyword='conn'
+    )
+    def delete_source_file(self, filename, sender=None, conn=None):
+        self._check_polkit_privilege(
+            sender, conn, 'org.pop_os.repolib.modifysources'
+        )
         source_file = self.sources_dir / filename
-        try:
-            key_file.unlink()
-        except FileNotFoundError:
-            pass
         source_file.unlink()
 
     @dbus.service.method(

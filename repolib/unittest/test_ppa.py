@@ -20,11 +20,23 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .argparser import get_argparser
-from .add import Add
-from .list import List
-from .remove import Remove
-from .modify import Modify
-from .key import Key
+import unittest
 
-parser = get_argparser()
+from ..shortcuts import ppa
+from .. import util
+
+class PPATestCase(unittest.TestCase):
+    
+    def test_ppa(self):
+        source = ppa.PPASource()
+        
+        # Verification data
+        uris_test = ['http://ppa.launchpad.net/system76/pop/ubuntu']
+        signed_test = '/usr/share/keyrings/ppa-system76-pop-archive-keyring.gpg'
+        source.load_from_shortcut(shortcut='ppa:system76/pop', meta=False, key=False)
+
+        self.assertEqual(source.uris, uris_test)
+        self.assertEqual(source.ident, 'ppa-system76-pop')
+        self.assertEqual(source.suites, [util.DISTRO_CODENAME])
+        self.assertEqual(source.components, ['main'])
+        self.assertEqual(source.types, [util.SourceType.BINARY])

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2019-2020, Ian Santopietro
+Copyright (c) 2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -19,113 +19,55 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-#pylint: disable=too-many-ancestors, too-many-instance-attributes
-# If we want to use the subclass, we don't have a lot of options.
 
-from . import source
+import logging
+
+from pathlib import Path
+
 from . import util
-
-class SystemSourceException(Exception):
-    """ System Source Exceptions. """
-
-    def __init__(self, *args, code=1, **kwargs):
-        """Exception with the system sources
-
-        Arguments:
-            msg (str): Human-readable message describing the error that threw the
-                exception.
-            code (:obj:`int`, optional, default=1): Exception error code.
-    """
-        super().__init__(*args, **kwargs)
-        self.code = code
-
-class SystemSource(source.Source):
-    """ System Sources. """
-
-    def __init__(self, ident='system'):
-        """ Constructor for System Sources
-
-        Loads a source object for the System Sources. These are located (by
-        default) in /etc/apt/sources.list.d/system.sources. If your distro uses
-        a different location, please patch this in your packaging.
-        """
-        super().__init__()
-        self.ident = ident
-        self.load_from_file()
-
-    def set_component_enabled(self, component='main', enabled=True):
-        """ Enables or disabled a repo component (e.g. 'main')
-
-        Keyword Arguments:
-            component -- The component to (en|dis)able (default: "main")
-            ennabled -- Whether COMPONENT is enabled (default: True)
-        """
-        components = self.components.copy()
-        if not enabled:
-            if component in components:
-                components.remove(component)
-                self.components = components.copy()
-                self.save_to_disk()
-                return component
-        else:
-            if component not in components:
-                self.enabled = True
-                components.append(component)
-                self.components = components.copy()
-                self.save_to_disk()
-                return component
-
-        raise SystemSourceException(
-            msg=f"Couldn't toggle component: {component} to {enabled}"
-        )
-
-    def set_suite_enabled(self, suite=util.DISTRO_CODENAME, enabled=True):
-
-        """ Enables or disabled a repo suite (e.g. 'main')
-
-        Keyword Arguments:
-            suite -- The suite to (en|dis)able (default: main)
-            ennabled -- Whether COMPONENT is enabled (default: True)
-        """
-        suites = self.suites.copy()
-        if not enabled:
-            if suite in suites:
-                suites.remove(suite)
-                self.suites = suites.copy()
-                self.save_to_disk()
-                return suite
-        else:
-            if suite not in suites:
-                self.enabled = True
-                suites.append(suite)
-                self.suites = suites.copy()
-                self.save_to_disk()
-                return suite
+from .file import SourceFile
+from .source import Source
+from .shortcuts import popdev, ppa
 
 
-        raise SystemSourceException(
-            msg=f"Couldn't toggle suite: {suite} to {enabled}"
-        )
+log = logging.getLogger(__name__)
 
-    def set_default_mirror(self):
-        """ Resets the System Sources to use the default mirrors.
+def load_all_sources() -> None:
+    """Loads all of the sources present on the system."""
+    log.info('Loading all sources')
 
-        Requires that the `default_mirror` attribute be set.
-        """
-        if self.default_mirror:
-            self.uris = [self.default_mirror]
-            return
-        raise SystemSourceException('No default mirror set.')
+    util.sources.clear()
+    util.files.clear()
+    util.keys.clear()
+    util.errors.clear()
 
-    @property
-    def default_mirror(self):
-        """str: The default system mirror."""
+    sources_path = Path(util.SOURCES_DIR)
+    sources_files = sources_path.glob('*.sources')
+    legacy_files = sources_path.glob('*.list')
+
+    for file in sources_files:
         try:
-            return self['X-Repolib-Default-Mirror']
-        except KeyError:
-            return ''
+            sourcefile = SourceFile(name=file.stem)
+            log.debug('Loading %s', file)
+            sourcefile.load()
+            if file.name not in util.files:
+                util.files[file.name] = sourcefile
 
-    @default_mirror.setter
-    def default_mirror(self, uri):
-        if util.url_validator(uri):
-            self['X-Repolib-Default-Mirror'] = uri
+        except Exception as err:
+            util.errors[file.name] = err
+    
+    for file in legacy_files:
+        try:
+            sourcefile = SourceFile(name=file.stem)
+            sourcefile.load()
+            util.files[file.name] = sourcefile
+        except Exception as err:
+            util.errors[file.name] = err
+    
+    for f in util.files:
+        file = util.files[f]
+        for source in file.sources:
+            if source.ident in util.sources:
+                source.ident = f'{file.name}-{source.ident}'
+                source.file.save()
+            util.sources[source.ident] = source
