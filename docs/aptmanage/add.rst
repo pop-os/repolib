@@ -30,24 +30,21 @@ The new source can be disabled upon adding it using the ``--disable`` flag::
 
     $ apt-manage add --disable ppa:system76/pop
 
-Details for the PPA can be printed for review prior to adding the source using 
-the ``--expand`` flag::
-
-    $ apt-manage add --expand ppa:system76/pop
-    Name: Pop!_OS PPA
-    Enabled: yes
-    Types: deb
-    URIs: http://ppa.launchpad.net/system76/pop/ubuntu
-    Suites: focal
-    Components: main
-
-    A repository for all Pop!_OS software components.
-
-    Press [ENTER] to contine or Ctrl + C to cancel.
-
+Details for the PPA are printed for review prior to adding the source by default.
 This will print the generated configuration for the source as well as any 
 available details fetched for the source (typically only available for PPA 
-sources).
+sources). To suppress this output, include ``--terse``.
+
+
+Source File Format
+------------------
+
+The format which RepoLib saves the repository on disk in depends on the type of
+repository being added, but regardless the ``--format`` flag can be used to 
+force either legacy ``.list`` format or modern ``.sources`` format::
+
+    apt-manage add popdev:master --format=list
+    apt-manage add ppa:system76/pop --format=sources
 
 
 Names and Identifiers

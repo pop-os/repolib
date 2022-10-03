@@ -8,9 +8,9 @@ software repositories currently configured::
 
     $ apt-manage
     Configured sources:
-    system - Pop_OS System Sources
-    pop-os-apps - Pop_OS Applications
-    ppa-system76-pop - Pop!_OS PPA
+    system 
+    pop-os-apps
+    ppa-system76-pop 
 
 
 ``apt-manage`` operates on both DEB822-formated sources (located in the
@@ -25,4 +25,4 @@ one-line format sources (in ``/etc/apt/sources.list.d/*.list`` files).
     list
     modify
     remove
-    source
+    key

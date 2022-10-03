@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2020, Ian Santopietro
+Copyright (c) 2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -18,179 +18,198 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
-
-Module for listing repos on the system in CLI applications.
 """
 
+import argparse
+import textwrap
 import traceback
 
-from ..deb import DebLine
-from ..legacy_deb import LegacyDebSource
-from ..source import Source
-from ..util import get_sources_dir, RepoError
-from .. import get_all_sources
+from ..file import SourceFile, SourceFileError
+from ..source import Source, SourceError
+from .. import RepoError, util, system
 
-from . import command
+from .command import Command, RepolibCommandError
 
-class List(command.Command):
-    """ List subcommand
-
-    The list command lists available software sources as well as details about
-    sources. With no further options, it lists all configured sources. With a
-    configured source, it lists details about the specified source.
+class List(Command):
+    """List subcommand
+    
+    Lists information about currently-configured sources on the system.
 
     Options:
         --legacy, -l
-        --verbose, v
+        --verbose, -v
+        --all, -a
+        --no-names, -n
+        --file-names, -f
+        --no-indentation
     """
 
     @classmethod
     def init_options(cls, subparsers):
-        """ Sets up this command's options parser.
-
-        Returns:
-            The subparser for this command.
+        """Sets up ths argument parser for this command.
+        
+        Returns: argparse.subparser:
+            This command's subparser
         """
-        options = subparsers.add_parser(
+
+        sub = subparsers.add_parser(
             'list',
             help=(
-                'List configured repositories. If a repository name is provided, '
-                'show details about that repository.'
-                )
+                'List information for configured repostiories. If a repository '
+                'name is provided, details about that repository are printed.'
+            )
         )
 
-        options.add_argument(
+        sub.add_argument(
             'repository',
             nargs='*',
             default=['x-repolib-all-sources'],
-            help='The repository to list details about.'
+            help='The repository for which to list configuration'
         )
-        options.add_argument(
+        sub.add_argument(
             '-v',
             '--verbose',
             action='store_true',
-            help='Display details of all configured repositories.'
+            help='Show additional information, if available.'
         )
-        options.add_argument(
+        sub.add_argument(
+            '-a',
+            '--all',
+            action='store_true',
+            help='Display full configuration for all configured repositories.'
+        )
+        sub.add_argument(
             '-l',
             '--legacy',
             action='store_true',
-            help='Include listing details about entries configured in sources.list'
+            help='Include repositories configured in legacy sources.list file.'
         )
-        options.add_argument(
+        sub.add_argument(
             '-n',
             '--no-names',
             action='store_true',
-            dest='names',
-            help='Do not print names of repositories.'
+            dest='skip_names',
+            help=argparse.SUPPRESS
         )
-
-
-
-    def __init__(self, log, args, parser):
-        super().__init__(log, args, parser)
+        sub.add_argument(
+            '-f',
+            '--file-names',
+            action='store_true',
+            dest='print_files',
+            help="Don't print names of files"
+        )
+        sub.add_argument(
+            '--no-indentation',
+            action='store_true',
+            dest='no_indent',
+            help=argparse.SUPPRESS
+        )
+    
+    def finalize_options(self, args):
+        super().finalize_options(args)
+        self.repo = ' '.join(args.repository)
         self.verbose = args.verbose
+        self.all = args.all
         self.legacy = args.legacy
-        self.no_names = args.names
-        self.source = ' '.join(args.repository)
-        self.sources_dir = get_sources_dir()
-
-    def list_all_sources(self):
-        """ List all sources on the system, potentially with their info."""
-        # pylint: disable=too-many-branches
-        # The branches involved control program output. Maybe this can be
-        # split into separate methods.
+        self.skip_names = args.skip_names
+        self.print_files = args.print_files
+        self.no_indent = args.no_indent
+    
+    def list_legacy(self, indent) -> None:
+        """List the contents of the sources.list file.
+        
+        Arguments:
+            list_file(Path): The sources.list file to try and parse.
+            indent(str): An indentation to append to the output
+        """
         try:
-            sources_list_d_file = self.sources_dir.parent / 'sources.list'
+            sources_list_file = util.SOURCES_DIR.parent / 'sources.list'
         except FileNotFoundError:
-            sources_list_d_file = None
+            sources_list_file = None
 
-        if not self.no_names:
-            print('Configured sources:')
+        print('Legacy source.list sources:')
+        with open(sources_list_file, mode='r') as file:
+            for line in file:
+                if 'cdrom' in line:
+                    line = ''
+                
+                try: 
+                    source = Source()
+                    source.load_from_data([line])
+                    print(textwrap.indent(source.ui, indent))
+                except SourceError:
+                    pass
 
-        sources, errors = get_all_sources(get_system=True, get_exceptions=True)
+    def list_all(self):
+        """List all sources presently configured in the system
+        
+        This may include the configuration data for each source as well
+        """
+        
+        indent = '   '
+        if self.no_indent:
+            indent = ''
 
-        for source in sources:
-            self.log.debug('Found source file %s', source.filename)
-            if self.no_names:
-                print(f'{source.ident}')
-            else:
-                print(f'{source.ident} - {source.name}')
-            if self.verbose:
-                print(f'{source.make_source_string()}')
+        if self.print_files:
+            print('Configured source files:')
+        
+            for file in util.files:
+                print(f'{file.path.name}:')
 
-        if sources_list_d_file and self.legacy:
-            print('\n Legacy sources.list entries:\n')
-            with sources_list_d_file.open(mode='r') as file:
-                for line in file:
-                    if "cdrom:" in line:
-                        line = ''
-                    try:
-                        source = DebLine(line)
-                        print(f'{source.make_debline()}')
-                    except RepoError:
-                        pass
-        if errors:
-            print('\nThe following files have formatting errors:')
-            for err in errors:
+                for source in file.sources:
+                    print(textwrap.indent(source.ui, indent))
+            
+            if self.legacy:
+                self.list_legacy(indent)
+        
+        else:
+            print('Configured Sources:')
+            for source in util.sources:
+                output = util.sources[source]
+                print(textwrap.indent(output.ui, indent))
+            
+            if self.legacy:
+                self.list_legacy(indent)
+        
+        if util.errors:
+            print('\n\nThe following files contain formatting errors:')
+            for err in util.errors:
                 print(err)
             if self.verbose or self.debug:
-                print('\nDetails for the failing files:')
-                for err in errors:
-                    print(f'{err}:')
-                    with open(err) as error_file:
-                        print(error_file.read())
-                    print('Stack Trace:')
-                    traceback.print_tb(errors[err].__traceback__)
-                    print('\n')
-
-
+                print('\nDetails about failing files:')
+                for err in util.errors:
+                    print(f'{err}: {util.errors[err]}')
+                    
         return True
-
-    def get_source_path(self):
-        """ Tries to get the full path to the source.
-
-        This is necessary because some sources end in .list, others in .sources
-
-        Returns:
-            source.Source for the actual full path.
-        """
-        full_name = f'{self.source}.sources'
-        full_path = self.sources_dir / full_name
-        self.log.debug('Trying to load %s', full_path)
-        if full_path.exists():
-            self.log.debug('Path %s exists!', full_path)
-            source = Source(filename=full_path.name)
-            source.load_from_file()
-            return source
-
-        full_name = f'{self.source}.list'
-        full_path = self.sources_dir / full_name
-        self.log.debug('Trying to load %s', full_path)
-        if full_path.exists():
-            self.log.debug('Path %s exists!', full_path)
-            leg = LegacyDebSource(filename=full_path.name)
-            leg.load_from_file()
-            return leg
-
-        raise RepoError('The path does not exist (checked .sources and .list files.')
-
+    
     def run(self):
-        """ Run the command. """
+        """Run the command"""
+        system.load_all_sources()
+        self.log.debug("Current sources: %s", util.sources)
         ret = False
-        if self.source == 'x-repolib-all-sources':
-            ret = self.list_all_sources()
 
+        if self.all:
+            return self.list_all()
+
+        if self.repo == 'x-repolib-all-sources' and not self.all:
+            if not self.skip_names:
+                print('Configured Sources:')
+            for source in util.sources:
+                line = source
+                if not self.skip_names:
+                    line += f' - {util.sources[source].name}'
+                print(line)
+            
+            return True
+        
         else:
             try:
-                source = self.get_source_path()
-            except RepoError:
+                output = util.sources[self.repo]
+                print(f'Details for source {output.ui}')
+                return True
+            except KeyError:
                 self.log.error(
-                    "Couldn't find the source file for %s. Check your spelling.",
-                    self.source
+                    "Couldn't find the source file for %s, check the spelling",
+                    self.repo
                 )
                 return False
-
-            print(f'Details for source {self.source}:\n{source.make_source_string()}')
-            ret = True
-        return ret

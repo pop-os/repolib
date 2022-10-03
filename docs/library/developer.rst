@@ -1,4 +1,4 @@
-.. _repolib-module:
+.. _repolib_module:
 
 =======
 RepoLib 
@@ -18,7 +18,6 @@ also allows easy creation of new DEB822-style sources from user-supplied data.
 
     source/source
     ppa-module
-    util-module
     enums
 
 ==================
@@ -42,123 +41,295 @@ the module.
 repolib.VERSION
     Provides the current version of the library.
 
-.. _module-get-all-sources
+.. _module_log_file_path
 
-get_all_sources()
+``LOG_FILE_PATH``
 -----------------
 
-repolib.get_all_sources(get_system=False, get_exceptions=False)
-    Get a list of all valid sources configured on the system. Invalid sources or 
-    sources with formatting errors are excluded.
+repolib.LOG_FILE_PATH
+    Stores the current path to the log file
 
-    Returns:
-        Either a ``list`` of :ref:`source-object`, or a tuple with this list 
-        plus a :obj:`dict` with :obj:`Exception` for any sources with errors 
+.. _module_log_level
 
-get_system
-^^^^^^^^^^
-:obj:`bool` - Whether to include the system source at the beginning of the list
-of sources.
+repolib.LOG_LEVEL
+    Stores the current logging level. Note: Change this level using the 
+    :ref:`module_set_logging_level` function.
 
-get_exceptions
-^^^^^^^^^^^^^^
-:obj:`bool` - Whether to return just the list of sources or to include the 
-exception Dictionary. If ``True``, then the Exception Dictionary will contain 
-keys for each failing filename, plus the :obj:`Exception` which triggered the 
-failure.
+.. _module_dirs
+
+Configuration directories
+=========================
+
+repolib.KEYS_DIR
+repolib.SOURCES_DIR
+    Stores the current :obj:`Pathlib.Path` pointing at the signing key and 
+    sources directories, respectively. Used for building path names and reading
+    configuration.
+
+.. _module_distro_codename:
+
+DISTRO_CODENAME
+===============
+
+repolib.DISTRO_CODENAME
+    The current CODENAME field from LSB. If LSB is not available, it will 
+    default to ``linux``.
+
+
+.. _module_clean_chars
+
+CLEAN_CHARS
+===========
+
+repolib.CLEAN_CHARS 
+    A ``dict`` which maps invalid characters for the :ref:`ident` attributes 
+    which cannot be used and their replacements. These limitations are based on 
+    invalid characters in unix-compatible filenames.
+
+.. _module_sources
+
+sources
+=======
+
+repolib.sources
+    A :obj:`dict` storing all current sources configured on the system. To save
+    resources, this list is only loaded/parsed when 
+    :ref:`module_load_all_sources` is called, since many simple operations don't
+    need the full list of currently-configured sources.
+
+.. _module_files
+
+files
+=====
+
+repolib.files
+    A :obj:`dict` containing any source file objects present in the configured 
+    sources dir (See :ref:`module_dirs`). This list is empty until 
+    :ref:`module_load_all_sources` is called, since many simple operations don't
+    need the full list of currently-installed config files.
+
+.. _module_keys
+
+keys
+====
+
+repolib.keys
+    A :obj`dict` containing any installed repository signing keys on the system.
+    This list is empty until :ref:`module_load_all_sources` is called, since 
+    many simple operations don'tneed the full list of 
+    currently-installed keys.
+
+.. _module_compare_sources
+
+compare_sources()
+-----------------
+
+repolib.compare_sources(source1, source2, excl_keys:list) -> bool
+    Compares two sources based on arbitrary criteria.
+    
+    This looks at a given list of keys, and if the given keys between the two
+    given sources are identical, returns True.
+    
+    Returns: :obj:`bool`
+        `True` if the sources are identical, otherwise `False`.
+
+source1, source2
+^^^^^^^^^^^^^^^^
+The two source objects to compare.
+
+excl_keys
+^^^^^^^^^
+:obj:`list` A list of DEB822key names to ignore when comparing. Even if these  
+items don't match, this function still returns true if all other keys match.
+
+.. _module_combine_sources
+
+combine_sources()
+-----------------
+
+repolib.combine_sources(source1, source2) -> None
+    Copies all of the data in `source2` and adds it to `source1`.
+
+    This avoids duplicating data and ensures that all of both sources' data are
+    present in the unified source
+
+source1
+^^^^^^^
+The source into which both sources should be merged
+
+source2
+^^^^^^^
+The source from which to copy to `source1`
+
+
+.. _module_url_validator
+
+url_validator()
+---------------
+
+repolib.url_validator(url: str) -> bool
+    Validates a given URL and attempts to see if it's a valid Debian respository
+    URL. Returns `True` if the URL appears to be valid and `False` if not.
+
+url
+^^^
+:obj:`str`The url to validate
+
+
+.. _module_validate_debline
+
+validate_debline()
+==================
+
+repolib.util.validate_debline(line: str) -> bool
+    Validate if the provided debline ``line`` is valid or not. 
+
+    Returns ``True`` if ``line`` is valid, otherwise ``False``.
+
+line
+^^^^
+:obj:`str` The line to validate
+
+
+.. _module_strip_hashes
+
+strip_hashes()
+--------------
+
+repolib.strip_hashes(line: str) -> str
+    Strips leading hash (`#`) characters from a line and returns the result.
+
+line
+^^^^
+:obj:`str` The line to strip
+
+.. _module_load_all_sources
+
+load_all_sources()
+------------------
+
+repolib.load_all_sources() -> None
+
+    Loads all sources from the current system configuration.
+
+
+.. _module-set_testing
+
+set_testing()
+-------------
+
+repolib.set_testing(testing: bool = True) -> None
+    Enables or disables testing mode in Repolib
+
+    When in testing mode, repolib will operate within a temporary directory 
+    rather tan on your live system configuration. This can be used for testing 
+    out changes to the program without worry about changes to the system config.
+    It's also used for unit testing.
+
+
+testing
+^^^^^^^
+:obj:`bool` - Wether testing mode should be enabled (`True`) or not (`False`)
 
 
 Example
 =======
 
-The following code is a Python prgram that creates an ``example.sources`` file 
-in `/etc/apt/sources.list.d/` with some sample data, and then modifies the 
-suites used by the source and prints it to the console, before finally saving 
-the new, modified source to disk::
+The following code as a Python program that creates in ``example.sources`` file
+in `/etc/apt/sources.list.d` with some sample data, then modifies the suites 
+used by the source and prints it to the console, before finally saving the new,
+modified source to disk::
 
     import repolib
-    source = repolib.Source(ident='example')
-    
+    source = repolib.Source()
+    file = repolib.SourceFile(name='example')
+
+    source.ident = 'example-source'
     source.name = 'Example Source'
-    source.types = ['deb', 'deb-src']
-    source.uris = ['http://example.com/ubuntu']
+    source.types = [repolib.SourceType.BINARY]
+    source.uris = ['http://example.com/software']
     source.suites = ['focal']
     source.components = ['main']
-    
-    print(source.make_source_string())
-    
-    source.save_to_disk()
+    file.add_source(source)
 
-When run with the appropriate arguments, it prints the contents of the source 
-to console and then saves a new ``example.sources`` file in 
-``/etc/apt/sources.list.d``::
+    print(source.ui)
 
-    $ 
+    file.save()
+
+When run with the appropriate arguments, it prints the contents of the source to 
+console and then saves a new ``example.sources`` file::
+
+    $
+    example-source:
     Name: Example Source
     Enabled: yes
-    Types: deb deb-src
-    URIs: http://example.com/ubuntu
+    Types: deb
+    URIs: http://example.com/software
     Suites: focal
     Components: main
+
     $ ls -la /etc/apt/sources.list.d/example.sources
     -rw-r--r-- 1 root root 159 May  1 15:21 /etc/apt/sources.list.d/example.sources
 
-The following will walk you through this example.
+Below is a walkthrough of this example.
 
-Creating a Source Object
-------------------------
+Creating Source and File Objects
+--------------------------------
 
-The first step in using :ref:`repolib-module` is creating a :ref:`source-object`::
+The first step in using :ref:`repolib_module` is creating :ref:`source_object`
+and :ref:`file_object`::
 
-    source = repolib.Source(ident='example')
+    source = repolib.Source()
+    file = repolib.SourceFile(name='example')
 
-The :ref:'source-object' will hold all of the information about the 
-source we're working with.
+The :ref:`source_object` will hold all of the information for the source to be 
+created. The :ref:`file_object` represents the output file on disk, and allows 
+for advanced usage like multiple sources per file.
 
 Adding and Manipulating Data
 ----------------------------
 
-The :ref:`source-object` contains attributes which describe the various parts of 
-the source that are required to fetch and install software. Generally, these 
-attributes are lists of strings which describe the different parts of the source. 
-These attributes can be set or retrieved like any other attributes::
+The :ref:`source_object` contains attributes which describe the connfiguration 
+aspects of the source required to fetch and install software. Generally, these 
+attributes are lists of strings which describe different aspects of the source.
+They can be set or retrieved like any other attributes::
 
+    source.uris = ['http://example.com/software']
     source.suites = ['focal']
-    source.uris. = ['http://example.com/ubuntu']
 
-This will add a ``focal`` suite to our source and add a URI from which to fetch 
-software. 
+This will add a ``focal`` suite to our source and add a URI from which to 
+download package lists.
 
-:ref:`source-object` also presents a dict-like interface for setting and getting 
-data, due to the inherited deb822 class. Key values are case insensitive and 
-their order within the object are preserved. The Keys map to the corresponding 
-attributes as follows:
+:ref:`source_object` also presents a dict-like interface for setting and getting 
+configuration data. Key names are case-insensitive and their order within the 
+object are preserved. 
 
-    X-Repolib-Name: name
-    Enabled: enabled
-    Types: types
-    URIs: uris
-    Suites: suites
-    Components: components
+Adding the Source to the File
+-----------------------------
 
-Option keys will mapt to the ``options`` attribute(``dict``).
+Before the :ref:`source_object` can be saved, it needs to be added to a 
+:ref:`file_object`::
+
+    file.add_source(source)
+
+This will add `source` to the `file`'s lists of sources, as well as setting the
+`source`'s file attribute to `file`.
 
 Saving Data to Disk
 -------------------
 
-Once a source has the correct data (either after modification or creation), we 
-need to save it to disk in order for Apt to be made aware of it::
+Once a source has the correct data and has been added to a file object, it can 
+be saved into the system configuration using :ref:`file-save`::
 
-    source.save_to_disk()
+    file.save()
 
-When called, this writes the data contained within the :ref:`source-object` to
-disk. This does not destroy the object, so that it may be further manipulated by 
-the program.
+When called, this writes the sources stored in the file to disk. This does not 
+destroy the object, so that it may be further manipulated by the program. 
 
 .. note::
-    While :ref:`source-object` data can be manipulated after using the 
-    :ref:`save-to-disk` method, any subsequent changes will not be automatically 
-    written to the disk as well. You need to call :ref:`save-to-disk` again in
-    order to save further changes.
+    While data within the source or file objects can be manipulated after 
+    calling :ref:`file-save`, any subsequent changes will not be automatically
+    written to disk as well. The :ref:`file-save` method must be called to 
+    commit changes to disk.
 
-.. _source-object:
+.. _source_object:
