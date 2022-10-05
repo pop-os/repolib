@@ -226,7 +226,12 @@ class Source(deb822.Deb822):
             A name based on the ident
         """
         name:str = self.ident
-        if not self['X-Repolib-Name']:
+        try:
+            name = self['X-Repolib-Name']
+        except KeyError:
+            name = self.ident
+
+        if name:
             self['X-Repolib-Name'] = name
         
         return name
