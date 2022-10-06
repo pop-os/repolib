@@ -178,7 +178,7 @@ class List(Command):
             if self.verbose or self.debug:
                 print('\nDetails about failing files:')
                 for err in util.errors:
-                    print(f'{err}: {util.errors[err]}')
+                    print(f'{err}: {util.errors[err].args[0]}')
                     
         return True
     
