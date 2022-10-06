@@ -229,12 +229,13 @@ class Source(deb822.Deb822):
         try:
             name = self['X-Repolib-Name']
         except KeyError:
-            name = self.ident
+            self['X-Repolib-Name'] = self.ident
+            return self['X-Repolib-Name']
 
-        if name:
-            self['X-Repolib-Name'] = name
+        if not name:
+            self['X-Repolib-Name'] = self.ident
         
-        return name
+        return self['X-Repolib-Name']
 
     def load_key(self, ignore_errors:bool = True) -> None:
         """Finds and loads the signing key from the system
