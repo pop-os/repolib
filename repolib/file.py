@@ -410,6 +410,13 @@ class SourceFile:
             item += 1
             self.contents.append('')
         
+        for source in self.sources:
+            if not source.has_required_parts:
+                raise SourceFileError(
+                    f'The file {self.path.name} is malformed and contains '
+                    'errors. Maybe it has some extra new-lines?'
+                )
+        
         self.log.debug('File %s loaded', self.path)
 
     def save(self) -> None:
