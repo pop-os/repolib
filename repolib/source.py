@@ -226,10 +226,16 @@ class Source(deb822.Deb822):
             A name based on the ident
         """
         name:str = self.ident
-        if not self['X-Repolib-Name']:
-            self['X-Repolib-Name'] = name
+        try:
+            name = self['X-Repolib-Name']
+        except KeyError:
+            self['X-Repolib-Name'] = self.ident
+            return self['X-Repolib-Name']
+
+        if not name:
+            self['X-Repolib-Name'] = self.ident
         
-        return name
+        return self['X-Repolib-Name']
 
     def load_key(self, ignore_errors:bool = True) -> None:
         """Finds and loads the signing key from the system

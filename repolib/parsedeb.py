@@ -20,7 +20,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
+
 from . import util
+
+log = logging.getLogger(__name__)
 
 class DebParseError(util.RepoError):
     """ Exceptions related to parsing deb lines."""
@@ -126,7 +130,9 @@ def parse_name_ident(tail:str) -> tuple:
 
     # Used for sanity checking later
     has_name = 'X-Repolib-Name' in tail
+    log.debug('Line name found: %s', has_name)
     has_ident = 'X-Repolib-ID' in tail
+    log.debug('Line ident found: %s', has_ident)
 
     parts: list = tail.split()
     name_found = False
@@ -135,6 +141,7 @@ def parse_name_ident(tail:str) -> tuple:
     ident:str = ''
     comment:str = ''
     for item in parts:
+        log.debug("Checking line item: %s", item)
         item_is_name = item.strip('#').strip().startswith('X-Repolib-Name')
         item_is_ident = item.strip('#').strip().startswith('X-Repolib-ID')
         
@@ -168,6 +175,10 @@ def parse_name_ident(tail:str) -> tuple:
     name = name.strip()
     ident = ident.strip()
     comment = comment.strip()
+
+    if not name:
+        if ident: 
+            name = ident
 
     # Final sanity checking
     if has_name and not name:
