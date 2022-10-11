@@ -60,8 +60,8 @@ class SourceFile:
         """
         self.log = logging.getLogger(__name__)
         self.name:str = ''
-        self.path:Path = None
-        self.alt_path:Path = None
+        self.path:Path = Path()
+        self.alt_path:Path = Path()
         self.format:util.SourceFormat = util.SourceFormat.DEFAULT
         self.contents:list = []
         self.sources:list = []
@@ -290,7 +290,7 @@ class SourceFile:
                     elif valid_legacy:
                         if self.format != util.SourceFormat.LEGACY:
                             raise SourceFileError(
-                                f'File {self.ident} is an updated file, but '
+                                f'File {self.path.name} is an updated file, but '
                                 'contains legacy-format sources. This is not '
                                 'allowed. Please fix the file manually.'
                             )
@@ -321,7 +321,7 @@ class SourceFile:
                     if util.validate_debline(line.strip()):
                         if self.format != util.SourceFormat.LEGACY:
                             raise SourceFileError(
-                                f'File {self.ident} is an updated file, but '
+                                f'File {self.path.name} is an updated file, but '
                                 'contains legacy-format sources. This is not '
                                 'allowed. Please fix the file manually.'
                             )
@@ -353,7 +353,7 @@ class SourceFile:
                     if line.startswith(key):
                         if self.format == util.SourceFormat.LEGACY:
                             raise SourceFileError(
-                                f'File {self.ident} is a DEB822-format file, but '
+                                f'File {self.path.name} is a DEB822-format file, but '
                                 'contains legacy sources. This is not allowed. '
                                 'Please fix the file manually.'
                             )
@@ -479,6 +479,7 @@ class SourceFile:
     @format.setter
     def format(self, format:util.SourceFormat) -> None:
         """The path needs to be updated when the format changes"""
+        alt_format:util.SourceFormat = util.SourceFormat.LEGACY
         self._format = format
         self.path = util.SOURCES_DIR / f'{self.name}.{self._format.value}'
         for format_ in util.SourceFormat:
