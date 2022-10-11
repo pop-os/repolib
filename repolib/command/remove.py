@@ -83,7 +83,7 @@ class Remove(Command):
             self.key = self.source.key
             self.file = self.source.file
         
-        print(f'This will remzove the source {self.source_name}')
+        print(f'This will remove the source {self.source_name}')
         print(self.source.ui)
         response:str = 'n'
         if self.assume_yes:
