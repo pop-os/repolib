@@ -129,7 +129,7 @@ class PopdevSource(Source):
         self.log.debug('Loading shortcut %s', self.line)
         
         self.info_parts = shortcut.split(delineator)
-        self.branch_name = ':'.join(self.info_parts[1:])
+        self.branch_name = util.scrub_filename(':'.join(self.info_parts[1:]))
         self.log.debug('Popdev branch name: %s', self.branch_name)
 
         self.ident = f'{prefix}-{self.branch_name}'
