@@ -1,3 +1,13 @@
+repolib (2.1.0) jammy; urgency=medium
+
+  * Repolib will now search for mis-typed repos when removing sources
+    Mistyped repos (if found on the system) are offered as a correction
+  * Fixed a bug where popdev: shortcuts containing slashes could be added
+  * Prints a suggestion for common "popdev/" typo
+  * Fixed a typo in the remove subcommand
+
+ -- Ian Santopietro <ian@system76.com>  Tue, 11 Oct 2022 11:35:07 -0600
+
 repolib (2.0.1) jammy; urgency=medium
 
   * Fix for sources missing names (pop-os/repolib/#49)
