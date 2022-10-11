@@ -213,20 +213,20 @@ class ParseDeb:
         self.curr_line: str = ''
         self.curr_line_valid: bool = False
     
-    def parse_options(self, options:str) -> dict:
+    def parse_options(self, opt:str) -> dict:
         """ Parses a string of options into a dictionary that repolib can use.
 
         Arguments:
-            options(str): The string with options returned from the line parser.
+            opt(str): The string with options returned from the line parser.
         
         Returns:
             `dict`: The dictionary of options with key:val pairs (may be {})
         """
-        options = options.strip()
-        options = options[1:-1].strip() # Remove enclosing brackets
-        options = options.split()
+        opt = opt.strip()
+        opt = opt[1:-1].strip() # Remove enclosing brackets
+        options = opt.split()
 
-        parsed_options:dict(str, str) = {}
+        parsed_options:dict = {}
 
         for opt in options:
             pre_key, values = opt.split('=')
@@ -236,7 +236,7 @@ class ParseDeb:
                 key:str = util.options_inmap[pre_key]
             except KeyError:
                 raise DebParseError(
-                    f'Could not parse line {self.curr_line}: option {key} is '
+                    f'Could not parse line {self.curr_line}: option {opt} is '
                     'not a valid debian repository option or is unsupported.'
                 )
             parsed_options[key] = value
@@ -285,7 +285,7 @@ class ParseDeb:
         
         comments_index = line.find('#')
         if comments_index > 0:
-            raw_comments:list = line[comments_index + 1:].strip()
+            raw_comments:str = line[comments_index + 1:].strip()
             (
                 line_parsed['name'],
                 line_parsed['ident'],
