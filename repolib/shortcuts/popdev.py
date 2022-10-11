@@ -76,9 +76,10 @@ class PopdevSource(Source):
         super().__init__(args, kwargs)
         self.log = logging.getLogger(__name__)
         self.line = line
-        self.twin_source = True
+        self.twin_source:bool = True
         self.prefs_path = None
-        self.branch_name = ''
+        self.branch_name:str = ''
+        self.branch_url:str = ''
         if line:
             self.load_from_shortcut(self.line)
     
@@ -86,7 +87,7 @@ class PopdevSource(Source):
         super().tasks_save(*args, **kwargs)
         self.log.info('Saving prefs file for %s', self.ident)
         prefs_contents = 'Package: *\n'
-        prefs_contents += f'Pin: release o=pop-os-staging-{self.branch_name}\n'
+        prefs_contents += f'Pin: release o=pop-os-staging-{self.branch_url}\n'
         prefs_contents += 'Pin-Priority: 1002\n'
 
         self.log.debug('%s prefs for pin priority:\n%s', self.ident, prefs_contents)
@@ -129,7 +130,8 @@ class PopdevSource(Source):
         self.log.debug('Loading shortcut %s', self.line)
         
         self.info_parts = shortcut.split(delineator)
-        self.branch_name = ':'.join(self.info_parts[1:])
+        self.branch_url = ':'.join(self.info_parts[1:])
+        self.branch_name = util.scrub_filename(name=self.branch_url)
         self.log.debug('Popdev branch name: %s', self.branch_name)
 
         self.ident = f'{prefix}-{self.branch_name}'
@@ -144,7 +146,7 @@ class PopdevSource(Source):
         self.file.add_source(self)
         
         self.name = f'Pop Development Branch {self.branch_name}'
-        self.uris = [f'{BASE_URL}/{self.branch_name}']
+        self.uris = [f'{BASE_URL}/{self.branch_url}']
         self.suites = [util.DISTRO_CODENAME]
         self.components = [BASE_COMPS]
 
