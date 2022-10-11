@@ -150,6 +150,14 @@ class Add(Command):
             if self.deb_line.startswith(prefix):
                 self.log.debug('Line is prefix:  %s', prefix)
                 new_source = shortcut_prefixes[prefix]()
+                if not new_source.validator(self.deb_line):
+                    self.log.error(
+                        'The shortcut "%s" is malformed',
+                        self.deb_line
+                    )
+                    if self.deb_line.startswith('popdev/'):
+                        print(f'Did you mean "{self.deb_line.replace("/", ":")}"?')
+                    return False
                 break
         
         new_source.load_from_data([self.deb_line])
