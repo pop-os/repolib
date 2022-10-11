@@ -77,11 +77,24 @@ class Remove(Command):
                 'Source %s was not found. Double-check the spelling',
                 self.source_name
             )
-            return False
-        else:
-            self.source = util.sources[self.source_name]
-            self.key = self.source.key
-            self.file = self.source.file
+            source_list:list = []
+            for source in util.sources:
+                source_list.append(source)
+            suggested_source:str = self.source_name.replace(':', '-')
+            suggested_source = suggested_source.translate(util.CLEAN_CHARS)
+            if not suggested_source in source_list:
+                return False
+
+            response:str = input(f'Did you mean "{suggested_source}"? (Y/n) ')
+            if not response:
+                response = 'y'
+            if response not in util.true_values:
+                return False
+            self.source_name = suggested_source
+
+        self.source = util.sources[self.source_name]
+        self.key = self.source.key
+        self.file = self.source.file
         
         print(f'This will remove the source {self.source_name}')
         print(self.source.ui)

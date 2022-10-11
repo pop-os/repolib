@@ -62,11 +62,14 @@ class PopdevSource(Source):
         Returns: bool
             `True` if the PPA is valid, otherwise False
         """
+        if '/' in shortcut:
+            return False
 
         if shortcut.startswith(prefix):
-            shortlist = shortcut.split('/')
+            shortlist = shortcut.split(':')
             if len(shortlist) > 0:
                 return True
+                
         return False
 
     def __init__(self, *args, line=None, fetch_data=True, **kwargs):
