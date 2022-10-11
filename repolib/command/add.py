@@ -124,7 +124,8 @@ class Add(Command):
             ident = args.identifier
 
         self.name = ' '.join(name)
-        self.ident = '-'.join(ident).translate(util.CLEAN_CHARS)
+        pre_ident:str = '-'.join(ident)
+        self.ident = util.scrub_filename(pre_ident)
         self.skip_keys = args.skip_keys
         self.format = args.format.lower()
     
