@@ -68,7 +68,7 @@ class PPASource(Source):
             `True` if the PPA is valid, otherwise False
         """
 
-        if shortcut.startswith(prefix):
+        if shortcut.startswith(f'{prefix}:'):
             shortlist = shortcut.split('/')
             if len(shortlist) > 1:
                 return True

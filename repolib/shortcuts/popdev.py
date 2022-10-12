@@ -65,7 +65,7 @@ class PopdevSource(Source):
         if '/' in shortcut:
             return False
 
-        if shortcut.startswith(prefix):
+        if shortcut.startswith(f'{prefix}:'):
             shortlist = shortcut.split(':')
             if len(shortlist) > 0:
                 return True
