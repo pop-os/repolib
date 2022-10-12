@@ -58,7 +58,7 @@ class PPASource(Source):
     default_format = BASE_FORMAT
 
     @staticmethod
-    def validator(shortcut:str) -> None:
+    def validator(shortcut:str) -> bool:
         """Determine whether a PPA shortcut is valid.
         
         Arguments:
