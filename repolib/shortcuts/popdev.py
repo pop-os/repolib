@@ -53,7 +53,7 @@ class PopdevSource(Source):
     default_format = BASE_FORMAT
 
     @staticmethod
-    def validator(shortcut:str) -> None:
+    def validator(shortcut:str) -> bool:
         """Determine whether a PPA shortcut is valid.
         
         Arguments:
@@ -63,6 +63,13 @@ class PopdevSource(Source):
             `True` if the PPA is valid, otherwise False
         """
         if '/' in shortcut:
+            return False
+
+        shortcut_split = shortcut.split(':')
+        try:
+            if not shortcut_split[1]:
+                return False
+        except IndexError:
             return False
 
         if shortcut.startswith(f'{prefix}:'):

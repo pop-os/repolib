@@ -156,8 +156,14 @@ class Add(Command):
                         'The shortcut "%s" is malformed',
                         self.deb_line
                     )
-                    if self.deb_line.startswith('popdev/'):
-                        print(f'Did you mean "{self.deb_line.replace("/", ":")}"?')
+
+                    # Try and get a suggested correction for common errors
+                    try:
+                        if self.deb_line[len(prefix)] != ':':
+                            broken_delim = self.deb_line[len(prefix)]
+                            print(f'Did you mean "{self.deb_line.replace(broken_delim, ":")}"?')
+                    except IndexError:
+                        pass
                     return False
                 break
         
