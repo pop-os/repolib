@@ -271,7 +271,8 @@ class Source(deb822.Deb822):
 
     def save(self) -> None:
         """Proxy method to save the source"""
-        self.file.save()
+        if not self.file == None:
+            self.file.save()
 
     def output_legacy(self) -> str:
         """Outputs a legacy representation of this source
@@ -459,7 +460,7 @@ class Source(deb822.Deb822):
         self._options = options
     
     @property
-    def prefs(self) -> Path:
+    def prefs(self):
         """The path to any apt preferences files for this source."""
         try:
             prefs = self['X-Repolib-Prefs']
@@ -770,10 +771,12 @@ class Source(deb822.Deb822):
         if self.comments:
             self['X-Repolib-Comments'] = '# '
             self['X-Repolib-Comments'] += ' # '.join(self.comments)
-        _deb822:str = self.dump()
+        _deb822 = self.dump()
         if self.comments:
             self.pop('X-Repolib-Comments')
-        return _deb822
+        if _deb822:
+            return _deb822
+        return ''
     
     @property
     def ui(self) -> str:
