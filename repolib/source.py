@@ -95,6 +95,16 @@ class Source(deb822.Deb822):
 
         return rep
     
+    def __bool__(self) -> bool:
+        has_uri:bool = len(self.uris) > 0
+        has_suite:bool = len(self.suites) > 0
+        has_component:bool = len(self.components) > 0
+
+        if has_uri and has_suite and has_component:
+            return True
+        return False
+
+
     def get_description(self) -> str:
         """Get a UI-compatible description for a source. 
         
