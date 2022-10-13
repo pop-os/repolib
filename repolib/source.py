@@ -469,7 +469,7 @@ class Source(deb822.Deb822):
         
         if prefs:
             return Path(prefs)
-        return None
+        return Path()
     
     @prefs.setter
     def prefs(self, prefs):

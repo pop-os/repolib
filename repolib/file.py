@@ -108,7 +108,7 @@ class SourceFile:
         ## Remove sources prefs files/pin-priority
         prefs_path = source.prefs
         try:
-            if prefs_path.exists():
+            if prefs_path.exists() and prefs_path.name:
                 prefs_path.unlink()
         
         except AttributeError:
@@ -472,12 +472,12 @@ class SourceFile:
     
     ## Attribute properties
     @property
-    def format(self) -> util.SourceFormat:
+    def format(self) -> util.SourceFormat:  # type: ignore (We don't use str.format)
         """The format of the file on disk"""
         return self._format
     
     @format.setter
-    def format(self, format:util.SourceFormat) -> None:
+    def format(self, format:util.SourceFormat) -> None:  # type: ignore (We don't use str.format)
         """The path needs to be updated when the format changes"""
         alt_format:util.SourceFormat = util.SourceFormat.LEGACY
         self._format = format
