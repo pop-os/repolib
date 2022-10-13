@@ -203,14 +203,13 @@ class Source(deb822.Deb822):
         Returns: str
             A sane default-id
         """
-        ident = ''
+        ident:str = ''
         if len(self.uris) > 0:
-            uri = self.uris[0].replace('/', ' ')
-            uri_list = uri.split()
-            ident = '{}{}'.format(
-                prefix,
-                '-'.join(uri_list[1:]).translate(util.CLEAN_CHARS)
-            )
+            uri:str = self.uris[0].replace('/', ' ')
+            uri_list:list = uri.split()
+            uri_str:str = '-'.join(uri_list[1:])
+            branch_name:str = util.scrub_filename(uri_str)
+            ident = f'{prefix}{branch_name}'
         ident += f'-{self.types[0].ident()}'
         try:
             if not self['X-Repolib-ID']:
@@ -331,7 +330,7 @@ class Source(deb822.Deb822):
 
     @ident.setter
     def ident(self, ident: str) -> None:
-        ident = ident.translate(util.CLEAN_CHARS)
+        ident = util.scrub_filename(ident)
         self['X-Repolib-ID'] = ident
 
 
