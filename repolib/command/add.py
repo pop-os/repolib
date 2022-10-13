@@ -160,8 +160,12 @@ class Add(Command):
                     # Try and get a suggested correction for common errors
                     try:
                         if self.deb_line[len(prefix)] != ':':
-                            broken_delim = self.deb_line[len(prefix)]
-                            print(f'Did you mean "{self.deb_line.replace(broken_delim, ":")}"?')
+                            fixed_debline: str = self.deb_line.replace(
+                                self.deb_line[len(prefix)], 
+                                ":",
+                                1
+                            )
+                            print(f'Did you mean "{fixed_debline}"?')
                     except IndexError:
                         pass
                     return False
