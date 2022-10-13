@@ -29,7 +29,7 @@ from ..file import SourceFile
 from .. import util
 
 try:
-    from launchpadlib.launchpad import Launchpad
+    from launchpadlib.launchpad import Launchpad as _Launchpad
     from lazr.restfulclient.errors import BadRequest, NotFound, Unauthorized
 except ImportError:
     raise SourceError(
@@ -43,6 +43,10 @@ BASE_DIST = 'ubuntu'
 BASE_COMPS = 'main'
 
 DEFAULT_FORMAT = util.SourceFormat.LEGACY
+
+class Launchpad(_Launchpad):
+    def __bool__(self) -> bool:
+        return True
 
 prefix = 'ppa'
 delineator = ':'
@@ -219,7 +223,7 @@ class PPA:
         """ The Launchpad object for the PPA's owner."""
         if not self._lpteam:
             try:
-                self._lpteam = self.lap.people(self.teamname)
+                self._lpteam = self.lap.people(self.teamname) # type: ignore (This won't actually be unbound because of the property)
             except NotFound as err:
                 msg = f'User/Team "{self.teamname}" not found'
                 raise SourceError(msg) from err
