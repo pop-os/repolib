@@ -58,7 +58,7 @@ class PPASource(Source):
     default_format = BASE_FORMAT
 
     @staticmethod
-    def validator(shortcut:str) -> None:
+    def validator(shortcut:str) -> bool:
         """Determine whether a PPA shortcut is valid.
         
         Arguments:
@@ -68,7 +68,7 @@ class PPASource(Source):
             `True` if the PPA is valid, otherwise False
         """
 
-        if shortcut.startswith(prefix):
+        if shortcut.startswith(f'{prefix}:'):
             shortlist = shortcut.split('/')
             if len(shortlist) > 1:
                 return True

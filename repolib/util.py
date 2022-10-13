@@ -216,6 +216,18 @@ files:dict = {}
 keys:dict = {}
 errors:dict = {}
 
+
+def scrub_filename(name: str = '') -> str:
+    """ Clean up a string intended for a filename.
+    
+    Arguments:
+        name (str): The prospective name to scrub.
+    
+    Returns: str
+        The cleaned-up name.
+    """
+    return name.translate(CLEAN_CHARS)
+
 def set_testing(testing:bool=True) -> None:
     """Sets Repolib in testing mode where changes will not be saved.
     
