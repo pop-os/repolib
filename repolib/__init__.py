@@ -124,6 +124,7 @@ SourceFormat = util.SourceFormat
 SourceType = util.SourceType
 AptSourceEnabled = util.AptSourceEnabled
 
+scrub_filename = util.scrub_filename
 url_validator = util.url_validator
 prettyprint_enable = util.prettyprint_enable
 validate_debline = util.validate_debline
