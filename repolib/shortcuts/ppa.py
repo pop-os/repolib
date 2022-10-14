@@ -29,7 +29,7 @@ from ..file import SourceFile
 from .. import util
 
 try:
-    from launchpadlib.launchpad import Launchpad as _Launchpad
+    from launchpadlib.launchpad import Launchpad
     from lazr.restfulclient.errors import BadRequest, NotFound, Unauthorized
 except ImportError:
     raise SourceError(
@@ -43,10 +43,6 @@ BASE_DIST = 'ubuntu'
 BASE_COMPS = 'main'
 
 DEFAULT_FORMAT = util.SourceFormat.LEGACY
-
-class Launchpad(_Launchpad):
-    def __bool__(self) -> bool:
-        return True
 
 prefix = 'ppa'
 delineator = ':'
