@@ -413,7 +413,9 @@ def validate_debline(valid):
     Returns:
         True if the line is valid, False otherwise.
     """
+    comment:bool = False
     if valid.startswith('#'):
+        comment = True
         valid = valid.replace('#', '')
         valid = valid.strip()
 
@@ -430,7 +432,7 @@ def validate_debline(valid):
     else:
         if valid.endswith('.flatpakrepo'):
             return False
-        if len(valid.split()) == 1:
+        if len(valid.split()) == 1 and not comment:
             return url_validator(valid)
         return False
 
