@@ -34,7 +34,7 @@ try:
 except ImportError:
     raise SourceError(
         'Missing optional dependency "launchpadlib". Try `sudo apt install '
-        'launchpadlib` to install it.'
+        'python3-launchpadlib` to install it.'
     )
 
 BASE_FORMAT = util.SourceFormat.LEGACY
