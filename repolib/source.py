@@ -62,6 +62,32 @@ class Source(deb822.Deb822):
 
     default_format = DEFAULT_FORMAT
 
+    @staticmethod
+    def validator(shortcut:str) -> bool:
+        """Determine whether a deb line is valid.
+        
+        Arguments:
+            shortcut(str): The shortcut to validate
+        
+        Returns: bool
+            `True` if the PPA is valid, otherwise False
+        """
+        shortcut_list:list = shortcut.split()
+
+        if not shortcut.startswith('deb'):
+            return False
+        
+        if not len(shortcut_list) > 3:
+            return False
+
+        if not util.validate_debline:
+            return False
+        
+        if len(shortcut_list) == 3 and '/' not in shortcut_list[-1]:
+            return False
+            
+        return True
+
     def __init__(self, *args, file=None, **kwargs) -> None:
         """Initialize this source object"""
         self.log = logging.getLogger(__name__)
