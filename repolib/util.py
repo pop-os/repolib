@@ -216,6 +216,18 @@ files:dict = {}
 keys:dict = {}
 errors:dict = {}
 
+
+def scrub_filename(name: str = '') -> str:
+    """ Clean up a string intended for a filename.
+    
+    Arguments:
+        name (str): The prospective name to scrub.
+    
+    Returns: str
+        The cleaned-up name.
+    """
+    return name.translate(CLEAN_CHARS)
+
 def set_testing(testing:bool=True) -> None:
     """Sets Repolib in testing mode where changes will not be saved.
     
@@ -401,7 +413,9 @@ def validate_debline(valid):
     Returns:
         True if the line is valid, False otherwise.
     """
+    comment:bool = False
     if valid.startswith('#'):
+        comment = True
         valid = valid.replace('#', '')
         valid = valid.strip()
 
@@ -418,7 +432,7 @@ def validate_debline(valid):
     else:
         if valid.endswith('.flatpakrepo'):
             return False
-        if len(valid.split()) == 1:
+        if len(valid.split()) == 1 and not comment:
             return url_validator(valid)
         return False
 

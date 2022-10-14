@@ -124,7 +124,8 @@ class Add(Command):
             ident = args.identifier
 
         self.name = ' '.join(name)
-        self.ident = '-'.join(ident).translate(util.CLEAN_CHARS)
+        pre_ident:str = '-'.join(ident)
+        self.ident = util.scrub_filename(pre_ident)
         self.skip_keys = args.skip_keys
         self.format = args.format.lower()
     
@@ -152,6 +153,24 @@ class Add(Command):
             if self.deb_line.startswith(prefix):
                 self.log.debug('Line is prefix:  %s', prefix)
                 new_source = shortcut_prefixes[prefix]()
+                if not new_source.validator(self.deb_line):
+                    self.log.error(
+                        'The shortcut "%s" is malformed',
+                        self.deb_line
+                    )
+
+                    # Try and get a suggested correction for common errors
+                    try:
+                        if self.deb_line[len(prefix)] != ':':
+                            fixed_debline: str = self.deb_line.replace(
+                                self.deb_line[len(prefix)], 
+                                ":",
+                                1
+                            )
+                            print(f'Did you mean "{fixed_debline}"?')
+                    except IndexError:
+                        pass
+                    return False
                 break
         
         if not new_source:
