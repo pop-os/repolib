@@ -823,7 +823,7 @@ class Source(deb822.Deb822):
         """The legacy/one-line format representation of this source"""
         self._update_legacy_options()
 
-        if self.prefs:
+        if str(self.prefs) != '.':
             raise SourceError(
                 'Apt Preferences files can only be used with DEB822-format sources.'
             )
