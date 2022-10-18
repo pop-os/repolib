@@ -173,6 +173,8 @@ class Add(Command):
                     return False
                 break
         
+        new_source.load_from_data([self.deb_line])
+        
         if not new_source:
             self.log.error(
                 f'Could not parse line "{self.deb_line}". Double-check the '
@@ -187,7 +189,6 @@ class Add(Command):
             print(f'Supported repository shortcuts:\n  {valid_shortcuts}')
             return False
 
-        new_source.load_from_data([self.deb_line])
         new_source.twin_source = True
         new_source.sourcecode_enabled = self.source_code
 
