@@ -171,9 +171,10 @@ class Add(Command):
                     except IndexError:
                         pass
                     return False
+                
+                new_source.load_from_data([self.deb_line])
                 break
         
-        new_source.load_from_data([self.deb_line])
         
         if not new_source:
             self.log.error(
