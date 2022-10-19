@@ -243,14 +243,14 @@ class PPA:
         return self._lpppa
 
     @property
-    def description(self):
+    def description(self) -> str:
         """str: The description of the PPA."""
-        return self.lpppa.description
+        return self.lpppa.description or ''
 
     @property
-    def displayname(self):
+    def displayname(self) -> str:
         """ str: the fancy name of the PPA."""
-        return self.lpppa.displayname
+        return self.lpppa.displayname or ''
 
     @property
     def fingerprint(self):
