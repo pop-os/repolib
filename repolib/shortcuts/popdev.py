@@ -79,7 +79,7 @@ class PopdevSource(Source):
                 
         return False
 
-    def __init__(self, *args, line=None, fetch_data=True, **kwargs):
+    def __init__(self, *args, line='', fetch_data=True, **kwargs):
         if line:
             if not line.startswith('ppa:'):
                 raise SourceError(f'The PPA shortcut {line} is malformed')
@@ -91,7 +91,7 @@ class PopdevSource(Source):
         self.branch_name:str = ''
         self.branch_url:str = ''
         if line:
-            self.load_from_shortcut(self.line)
+            self.load_from_shortcut(line)
     
     def tasks_save(self, *args, **kwargs) -> None:
         super().tasks_save(*args, **kwargs)
@@ -121,7 +121,7 @@ class PopdevSource(Source):
         self.log.debug('Loading line %s', data[0])
         self.load_from_shortcut(shortcut=data[0])
 
-    def load_from_shortcut(self, shortcut:str='', meta:bool=True, key:bool=True) -> None:
+    def load_from_shortcut(self, shortcut:str='', meta:bool=True, get_key:bool=True) -> None:
         """Translates the shortcut line into a full repo.
         
         Arguments:

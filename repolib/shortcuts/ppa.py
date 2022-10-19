@@ -32,7 +32,10 @@ try:
     from launchpadlib.launchpad import Launchpad
     from lazr.restfulclient.errors import BadRequest, NotFound, Unauthorized
 except ImportError:
-    Launchpad = None
+    raise SourceError(
+        'Missing optional dependency "launchpadlib". Try `sudo apt install '
+        'python3-launchpadlib` to install it.'
+    )
 
 BASE_FORMAT = util.SourceFormat.LEGACY
 BASE_URL = 'http://ppa.launchpad.net'
@@ -74,7 +77,7 @@ class PPASource(Source):
                 return True
         return False
 
-    def __init__(self, *args, line=None, fetch_data=True, **kwargs):
+    def __init__(self, *args, line='', fetch_data=True, **kwargs):
         if line:
             if not line.startswith('ppa:'):
                 raise SourceError(f'The PPA shortcut {line} is malformed')
@@ -93,6 +96,7 @@ class PPASource(Source):
         output += self.displayname
         output += '\n\n'
         output += self.description
+        return output
     
     def load_from_data(self, data: list) -> None:
         self.load_from_shortcut(shortcut=data[0])
@@ -145,13 +149,13 @@ class PPASource(Source):
             self.name = self.ppa.displayname
         
         if self.ppa and key:
-            key = SourceKey(name=self.ident)
-            if str(key.path) not in util.keys:
-                key.load_key_data(fingerprint=self.ppa.fingerprint)
-                util.keys[str(key.path)] = key
-                self.key = key
+            repo_key = SourceKey(name=self.ident)
+            if str(repo_key.path) not in util.keys:
+                repo_key.load_key_data(fingerprint=self.ppa.fingerprint)
+                util.keys[str(repo_key.path)] = repo_key
+                self.key:SourceKey = repo_key
             else:
-                self.key = util.keys[key.path]
+                self.key = util.keys[repo_key.path]
             self.signed_by = str(self.key.path)
 
         self.enabled = True
@@ -215,7 +219,7 @@ class PPA:
         """ The Launchpad object for the PPA's owner."""
         if not self._lpteam:
             try:
-                self._lpteam = self.lap.people(self.teamname)
+                self._lpteam = self.lap.people(self.teamname) # type: ignore (This won't actually be unbound because of the property)
             except NotFound as err:
                 msg = f'User/Team "{self.teamname}" not found'
                 raise SourceError(msg) from err
@@ -239,14 +243,14 @@ class PPA:
         return self._lpppa
 
     @property
-    def description(self):
+    def description(self) -> str:
         """str: The description of the PPA."""
-        return self.lpppa.description
+        return self.lpppa.description or ''
 
     @property
-    def displayname(self):
+    def displayname(self) -> str:
         """ str: the fancy name of the PPA."""
-        return self.lpppa.displayname
+        return self.lpppa.displayname or ''
 
     @property
     def fingerprint(self):

@@ -62,6 +62,32 @@ class Source(deb822.Deb822):
 
     default_format = DEFAULT_FORMAT
 
+    @staticmethod
+    def validator(shortcut:str) -> bool:
+        """Determine whether a deb line is valid.
+        
+        Arguments:
+            shortcut(str): The shortcut to validate
+        
+        Returns: bool
+            `True` if the PPA is valid, otherwise False
+        """
+        shortcut_list:list = shortcut.split()
+
+        if not shortcut.startswith('deb'):
+            return False
+        
+        if not len(shortcut_list) > 3:
+            return False
+
+        if not util.validate_debline:
+            return False
+        
+        if len(shortcut_list) == 3 and '/' not in shortcut_list[-1]:
+            return False
+            
+        return True
+
     def __init__(self, *args, file=None, **kwargs) -> None:
         """Initialize this source object"""
         self.log = logging.getLogger(__name__)
@@ -95,6 +121,16 @@ class Source(deb822.Deb822):
 
         return rep
     
+    def __bool__(self) -> bool:
+        has_uri:bool = len(self.uris) > 0
+        has_suite:bool = len(self.suites) > 0
+        has_component:bool = len(self.components) > 0
+
+        if has_uri and has_suite and has_component:
+            return True
+        return False
+
+
     def get_description(self) -> str:
         """Get a UI-compatible description for a source. 
         
@@ -260,7 +296,8 @@ class Source(deb822.Deb822):
 
     def save(self) -> None:
         """Proxy method to save the source"""
-        self.file.save()
+        if not self.file == None:
+            self.file.save()
 
     def output_legacy(self) -> str:
         """Outputs a legacy representation of this source
@@ -448,7 +485,7 @@ class Source(deb822.Deb822):
         self._options = options
     
     @property
-    def prefs(self) -> Path:
+    def prefs(self):
         """The path to any apt preferences files for this source."""
         try:
             prefs = self['X-Repolib-Prefs']
@@ -457,7 +494,7 @@ class Source(deb822.Deb822):
         
         if prefs:
             return Path(prefs)
-        return None
+        return Path()
     
     @prefs.setter
     def prefs(self, prefs):
@@ -759,10 +796,12 @@ class Source(deb822.Deb822):
         if self.comments:
             self['X-Repolib-Comments'] = '# '
             self['X-Repolib-Comments'] += ' # '.join(self.comments)
-        _deb822:str = self.dump()
+        _deb822 = self.dump()
         if self.comments:
             self.pop('X-Repolib-Comments')
-        return _deb822
+        if _deb822:
+            return _deb822
+        return ''
     
     @property
     def ui(self) -> str:
@@ -784,7 +823,7 @@ class Source(deb822.Deb822):
         """The legacy/one-line format representation of this source"""
         self._update_legacy_options()
 
-        if self.prefs:
+        if str(self.prefs) != '.':
             raise SourceError(
                 'Apt Preferences files can only be used with DEB822-format sources.'
             )

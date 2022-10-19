@@ -50,10 +50,10 @@ class SourceKey:
 
     def __init__(self, name:str = '') -> None:
         self.log = logging.getLogger(__name__)
-        self.tmp_path = None
-        self.path = None
-        self.gpg = None
-        self.data = None
+        self.tmp_path = Path()
+        self.path = Path()
+        self.gpg = gnupg.GPG()
+        self.data = b''
         
         if name:
             self.reset_path(name=name)
