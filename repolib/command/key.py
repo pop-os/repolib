@@ -46,7 +46,7 @@ class Key(Command):
     """
 
     @classmethod
-    def init_options(self, subparsers):
+    def init_options(cls, subparsers) -> None:
         """Sets up this command's options parser"""
 
         sub = subparsers.add_parser(
@@ -127,7 +127,6 @@ class Key(Command):
         self.keyserver = args.keyserver
 
         self.actions:dict = {}
-        self.source = None
         self.system_source = False
 
         for act in [
@@ -248,7 +247,7 @@ class Key(Command):
         self.source.load_key()
         return True
     
-    def ascii(self, value:str) -> None:
+    def ascii(self, value:str) -> bool:
         """Loads the key from provided ASCII-armored data"""
         if not value:
             return False

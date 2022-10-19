@@ -128,17 +128,18 @@ class List(Command):
             sources_list_file = None
 
         print('Legacy source.list sources:')
-        with open(sources_list_file, mode='r') as file:
-            for line in file:
-                if 'cdrom' in line:
-                    line = ''
-                
-                try: 
-                    source = Source()
-                    source.load_from_data([line])
-                    print(textwrap.indent(source.ui, indent))
-                except SourceError:
-                    pass
+        if sources_list_file:
+            with open(sources_list_file, mode='r') as file:
+                for line in file:
+                    if 'cdrom' in line:
+                        line = ''
+                    
+                    try: 
+                        source = Source()
+                        source.load_from_data([line])
+                        print(textwrap.indent(source.ui, indent))
+                    except SourceError:
+                        pass
 
     def list_all(self):
         """List all sources presently configured in the system

@@ -145,6 +145,8 @@ class Add(Command):
         print('Fetching repository information...')
 
         self.log.debug('Adding line %s', self.deb_line)
+
+        new_source: Source = Source()
         
         for prefix in shortcut_prefixes:
             self.log.debug('Trying prefix %s', prefix)
@@ -169,9 +171,25 @@ class Add(Command):
                     except IndexError:
                         pass
                     return False
+                
+                new_source.load_from_data([self.deb_line])
                 break
         
-        new_source.load_from_data([self.deb_line])
+        
+        if not new_source:
+            self.log.error(
+                f'Could not parse line "{self.deb_line}". Double-check the '
+                'spelling.'
+            )
+            valid_shortcuts: str = ''
+            for shortcut in shortcut_prefixes:
+                if shortcut.startswith('deb'):
+                    continue
+                valid_shortcuts += f'{shortcut}, '
+            valid_shortcuts = valid_shortcuts.strip(', ')
+            print(f'Supported repository shortcuts:\n  {valid_shortcuts}')
+            return False
+
         new_source.twin_source = True
         new_source.sourcecode_enabled = self.source_code
 

@@ -224,9 +224,6 @@ class Modify(Command):
         try:
             self.source = util.sources[self.repo]
         except KeyError:
-            self.source = None
-        
-        if not self.source:
             self.log.error(
                 'The source %s could not be found. Check the spelling',
                 self.repo
@@ -299,7 +296,7 @@ class Modify(Command):
         self.source.sourcecode_enabled = True
         return True
     
-    def add_uri(self, values:list) -> bool:
+    def add_uri(self, values:str) -> bool:
         """Adds URIs to the source, if not already present."""
         if not values:
             return False
@@ -330,7 +327,7 @@ class Modify(Command):
             return True
         return False
     
-    def remove_uri(self, values:list) -> bool:
+    def remove_uri(self, values:str) -> bool:
         """Remove URIs from the soruce, if they are added."""
         if not values:
             return False
@@ -364,7 +361,7 @@ class Modify(Command):
         
         return False
     
-    def add_suite(self, values:list) -> bool:
+    def add_suite(self, values:str) -> bool:
         """Adds a suite to the source"""
         if not values:
             return False
@@ -389,7 +386,7 @@ class Modify(Command):
             return True
         return False
     
-    def remove_suite(self, values:list) -> bool:
+    def remove_suite(self, values:str) -> bool:
         """Remove a suite from the source"""
         if not values:
             return False
@@ -423,7 +420,7 @@ class Modify(Command):
         
         return False
     
-    def add_component(self, values:list) -> bool:
+    def add_component(self, values:str) -> bool:
         """Adds components to the source"""
         if not values:
             return False
@@ -455,7 +452,7 @@ class Modify(Command):
             return True
         return False
 
-    def remove_component(self, values:list) -> bool:
+    def remove_component(self, values:str) -> bool:
         """Removes components from the source"""
         if not values:
             return False

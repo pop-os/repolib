@@ -81,7 +81,7 @@ log_level_map:dict = {
 }
 
 if systemd_support:
-    journald_log = JournalHandler()
+    journald_log = JournalHandler() # type: ignore (this is handled by the wrapping if)
     journald_log.setLevel(logging.INFO)
     journald_log.setFormatter(stream_fmt)
     log.addHandler(journald_log)
