@@ -20,6 +20,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from httplib2.error import ServerNotFoundError
+from urllib.error import URLError
+
 from .. import util
 from ..source import Source, SourceError
 from ..file import SourceFile, SourceFileError
@@ -172,7 +175,17 @@ class Add(Command):
                         pass
                     return False
                 
-                new_source.load_from_data([self.deb_line])
+                try:
+                    new_source.load_from_data([self.deb_line])
+                except (URLError, ServerNotFoundError) as err:
+                    self.log.error(
+                        'System is offline. A connection is required to add '
+                        'PPA and Popdev sources.'
+                    )
+                    return False
+                except Exception as err:
+                    self.log.error('An error ocurred: %s', err)
+                    return False
                 break
         
         
