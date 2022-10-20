@@ -178,12 +178,26 @@ class Add(Command):
                 try:
                     new_source.load_from_data([self.deb_line])
                 except (URLError, ServerNotFoundError) as err:
+                    import traceback
+                    self.log.debug(
+                        'Exception info: %s \n %s \n %s',
+                        type(err),
+                        ''.join(traceback.format_exception(err)),
+                        err.args
+                    )
                     self.log.error(
                         'System is offline. A connection is required to add '
                         'PPA and Popdev sources.'
                     )
                     return False
                 except Exception as err:
+                    import traceback
+                    self.log.debug(
+                        'Exception info: %s \n %s \n %s',
+                        type(err),
+                        err.__traceback__,
+                        err
+                    )
                     self.log.error('An error ocurred: %s', err)
                     return False
                 break
