@@ -139,6 +139,31 @@ class Source(deb822.Deb822):
         """
         return self.name
     
+    def get_key_info(self, halt_errors: bool = False) -> dict:
+        """ Get a dictionary containing information for the signing key for
+        this source.
+
+        Arguments:
+            halt_errors (bool): if there are errors or other unexpected data, 
+                raise a SourceError exception. Otherwise, simply log a warning.
+        
+        Returns: dict
+            The dictionary from gnupg with key info.
+        """
+        if self.key:
+            keys:list = self.key.gpg.list_keys()
+            if len(keys) > 1:
+                error_msg = (
+                        f'The keyring for {self.ident} contains {len(keys)} keys'
+                        '. Check the keyring object for details about the keys.'
+                    )
+                if halt_errors:
+                    raise SourceError(error_msg)
+                self.log.warning(error_msg)
+            return keys[0]
+        
+        return {}
+    
     def reset_values(self) -> None:
         """Reset the default values for all attributes"""
         self.log.info('Resetting source info')
