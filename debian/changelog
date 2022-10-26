@@ -1,3 +1,10 @@
+repolib (2.2.0) jammy; urgency=medium
+
+  * Adds API for getting signing key details
+  * Adds CLI option to print signing key information
+
+ -- Ian Santopietro <ian@system76.com>  Wed, 26 Oct 2022 15:56:23 -0600
+
 repolib (2.1.1) jammy; urgency=medium
 
   * Improved error CLI error handling
