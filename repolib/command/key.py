@@ -166,9 +166,18 @@ class Key(Command):
             )
             return False
         
-        if not True in self.actions:
-            self.actions['info'] = True
         self.log.debug('Actions to take:\n%s', self.actions)
+        # Run info, unless a different action is specified
+        self.actions['info'] = True
+        for key in self.actions:
+            if key == 'info':
+                self.log.debug('Skipping info key')
+                continue
+            if self.actions[key]:
+                self.log.info('Got an action, skipping info')
+                self.actions['info'] = False
+                break
+         
         self.log.debug('Source before:\n%s', self.source)
 
         rets = []
@@ -182,9 +191,13 @@ class Key(Command):
         self.log.debug('Results: %s', rets)
         self.log.debug('Source after: \n%s', self.source)
 
+        if self.actions['info']:
+            self.log.info('Running Info, skipping saving %s', self.source.ident)
+            return True
+
         if True in rets:
-            if not self.actions['info']:
-                self.source.file.save()
+            self.log.info('Saving source %s', self.source.ident)
+            self.source.file.save()
             return True
         else:
             self.log.warning('No valid changes specified, no actions taken.')
@@ -301,7 +314,7 @@ class Key(Command):
                 'The source %s does not have a key configured.', 
                 self.repo
             )
-            return False
+            return True
 
         else:
             key:dict = self.source.get_key_info()
