@@ -65,9 +65,7 @@ class Key(Command):
             help='Which repository to manage keys for.'
         )
 
-        sub_group = sub.add_mutually_exclusive_group(
-            required=True
-        )
+        sub_group = sub.add_mutually_exclusive_group()
 
         sub_group.add_argument(
             '-n',
@@ -103,6 +101,13 @@ class Key(Command):
         )
 
         sub_group.add_argument(
+            '-i',
+            '--info',
+            action='store_true',
+            help='Print key information'
+        )
+
+        sub_group.add_argument(
             '-r',
             '--remove',
             action='store_true',
@@ -135,6 +140,7 @@ class Key(Command):
             'url',
             'ascii',
             'fingerprint',
+            'info',
             'remove',
         ]:
             self.actions[act] = getattr(args, act)
@@ -161,6 +167,17 @@ class Key(Command):
             return False
         
         self.log.debug('Actions to take:\n%s', self.actions)
+        # Run info, unless a different action is specified
+        self.actions['info'] = True
+        for key in self.actions:
+            if key == 'info':
+                self.log.debug('Skipping info key')
+                continue
+            if self.actions[key]:
+                self.log.info('Got an action, skipping info')
+                self.actions['info'] = False
+                break
+         
         self.log.debug('Source before:\n%s', self.source)
 
         rets = []
@@ -169,11 +186,17 @@ class Key(Command):
                 self.log.debug('Running action: %s - (%s)', action, self.actions[action])
                 ret = getattr(self, action)(self.actions[action])
                 rets.append(ret)
+                break
         
         self.log.debug('Results: %s', rets)
         self.log.debug('Source after: \n%s', self.source)
 
+        if self.actions['info']:
+            self.log.info('Running Info, skipping saving %s', self.source.ident)
+            return True
+
         if True in rets:
+            self.log.info('Saving source %s', self.source.ident)
             self.source.file.save()
             return True
         else:
@@ -281,6 +304,33 @@ class Key(Command):
         self.source.key = key
         self.source.signed_by = str(key.path)
         self.source.load_key()
+        return True
+    
+    def info(self, value:str) -> bool:
+        """Prints key information"""
+        from datetime import date
+        if not self.source.key:
+            self.log.error(
+                'The source %s does not have a key configured.', 
+                self.repo
+            )
+            return True
+
+        else:
+            key:dict = self.source.get_key_info()
+            output: str = f'Key information for source {self.source.ident}:\n'
+            output += f'Key ID: {key["uids"][0]}\n'
+            output += f'Fingerprint: {key["keyid"]}\n'
+            if key['type'] == 'pub':
+                output += 'Key Type: Public\n'
+            else:
+                output += 'Key Type: Private\n'
+            keydate = date.fromtimestamp(int(key['date']))
+            output += f'Issue Date: {keydate.ctime()}\n'
+            output += f'Length: {key["length"]} Bytes\n'
+            output += f'Keyring Path: {str(self.source.key.path)}\n'
+            print(output)
+
         return True
     
     def remove(self, value:str) -> bool:
