@@ -44,6 +44,7 @@ case "$state" in
       '--ascii'
       '--fingerprint'
       '--keyserver'
+      '--info'
       '--remove'
       # List subcommand
       '--legacy'
