@@ -182,7 +182,14 @@ setup(
     description='Easily manage software sources',
     download_url='https://github.com/pop-os/repolib/releases',
     long_description=long_description,
-    tests_require=['pytest'],
+    tests_require=['pytest', 'pytest-pylint'],
+    install_requires=[
+        'dbus-python',
+        'distro',
+        'gnupg',
+        'launchpadlib',
+        'python-debian'
+    ],
     license='LGPLv3',
     packages=['repolib', 'repolib/command', 'repolib/shortcuts', 'repolib/unittest'],
     cmdclass={'release': Release, 'test': Test},

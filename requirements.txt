@@ -1,4 +1,0 @@
-dbus-python
-distro
-pytest-pylint
-python-debian
