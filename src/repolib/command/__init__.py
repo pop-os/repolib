@@ -26,5 +26,6 @@ from .list import List
 from .remove import Remove
 from .modify import Modify
 from .key import Key
+from . import bin
 
 parser = get_argparser()
