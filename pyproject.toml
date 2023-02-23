@@ -13,9 +13,9 @@ readme = "README.rst"
 requires-python = ">=3.8"
 classifiers = [
     'Environment :: Console',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: System Administrators',
     'Intended Audience :: End Users/Desktop',
-    'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Natural Language :: English',
     'Operating System :: POSIX :: Linux',
@@ -25,8 +25,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/isantop/crashbang"
-"Bug Tracker" = "https://github.com/isantop/crashbang/issues"
+"Homepage" = "https://github.com/pop-os/repolib"
+"Bug Tracker" = "https://github.com/pop-os/repolib/issues"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
