@@ -11,6 +11,7 @@ authors = [
 description = "Easily manage software sources"
 readme = "README.rst"
 requires-python = ">=3.8"
+license = {file = "LICENSE.LESSER"}
 classifiers = [
     'Environment :: Console',
     'Development Status :: 5 - Production/Stable',
@@ -27,6 +28,7 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/pop-os/repolib"
 "Bug Tracker" = "https://github.com/pop-os/repolib/issues"
+"Documentation" = "https://repolib.readthedocs.io/en/latest/"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
