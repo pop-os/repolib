@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Repolib"
-version = "2.2.0"
+version = "2.2.1"
 authors = [
     { name="Ian Santopietro", email="ian@system76.com" }
 ]
@@ -40,7 +40,7 @@ dependencies = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2.2.0"
+version = "2.2.1"
 version_files = [
     "pyproject.toml:^version",
     "setup.cfg:^version",
