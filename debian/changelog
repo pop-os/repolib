@@ -1,3 +1,9 @@
+repolib (2.2.1) jammy; urgency=medium
+
+  * Build system improvements
+
+ -- Ian Santopietro <ian@system76.com>  Thu, 02 Mar 2023 11:33:10 -0700
+
 repolib (2.2.0) jammy; urgency=medium
 
   * Adds API for getting signing key details
