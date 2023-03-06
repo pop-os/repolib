@@ -1,0 +1,6 @@
+data/bash-completion/apt-manage usr/share/bash-completion/completions
+data/zsh-completion/_apt-manage usr/share/zsh/vendor-completions
+data/org.pop_os.repolib.service usr/share/dbus-1/system-services
+data/org.pop_os.repolib.policy usr/share/polkit-1/actions
+data/org.pop_os.repolib.conf etc/dbus-1/system.d/
+data/service.py usr/lib/repolib
