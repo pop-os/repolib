@@ -107,8 +107,13 @@ class PopdevSource(Source):
                 prefs_file.write(prefs_contents)
         except PermissionError:
             bus = dbus.SystemBus()
-            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-            privileged_object.output_prefs_to_disk(str(self.prefs), prefs_contents)
+            try:
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.output_prefs_to_disk(str(self.prefs), prefs_contents)
+            except dbus.exceptions.DBusException:
+                self.log.critical('DBus service not found!')
+                print("Permission denied. Please use `sudo`.")
+                return
         
         self.log.debug('Pin priority saved for %s', self.ident)
 
