@@ -116,11 +116,16 @@ class SourceKey:
         
         except PermissionError:
             bus = dbus.SystemBus()
-            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-            privileged_object.install_signing_key(
-                str(self.tmp_path),
-                str(self.path)
-            )
+            try:
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.install_signing_key(
+                    str(self.tmp_path),
+                    str(self.path)
+                )
+            except dbus.exceptions.DBusException:
+                self.log.critical('DBus service not found!')
+                print("Permission denied. Please use `sudo`.")
+                return
     
     def delete_key(self) -> None:
         """Deletes the key file from disk."""
@@ -130,8 +135,13 @@ class SourceKey:
         
         except PermissionError:
             bus = dbus.SystemBus()
-            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-            privileged_object.delete_signing_key(str(self.path))
+            try:
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.delete_signing_key(str(self.path))
+            except dbus.exceptions.DBusException:
+                self.log.critical('DBus service not found!')
+                print("Permission denied. Please use `sudo`.")
+                return
         
         except FileNotFoundError:
             pass

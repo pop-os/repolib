@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Repolib"
+version = "2.2.1"
+authors = [
+    { name="Ian Santopietro", email="ian@system76.com" }
+]
+description = "Easily manage software sources"
+readme = "README.rst"
+requires-python = ">=3.8"
+license = {file = "LICENSE.LESSER"}
+classifiers = [
+    'Environment :: Console',
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: System Administrators',
+    'Intended Audience :: End Users/Desktop',
+    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+    'Natural Language :: English',
+    'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python :: 3',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: System'
+]
+dependencies = [
+    "dbus-python",
+    "distro >= 1.4.0",
+    "gnupg",
+    "httplib2 >= 0.19.0",
+    "launchpadlib",
+    "python-debian"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/pop-os/repolib"
+"Bug Tracker" = "https://github.com/pop-os/repolib/issues"
+"Documentation" = "https://repolib.readthedocs.io/en/latest/"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "2.2.1"
+version_files = [
+    "pyproject.toml:^version",
+    "setup.cfg:^version",
+    "src/repolib/__version__.py:__version__"
+]
+tag_format = "$version"

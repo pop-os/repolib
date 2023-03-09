@@ -3,8 +3,9 @@
 # output every command that modifies files on the build system.
 #export DH_VERBOSE = 1
 
-export PYBUILD_NAME=repolib
-export PYBUILD_OPTION=--test-pytest
+export PYBUILD_NAME = repolib
+export PYBUILD_TEST_PYTEST = 1
+export PYBUILD_TEST_ARGS = "{dir}/src/repolib/unittest"
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
