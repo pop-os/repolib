@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Copyright (c) 2022, Ian Santopietro
+Copyright (c) 2019-2022, Ian Santopietro
 All rights reserved.
 
 This file is part of RepoLib.
@@ -19,12 +19,4 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RepoLib.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-from .argparser import get_argparser
-from .add import Add
-from .list import List
-from .remove import Remove
-from .modify import Modify
-from .key import Key
-
-parser = get_argparser()
+__version__ = "2.2.1"

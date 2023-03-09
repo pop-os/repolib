@@ -117,8 +117,13 @@ class SourceFile:
         
         except PermissionError:
             bus = dbus.SystemBus()
-            privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-            privileged_object.delete_prefs_file(str(prefs_path))
+            try:
+                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                privileged_object.delete_prefs_file(str(prefs_path))
+            except dbus.exceptions.DBusException:
+                self.log.critical('DBus service not found!')
+                print("Permission denied. Please use `sudo`.")
+                return
 
     def get_source_by_ident(self, ident: str) -> Source:
         """Find a source within this file by its ident
@@ -455,8 +460,13 @@ class SourceFile:
             
             except PermissionError:
                 bus = dbus.SystemBus()
-                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-                privileged_object.output_file_to_disk(self.path.name, self.output)
+                try:
+                    privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                    privileged_object.output_file_to_disk(self.path.name, self.output)
+                except dbus.exceptions.DBusException:
+                    self.log.critical('DBus service not found!')
+                    print("Permission denied. Please use `sudo`.")
+                    return
             self.log.debug('File %s saved', self.path)
         else:
             try:
@@ -465,8 +475,13 @@ class SourceFile:
                 save_path.unlink(missing_ok=True)
             except PermissionError:
                 bus = dbus.SystemBus()
-                privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
-                privileged_object.delete_source_file(self.path.name)
+                try:
+                    privileged_object = bus.get_object('org.pop_os.repolib', '/Repo')
+                    privileged_object.delete_source_file(self.path.name)
+                except dbus.exceptions.DBusException:
+                    self.log.critical('DBus service not found!')
+                    print("Permission denied. Please use `sudo`.")
+                    return
             self.log.debug('File %s removed', self.path)
 
     
