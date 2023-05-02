@@ -37,7 +37,7 @@ class Add(Command):
     Options:
         --disable, d
         --source-code, -s
-        --terse, -t
+        --terse, -t, -y
         --name, -n
         --identifier, -i
         --format, -f
@@ -77,6 +77,7 @@ class Add(Command):
         )
         sub.add_argument(
             '-t',
+            '-y',
             '--terse',
             action='store_true',
             help='Do not display expanded info about a repository before adding it.'
