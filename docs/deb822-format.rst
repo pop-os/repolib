@@ -158,7 +158,7 @@ Types: (value: "deb" or "deb-src", required: Yes)
     typical two-level Debian archive providing packages containing pre-compiled 
     binary data intended for execution on user machines. The ``deb-src`` type 
     references a Debian distribution's source code in the same form as the ``deb``
-    type. A ``deb-src`` line is required to fetch source pacakge indices. 
+    type. A ``deb-src`` line is required to fetch source package indices. 
 
 
 .. _deb822-field-uris:
