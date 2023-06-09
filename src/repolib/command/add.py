@@ -264,5 +264,8 @@ class Add(Command):
                 exit(0)
         
         new_file.save()
-        util.dbus_quit()
+        try:
+            util.dbus_quit()
+        except:
+            self.log.warning('Failed to disconnect from dbus session.')
         return True
