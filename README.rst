@@ -75,9 +75,46 @@ From System Package Manager
 ---------------------------
 
 If your operating system packages repolib, you can install it by running::
-    
+
     sudo apt install python3-repolib
 
+If your distro does not yet supply the package, you can install the
+[latest release](https://github.com/pop-os/repolib/releases/) using the
+steps below (At the time of writing this, the version is 2.0.0):
+
+    # Initialize some useful variables
+    PKG=python3-repolib_2.0.0_all.deb
+    URL="https://github.com/pop-os/repolib/releases/download/2.0.0/$PKG"
+
+    PREREQ_PKG=(curl python3-gnupg python3-debian ca-certificates)
+    . <(grep -E '^(VERSION_)?ID=' /etc/os-release)
+
+    # Make sure we're using the right mix, debian requires some missing
+    # packages.
+    [[ "$ID" == 'debian' ]] \
+    && PREREQ_PKG+=( debhelper dh-python python3-all \
+        python3-setuptools python3-gnupg python3-debian zstd )
+
+    apt-get install --yes --no-install-recommends "${PREREQ_PKG[@]}"
+
+    curl -Lo "/tmp/$PKG" "$URL"
+
+    # If we're on debian, zstd compression isn't supported by pkg.
+    # So we repackage.
+    if [[ "$ID" == 'debian' ]]; then
+        echo "We're on debian, so repackaging without zstd compression..."
+        rm -r /tmp/repolib.tmp 2>/dev/null || true
+        mkdir -p /tmp/repolib.tmp && pushd /tmp/repolib.tmp/ >/dev/null \
+        && mv "/tmp/${PKG}" "${PKG}.tmp" \
+        && ar x "${PKG}.tmp" \
+        && zstd -d < control.tar.zst | xz > control.tar.xz \
+        && zstd -d < data.tar.zst | xz > data.tar.xz \
+        && ar -m -c -a sdsd "/tmp/${PKG}" debian-binary control.tar.xz data.tar.xz \
+        && popd >/dev/null
+    fi
+
+    # Install the package
+    apt-get install --yes "/tmp/$PKG"
 
 Uninstall
 ^^^^^^^^^
