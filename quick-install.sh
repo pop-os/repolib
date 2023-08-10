@@ -22,13 +22,17 @@ if ! has apt-manage; then
     if ! has apt-manage; then
         mkdir -p /tmp
 
+        # Initialize some useful variables
         PKG=python3-repolib_2.0.0_all.deb
         URL="https://github.com/pop-os/repolib/releases/download/2.0.0/$PKG"
 
         if [ ! -e "/tmp/$PKG" ]; then
             PREREQ_PKG=(curl python3-gnupg python3-debian ca-certificates)
+            # Grab VERSION_ID and ID from /etc/os-release
             . <(grep -E '^(VERSION_)?ID=' /etc/os-release)
 
+            # Make sure we're using the right mix.
+            # Debian requires some missing packages.
             [[ "$ID" == 'debian' ]] \
             && PREREQ_PKG+=( debhelper dh-python python3-all \
                 python3-setuptools python3-gnupg python3-debian zstd )
@@ -37,6 +41,8 @@ if ! has apt-manage; then
             
             curl -Lo "/tmp/$PKG" "$URL"
 
+            # If Running on Debian, zstd compression isn't supported by pkg.
+            # The code below repackages the deb packages using xz instead.
             if [[ "$ID" == 'debian' ]]; then
                 echo "We're on debian, so repackaging without zstd compression..."
                 rm -r /tmp/repolib.tmp 2>/dev/null || true
@@ -49,6 +55,8 @@ if ! has apt-manage; then
                 && popd >/dev/null
             fi
         fi
+
+        # Install the package
         apt-get install --yes "/tmp/$PKG"
     fi
 fi
