@@ -23,8 +23,9 @@ if ! has apt-manage; then
         mkdir -p /tmp
 
         # Initialize some useful variables
-        PKG=python3-repolib_2.0.0_all.deb
-        URL="https://github.com/pop-os/repolib/releases/download/2.0.0/$PKG"
+        PKG_VER='2.0.0'
+        PKG="python3-repolib_${PKG_VER}_all.deb"
+        URL="https://github.com/pop-os/repolib/releases/download/${PKG_VER}/$PKG"
 
         if [ ! -e "/tmp/$PKG" ]; then
             PREREQ_PKG=(curl python3-gnupg python3-debian ca-certificates)

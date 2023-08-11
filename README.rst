@@ -82,16 +82,17 @@ From Pre-Compiled .deb Package
 ------------------------------
 
 If your distro does not yet supply the package, you can install the
-`latest release`__ using the script below (At the time of writing this,
-the version is 2.0.0):
+`latest release`__ using the script below
+(replace ``PKG_VER='2.0.0'`` with the version you wish to install):
 
 .. code:: bash
 
     #! /usr/bin/env bash
     
     # Initialize some useful variables
-    PKG=python3-repolib_2.0.0_all.deb
-    URL="https://github.com/pop-os/repolib/releases/download/2.0.0/$PKG"
+    PKG_VER='2.0.0'
+    PKG="python3-repolib_${PKG_VER}_all.deb"
+    URL="https://github.com/pop-os/repolib/releases/download/${PKG_VER}/$PKG"
     PREREQ_PKG=(curl python3-gnupg python3-debian ca-certificates)
     # Grab VERSION_ID and ID from /etc/os-release
     . <(grep -E '^(VERSION_)?ID=' /etc/os-release)
