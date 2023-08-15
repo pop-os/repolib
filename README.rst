@@ -81,50 +81,16 @@ If your operating system packages repolib, you can install it by running::
 From Pre-Compiled .deb Package
 ------------------------------
 
-If your distro does not yet supply the package, you can install the
-`latest release`__ using the script below
-(replace ``PKG_VER='2.0.0'`` with the version you wish to install):
+When using any other Debian based distro, it's possible to install the
+`latest release`__ using the `quick_install.sh`__ script:
 
-.. code:: bash
+.. code:: shell
 
-    #! /usr/bin/env bash
-    
-    # Initialize some useful variables
-    PKG_VER='2.0.0'
-    PKG="python3-repolib_${PKG_VER}_all.deb"
-    URL="https://github.com/pop-os/repolib/releases/download/${PKG_VER}/$PKG"
-    PREREQ_PKG=(curl python3-gnupg python3-debian ca-certificates)
-    # Grab VERSION_ID and ID from /etc/os-release
-    . <(grep -E '^(VERSION_)?ID=' /etc/os-release)
-    
-    # Make sure we're using the right mix.
-    # Debian requires some missing packages.
-    [[ "$ID" == 'debian' ]] \
-    && PREREQ_PKG+=( debhelper dh-python python3-all \
-        python3-setuptools python3-gnupg python3-debian zstd )
-    
-    apt-get install --yes --no-install-recommends "${PREREQ_PKG[@]}"
-    
-    curl -Lo "/tmp/$PKG" "$URL"
-    
-    # If Running on Debian, zstd compression isn't supported by pkg.
-    # The code below repackages the deb packages using xz instead.
-    if [[ "$ID" == 'debian' ]]; then
-        echo "We're on debian, so repackaging without zstd compression..."
-        rm -r /tmp/repolib.tmp 2>/dev/null || true
-        mkdir -p /tmp/repolib.tmp && pushd /tmp/repolib.tmp/ >/dev/null \
-        && mv "/tmp/${PKG}" "${PKG}.tmp" \
-        && ar x "${PKG}.tmp" \
-        && zstd -d < control.tar.zst | xz > control.tar.xz \
-        && zstd -d < data.tar.zst | xz > data.tar.xz \
-        && ar -m -c -a sdsd "/tmp/${PKG}" debian-binary control.tar.xz data.tar.xz \
-        && popd >/dev/null
-    fi
-    
-    # Install the package
-    apt-get install --yes "/tmp/$PKG"
+    sudo apt update && sudo apt install --yes --no-install-recommends curl
+    sudo bash <(curl -s https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
 
 __ https://github.com/pop-os/repolib/releases/
+__ https://github.com/pop-os/repolib/blob/HEAD/quick-install.sh
 
 Uninstall
 ^^^^^^^^^

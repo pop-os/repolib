@@ -2,8 +2,8 @@
 # originally posted at https://askubuntu.com/a/1412554/720005
 # shellcheck disable=SC1090
 
-# Invoke this script by calling:
-# # bash <(curl https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
+# Invoke this script by calling (as root):
+# bash <(curl https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
 
 set -e
 
@@ -18,12 +18,20 @@ if ! has apt-manage; then
     # First let's hope there is package ready for installation
     apt-get install --yes apt-manage || true
 
-    # If it still doesn't exist, let's get it from repo
+    # If it still doesn't exist, get it directly from GitHub
+
     if ! has apt-manage; then
+        # If apt-manage is missing, 
+        export DEBIAN_FRONTEND=noninteractive
+
+        apt-get update
+        # For the odd case where /tmp is missing
+        # (might happen in some obscure docker images)
         mkdir -p /tmp
 
         # Initialize some useful variables
-        PKG_VER='2.0.0'
+        # Provide the option to export PKG_VER before calling the script.
+        PKG_VER="${PKG_VER:-2.0.0}"
         PKG="python3-repolib_${PKG_VER}_all.deb"
         URL="https://github.com/pop-os/repolib/releases/download/${PKG_VER}/$PKG"
 
@@ -40,7 +48,7 @@ if ! has apt-manage; then
 
             apt-get install --yes --no-install-recommends "${PREREQ_PKG[@]}"
             
-            curl -Lo "/tmp/$PKG" "$URL"
+            curl -sLo "/tmp/$PKG" "$URL"
 
             # If Running on Debian, zstd compression isn't supported by pkg.
             # The code below repackages the deb packages using xz instead.
@@ -62,4 +70,7 @@ if ! has apt-manage; then
     fi
 fi
 
-apt-manage "${@:---help}"
+# Passing '-' as the sole argument, will not run apt-manage, otherwise
+# it will run it with the any argument provided, or with --help to
+# indicate a successful installation.
+[[ $# -eq 1 && "$1" == "-" ]] || apt-manage "${@:---help}"
