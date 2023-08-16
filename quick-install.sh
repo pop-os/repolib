@@ -5,6 +5,12 @@
 # Invoke this script by calling (as root):
 # bash <(curl https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
 
+# As of 2023-08-15, This script has been tested with the following
+# Docker containers:
+#   debian:latest debian:12-slim debian:11-slim debian:10-slim
+#   debian:oldstable-slim debian:sid-slim
+#   ubuntu:latest ubuntu:23.04 ubuntu:22.04 ubuntu:devel
+
 set -e
 
 has() { command -v "$1" > /dev/null; }
@@ -26,7 +32,7 @@ if ! has apt-manage; then
 
         apt-get update
         # For the odd case where /tmp is missing
-        # (might happen in some obscure docker images)
+        # (might happen in some obscure Docker images)
         mkdir -p /tmp
 
         # Initialize some useful variables
@@ -70,7 +76,9 @@ if ! has apt-manage; then
     fi
 fi
 
-# Passing '-' as the sole argument, will not run apt-manage, otherwise
-# it will run it with the any argument provided, or with --help to
-# indicate a successful installation.
-[[ $# -eq 1 && "$1" == "-" ]] || apt-manage "${@:---help}"
+if has apt-manage; then
+    echo "apt-manage successfully installed"
+else
+    echo "Something went wrong, apt-manage isn't found"
+    exit 1
+fi

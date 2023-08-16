@@ -81,14 +81,10 @@ If your operating system packages repolib, you can install it by running::
 From Pre-Compiled .deb Package
 ------------------------------
 
-When using any other Debian based distro, it's possible to install the
-`latest release`__ using the `quick_install.sh`__ script:
-
-.. code:: shell
-
-    sudo apt update && sudo apt install --yes --no-install-recommends curl
-    sudo bash <(curl -s https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
-
+If your distro does not yet supply the package, you can download and
+install the .deb package from the `latest release`__.  
+A script to do this automatically can be found in `quick_install.sh`__ script.
+ 
 __ https://github.com/pop-os/repolib/releases/
 __ https://github.com/pop-os/repolib/blob/HEAD/quick-install.sh
 
