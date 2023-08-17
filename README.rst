@@ -83,7 +83,7 @@ From Pre-Compiled .deb Package
 
 If your distro does not yet supply the package, you can download and
 install the .deb package from the `latest release`__.  
-A script to do this automatically can be found in `quick_install.sh`__ script.
+A script to do this automatically can be found in `quick_install.sh`__.
  
 __ https://github.com/pop-os/repolib/releases/
 __ https://github.com/pop-os/repolib/blob/HEAD/quick-install.sh
