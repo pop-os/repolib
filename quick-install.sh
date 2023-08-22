@@ -2,7 +2,8 @@
 # originally posted at https://askubuntu.com/a/1412554/720005
 # shellcheck disable=SC1090
 
-# Invoke this script by calling (as root):
+# It should be possible to execut this script as a oneliner with curl
+# (check that it is installed first). For example in bash/zsh (as root):
 # bash <(curl https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
 
 # As of 2023-08-15, This script has been tested with the following
@@ -82,3 +83,5 @@ else
     echo "Something went wrong, apt-manage isn't found"
     exit 1
 fi
+
+#
