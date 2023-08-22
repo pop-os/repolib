@@ -82,8 +82,10 @@ From Pre-Compiled .deb Package
 ------------------------------
 
 If your distro does not yet supply the package, you can download and
-install the .deb package from the `latest release`__.  
-A script to do this automatically can be found in `quick_install.sh`__.
+install the `.deb` package from the `latest release`__, which you can
+install with `apt install <deb package file>`.  
+A script to automatically download and install, including installing
+prerequisites, can be found in `quick_install.sh`__.
  
 __ https://github.com/pop-os/repolib/releases/
 __ https://github.com/pop-os/repolib/blob/HEAD/quick-install.sh
