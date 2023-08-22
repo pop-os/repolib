@@ -2,8 +2,9 @@
 # originally posted at https://askubuntu.com/a/1412554/720005
 # shellcheck disable=SC1090
 
-# Invoke this script by calling (as root):
-# bash <(curl https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh)
+# It should be possible to execut this script as a one-liner with curl
+# (check that it is installed first). Example (as root):
+# curl https://raw.githubusercontent.com/pop-os/repolib/HEAD/quick-install.sh | bash 
 
 # As of 2023-08-15, This script has been tested with the following
 # Docker containers:
@@ -82,3 +83,5 @@ else
     echo "Something went wrong, apt-manage isn't found"
     exit 1
 fi
+
+#
