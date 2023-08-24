@@ -71,13 +71,22 @@ Allows changing configuration details of a given repository
 Installation
 ============
 
-From System Package Manager
----------------------------
+From System Repository 
+----------------------
 
 If your operating system packages repolib, you can install it by running::
-    
+
     sudo apt install python3-repolib
 
+From Pre-Compiled .deb Package
+------------------------------
+
+If your distro does not yet supply the package, you can download and
+install the .deb package from the `latest release`__.  
+A script to do this automatically can be found in `quick_install.sh`__.
+ 
+__ https://github.com/pop-os/repolib/releases/
+__ https://github.com/pop-os/repolib/blob/HEAD/quick-install.sh
 
 Uninstall
 ^^^^^^^^^
