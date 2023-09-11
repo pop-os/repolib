@@ -132,10 +132,12 @@ it onto your system. You will need the following build-dependencies:
     * dh-python
     * python3-all
     * python3-setuptools
+    * python3-gnupg
+    * python3-pytest
 
 You can use this command to install these all in one go::
 
-    sudo apt install debhelper dh-python python3-all python3-setuptools
+    sudo apt install debhelper dh-python python3-all python3-setuptools python3-gnupg python3-pytest
 
 Then build and install the package::
 
