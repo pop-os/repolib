@@ -131,13 +131,19 @@ it onto your system. You will need the following build-dependencies:
     * debhelper (>=11)
     * dh-python
     * python3-all
-    * python3-setuptools
+    * python3-dbus
+    * python3-debian
+    * python3-distro
+    * python3-distutils
     * python3-gnupg
+    * python3-launchpadlib
+    * python3-lazr.restfulclient
     * python3-pytest
+    * python3-setuptools
 
 You can use this command to install these all in one go::
 
-    sudo apt install debhelper dh-python python3-all python3-setuptools python3-gnupg python3-pytest
+    sudo apt install debhelper dh-python python3-all python3-dbus python3-debian python3-distro python3-distutils python3-gnupg python3-launchpadlib python3-lazr.restfulclient python3-pytest python3-setuptools
 
 Then build and install the package::
 
