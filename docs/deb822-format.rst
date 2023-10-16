@@ -268,9 +268,9 @@ This specifies a source for downloading packages for System76's Pop!_OS::
 
 Following is a PPA source which has been disabled::
 
-    X-Repolib-Name: ZNC Stable
+    X-Repolib-Name: System76 Pre-Stable
     Enabled: no
     Types: deb
-    URIs: http://ppa.launchpad.net/teward/znc/ubuntu
+    URIs: http://ppa.launchpad.net/system76/pre-stable/ubuntu
     Suites: disco
     Components: main
