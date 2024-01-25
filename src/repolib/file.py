@@ -391,7 +391,7 @@ class SourceFile:
                     item += 1
                     self.contents.append('')
                 else:
-                    raw822.append(line.strip())
+                    raw822.append(line)
         
         if raw822:
             parsing_deb822 = False
