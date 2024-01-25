@@ -38,6 +38,9 @@ dependencies = [
 "Bug Tracker" = "https://github.com/pop-os/repolib/issues"
 "Documentation" = "https://repolib.readthedocs.io/en/latest/"
 
+[project.scripts]
+apt-manage = "repolib.command:bin.apt_manage"
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "2.2.1"
