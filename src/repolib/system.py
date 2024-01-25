@@ -45,7 +45,10 @@ def load_all_sources() -> None:
     sources_files = sources_path.glob('*.sources')
     legacy_files = sources_path.glob('*.list')
 
-    for file in sources_files:
+    for file in [*sources_files, *legacy_files]:
+        if file.is_dir():
+            log.info("Ignoring directory '%s'", file)
+            continue
         try:
             sourcefile = SourceFile(name=file.stem)
             log.debug('Loading %s', file)
@@ -53,14 +56,6 @@ def load_all_sources() -> None:
             if file.name not in util.files:
                 util.files[file.name] = sourcefile
 
-        except Exception as err:
-            util.errors[file.name] = err
-    
-    for file in legacy_files:
-        try:
-            sourcefile = SourceFile(name=file.stem)
-            sourcefile.load()
-            util.files[file.name] = sourcefile
         except Exception as err:
             util.errors[file.name] = err
     
