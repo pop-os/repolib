@@ -122,24 +122,22 @@ class List(Command):
             list_file(Path): The sources.list file to try and parse.
             indent(str): An indentation to append to the output
         """
-        try:
-            sources_list_file = util.SOURCES_DIR.parent / 'sources.list'
-        except FileNotFoundError:
-            sources_list_file = None
+        sources_list_file = util.SOURCES_DIR.parent / 'sources.list'
+        if not sources_list_file.is_file():
+            return
 
         print('Legacy source.list sources:')
-        if sources_list_file:
-            with open(sources_list_file, mode='r') as file:
-                for line in file:
-                    if 'cdrom' in line:
-                        line = ''
-                    
-                    try: 
-                        source = Source()
-                        source.load_from_data([line])
-                        print(textwrap.indent(source.ui, indent))
-                    except SourceError:
-                        pass
+        with open(sources_list_file, mode='r') as file:
+            for line in file:
+                if 'cdrom' in line:
+                    line = ''
+
+                try:
+                    source = Source()
+                    source.load_from_data([line])
+                    print(textwrap.indent(source.ui, indent))
+                except SourceError:
+                    pass
 
     def list_all(self):
         """List all sources presently configured in the system
