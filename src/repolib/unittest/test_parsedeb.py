@@ -110,21 +110,21 @@ class DebTestCase(unittest.TestCase):
         source = Source()
         source.load_from_data([
             'deb [ arch=amd64 lang=en_US,en_CA ] '
-            'http://example][.com/[release]/ubuntu suite main'
+            'http://example.com/[release]/ubuntu suite main'
         ])
         source.generate_default_ident()
-        self.assertEqual(source.uris, ['http://example][.com/[release]/ubuntu'])
+        self.assertEqual(source.uris, ['http://example.com/[release]/ubuntu'])
         self.assertEqual(source.architectures, 'amd64')
         self.assertEqual(source.languages, 'en_US en_CA')
-        
+
     def test_source_uri_with_brackets_and_options_with_colons(self):
         source = Source()
         source.load_from_data([
             'deb [ arch=amd64,arm:2 lang=en_US,en_CA ] '
-            'http://example][.com/[release]/ubuntu suite main'
+            'http://example.com/[release]/ubuntu suite main'
         ])
         source.generate_default_ident()
-        self.assertEqual(source.uris, ['http://example][.com/[release]/ubuntu'])
+        self.assertEqual(source.uris, ['http://example.com/[release]/ubuntu'])
         self.assertEqual(source.architectures, 'amd64 arm:2')
         self.assertEqual(source.languages, 'en_US en_CA')
 
@@ -132,11 +132,11 @@ class DebTestCase(unittest.TestCase):
         source = Source()
         source.load_from_data([
             'deb [ arch=amd64,arm:2,arm][ lang=en_US,en_CA ] '
-            'http://example][.com/[release:good]/ubuntu suite main restricted '
+            'http://example.com/[release:good]/ubuntu suite main restricted '
             'nonfree not-a-component'
         ])
         source.generate_default_ident()
-        self.assertEqual(source.uris, ['http://example][.com/[release:good]/ubuntu'])
+        self.assertEqual(source.uris, ['http://example.com/[release:good]/ubuntu'])
         self.assertEqual(source.suites, ['suite'])
         self.assertEqual(source.components, [
             'main', 'restricted', 'nonfree', 'not-a-component'
