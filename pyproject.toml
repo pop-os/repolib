@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Repolib"
-version = "2.2.1"
+version = "2.2.2"
 authors = [
-    { name="Ian Santopietro", email="ian@system76.com" }
+    { name="Michael Aaron Murphy", email="michael@system76.com" },
+    { name="Ian Santopietro", email="isantop@gmail.com" }
 ]
 description = "Easily manage software sources"
 readme = "README.rst"
@@ -43,7 +44,7 @@ apt-manage = "repolib.command:bin.apt_manage"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2.2.1"
+version = "2.2.2"
 version_files = [
     "pyproject.toml:^version",
     "setup.cfg:^version",
