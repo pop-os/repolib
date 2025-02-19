@@ -1,3 +1,10 @@
+repolib (2.2.2) jammy; urgency=medium
+
+  * Legacy & duplicate source handling improvements
+  * Support multiline values in deb822 files
+
+ -- Jacob Kauffmann <jacob@system76.com>  Wed, 19 Feb 2025 22:50:12 -0700
+
 repolib (2.2.1) jammy; urgency=medium
 
   * Build system improvements
