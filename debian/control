@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 11),
                python3-lazr.restfulclient,
                python3-launchpadlib,
                python3-setuptools,
-               python3-distutils,
+               python3-distutils | python3-setuptools,
                python3-pytest
 Standards-Version: 4.1.3
 Homepage: https://github.com/isantop/repolib

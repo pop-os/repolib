@@ -2,6 +2,7 @@ repolib (2.2.2) jammy; urgency=medium
 
   * Legacy & duplicate source handling improvements
   * Support multiline values in deb822 files
+  * Build with python3-setuptools when python3-distutils isn't available
 
  -- Jacob Kauffmann <jacob@system76.com>  Wed, 19 Feb 2025 22:50:12 -0700
 
