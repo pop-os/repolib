@@ -38,7 +38,7 @@ except ImportError:
     )
 
 BASE_FORMAT = util.SourceFormat.LEGACY
-BASE_URL = 'http://ppa.launchpad.net'
+BASE_URL = 'https://ppa.launchpad.net'
 BASE_DIST = 'ubuntu'
 BASE_COMPS = 'main'
 
