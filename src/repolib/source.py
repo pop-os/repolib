@@ -127,13 +127,8 @@ class Source(deb822.Deb822):
         has_exact_path_suites:bool = all(suite.endswith("/") for suite in self.suites)
         has_component:bool = len(self.components) > 0
 
-        # see: https://manpages.debian.org/stretch/apt/sources.list.5.en.html#THE_DEB_AND_DEB-SRC_TYPES:_OPTIONS
-
-        # > suite can specify an exact path, in which case the components
-        # > must be omitted and suite must end with a slash (/). This is useful
-        # > for the case when only a particular sub-directory of the archive
-        # > denoted by the URI is of interest. If suite does not specify an exact
-        # > path, at least one component must be present.
+        # Suite can specify an exact path ending with a slash (/)
+        # OR one or more components.
 
         if has_uri and has_suite and (has_exact_path_suites != has_component):
             return True
