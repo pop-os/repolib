@@ -124,9 +124,13 @@ class Source(deb822.Deb822):
     def __bool__(self) -> bool:
         has_uri:bool = len(self.uris) > 0
         has_suite:bool = len(self.suites) > 0
+        has_exact_path_suites:bool = all(suite.endswith("/") for suite in self.suites)
         has_component:bool = len(self.components) > 0
 
-        if has_uri and has_suite and has_component:
+        # Suite can specify an exact path ending with a slash (/)
+        # OR one or more components.
+
+        if has_uri and has_suite and (has_exact_path_suites != has_component):
             return True
         return False
 
