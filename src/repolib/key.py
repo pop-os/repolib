@@ -185,7 +185,10 @@ class SourceKey:
             return
         
         if 'url' in kwargs:
-            req = request.Request(kwargs['url'])
+            req = request.Request(
+                kwargs['url'],
+                headers={"User-Agent": "python-requests/2.31.0"},
+            )
             with request.urlopen(req) as response:
                 self.data = response.read().decode('UTF-8')
                 self.gpg.import_keys(self.data)
