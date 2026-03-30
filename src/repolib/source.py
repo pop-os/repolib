@@ -179,7 +179,6 @@ class Source(deb822.Deb822):
         self.suites = []
         self.components = []
         self.comments = []
-        self.signed_by = None
         self.architectures = ''
         self.languages = ''
         self.targets = ''
