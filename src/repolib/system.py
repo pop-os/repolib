@@ -50,9 +50,8 @@ def load_all_sources() -> None:
             log.info("Ignoring directory '%s'", file)
             continue
         try:
-            sourcefile = SourceFile(name=file.stem)
             log.debug('Loading %s', file)
-            sourcefile.load()
+            sourcefile = SourceFile(name=file.stem)
             if file.name not in util.files:
                 util.files[file.name] = sourcefile
 
