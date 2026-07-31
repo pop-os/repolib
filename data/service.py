@@ -20,7 +20,7 @@
 #pylint: skip-file
 
 import shutil
-import subprocess
+import sys
 
 import gi
 from gi.repository import GObject, GLib
@@ -59,24 +59,16 @@ class Repo(dbus.service.Object):
         self.source = None
         self.sources_dir = Path('/etc/apt/sources.list.d')
         self.keys_dir = Path('/etc/apt/trusted.gpg.d')
-    
-    @dbus.service.method(
-        "org.pop_os.repolib.Interface",
-        in_signature='as', out_signature='',
-        sender_keyword='sender', connection_keyword='conn'
-    )
-    def add_apt_signing_key(self, cmd, sender=None, conn=None):
-        self._check_polkit_privilege(
-            sender, conn, 'org.pop_os.repolib.modifysources'
-        )
-        print(cmd)
-        key_path = str(cmd.pop(-1))
-        with open(key_path, mode='wb') as keyfile:
-            try:
-                subprocess.run(cmd, check=True, stdout=keyfile)
-            except subprocess.CalledProcessError as e:
-                raise e
-    
+        self.prefs_dir = Path('/etc/apt/preferences.d')
+
+    def _confine(self, base, name):
+        '''Resolve `name` under `base` and refuse anything that escapes it.'''
+        base = base.resolve()
+        target = (base / name).resolve()
+        if target != base and base not in target.parents:
+            raise PermissionDeniedByPolicy('path escapes permitted directory')
+        return target
+
     @dbus.service.method(
         "org.pop_os.repolib.Interface",
         in_signature='ss', out_signature='',
@@ -86,6 +78,8 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
+        # dest must land inside the trusted-keys dir; src is only read.
+        dest = self._confine(self.keys_dir, Path(dest).name)
         shutil.copy2(src, dest)
     
     @dbus.service.method(
@@ -97,7 +91,7 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        key_path = Path(src)
+        key_path = self._confine(self.keys_dir, Path(src).name)
         key_path.unlink()
     
     @dbus.service.method(
@@ -109,7 +103,7 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        prefs_path = Path(src)
+        prefs_path = self._confine(self.prefs_dir, Path(src).name)
         prefs_path.unlink()
     
     @dbus.service.method(
@@ -121,7 +115,7 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        full_path = Path(path)
+        full_path = self._confine(self.prefs_dir, Path(path).name)
         with open(full_path, mode='w') as output_file:
             output_file.write(contents)
     
@@ -134,7 +128,7 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        full_path = self.sources_dir / filename
+        full_path = self._confine(self.sources_dir, Path(filename).name)
         with open(full_path, mode='w') as output_file:
             output_file.write(source)
     
@@ -147,8 +141,8 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        alt_path = self.sources_dir / alt_file
-        save_path = self.sources_dir / save_file
+        alt_path = self._confine(self.sources_dir, Path(alt_file).name)
+        save_path = self._confine(self.sources_dir, Path(save_file).name)
         if alt_path.exists():
             alt_path.rename(save_path)
 
@@ -161,7 +155,7 @@ class Repo(dbus.service.Object):
         self._check_polkit_privilege(
             sender, conn, 'org.pop_os.repolib.modifysources'
         )
-        source_file = self.sources_dir / filename
+        source_file = self._confine(self.sources_dir, Path(filename).name)
         source_file.unlink()
 
     @dbus.service.method(
@@ -274,13 +268,7 @@ class Repo(dbus.service.Object):
             # bus, and it does not make sense to restrict operations here
             return
 
-        # get peer PID
-        if self.dbus_info is None:
-            self.dbus_info = dbus.Interface(conn.get_object('org.freedesktop.DBus',
-                '/org/freedesktop/DBus/Bus', False), 'org.freedesktop.DBus')
-        pid = self.dbus_info.GetConnectionUnixProcessID(sender)
-        
-        # query PolicyKit
+        # Authorize by bus name; a PID-based subject is open to PID-reuse races
         if self.polkit is None:
             self.polkit = dbus.Interface(dbus.SystemBus().get_object(
                 'org.freedesktop.PolicyKit1',
@@ -289,8 +277,7 @@ class Repo(dbus.service.Object):
         try:
             # we don't need is_challenge return here, since we call with AllowUserInteraction
             (is_auth, _, details) = self.polkit.CheckAuthorization(
-                    ('unix-process', {'pid': dbus.UInt32(pid, variant_level=1),
-                    'start-time': dbus.UInt64(0, variant_level=1)}), 
+                    ('system-bus-name', {'name': dbus.String(sender, variant_level=1)}),
                     privilege, {'': ''}, dbus.UInt32(1), '', timeout=600)
         except dbus.DBusException as e:
             if e._dbus_error_name == 'org.freedesktop.DBus.Error.ServiceUnknown':
@@ -301,8 +288,11 @@ class Repo(dbus.service.Object):
                 raise
 
         if not is_auth:
-            Repo._log_in_file('/tmp/repolib.log','_check_polkit_privilege: sender %s on connection %s pid %i is not authorized for %s: %s' %
-                    (sender, conn, pid, privilege, str(details)))
+            # stderr reaches the journal; a fixed /tmp log path is a symlink vector
+            sys.stderr.write(
+                '_check_polkit_privilege: sender %s is not authorized for %s: %s\n'
+                % (sender, privilege, str(details))
+            )
             raise PermissionDeniedByPolicy(privilege)
 
 if __name__ == '__main__':
