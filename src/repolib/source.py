@@ -419,11 +419,9 @@ class Source(deb822.Deb822):
     @property
     def enabled(self) -> util.AptSourceEnabled:
         """Whether or not the source is enabled/active"""
-        try:
-            enabled = self['Enabled'] in util.true_values
-        except KeyError:
-            return util.AptSourceEnabled.FALSE
-        
+        # A source with no Enabled field is enabled, per sources.list(5)
+        enabled = self.get('Enabled', 'yes') in util.true_values
+
         if enabled and self.has_required_parts:
             return util.AptSourceEnabled.TRUE
         return util.AptSourceEnabled.FALSE

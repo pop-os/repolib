@@ -142,6 +142,21 @@ class SourceTestCase(unittest.TestCase):
         self.source.enabled = False
         self.assertFalse(self.source.enabled.get_bool())
     
+    def test_enabled_without_field(self):
+        load_source = source.Source()
+        load_source.load_from_data([
+            'X-Repolib-ID: no-enabled-field',
+            'Types: deb',
+            'URIs: http://example.com/ubuntu',
+            'Suites: suite',
+            'Components: main',
+        ])
+        self.assertNotIn('Enabled', load_source)
+        self.assertTrue(load_source.enabled.get_bool())
+
+        load_source.enabled = False
+        self.assertFalse(load_source.enabled.get_bool())
+
     def test_sourcecode_enabled(self):
         self.source.sourcecode_enabled = False
         self.assertEqual(self.source.types, [util.SourceType.BINARY])
